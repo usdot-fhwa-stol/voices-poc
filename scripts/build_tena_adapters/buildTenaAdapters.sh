@@ -163,9 +163,8 @@ if [[ "$skipDocker" == true ]]
 		echo
 		echo "#### Docker Container Build ####"
 		
-		
-		exit
-		
+		sudo docker rm -v $dockerContainer 
+		sudo docker image rm $dockerContainer
 				
 		sudo docker build --force-rm --rm -f $localAppDir/docker/Dockerfile -t $dockerContainer .
 		
