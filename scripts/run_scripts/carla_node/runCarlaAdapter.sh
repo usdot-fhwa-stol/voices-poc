@@ -7,7 +7,7 @@ emAddress='192.168.55.230'
 emPort='55100'
 
 dockerInternalAddress='172.17.0.2'
-localAddress='192.168.55.230'
+localAddress='192.168.55.231'
 
 carlaMap='Ubuntu_1222'
 
