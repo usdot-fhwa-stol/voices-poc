@@ -11,4 +11,4 @@ localAddress='192.168.55.230'
 
 adapterVerbosity='4'
 
-./build/src/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -scenarioFile $scenarioFile -verbosity $adapterVerbosity
+$tenadevDir/scenario-publisher/build/src/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -scenarioFile $scenarioFile -verbosity $adapterVerbosity

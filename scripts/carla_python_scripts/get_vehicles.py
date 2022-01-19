@@ -125,13 +125,13 @@ def main():
         #client = carla.Client()
         #client.set_timeout(10.0)
         
-        print(world.get_actors().filter('traffic.traffic_light*'))
-
+        print(world.get_actors().filter('vehicle.*'))
+        #print(world.get_actors().find(102))
         trafficlights = world.get_actors().filter('traffic.traffic_light*')
         #print("TrafficLights:" + ', '.join(trafficlights))
-        print(dir(trafficlights[0]))
-        for light in trafficlights:
-            print(light.get_group_traffic_lights())
+        #print(dir(trafficlights[0]))
+        #for light in trafficlights:
+            #print(light.get_group_traffic_lights())
             
             
         
