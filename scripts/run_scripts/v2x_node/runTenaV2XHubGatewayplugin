@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sudo docker exec -it -w '/home/tenadev/INSTALL/tenav2xhubgateway/build/bin/' v2xhub ./TenaV2XHubGateway
