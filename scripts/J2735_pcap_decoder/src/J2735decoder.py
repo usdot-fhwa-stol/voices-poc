@@ -47,11 +47,11 @@ if(sys.argv[4] == "BSM"):
     fout.write("packet time,secMark,latency,latitude,longitude,speed(m/s),heading,elevation(m),accel_long(m/s^2),hex\n")
 elif(sys.argv[4]=="SPAT"):
     msgid="0013"
-    columnHeaderString="time,intersectionID,intersectionName"
+    columnHeaderString="packetTimestamp,spatTimestamp,intersectionID,intersectionName"
     for headerPhase in range(1,numSpatPhases):
         columnHeaderString = columnHeaderString + ",phase" + str(headerPhase) + "_eventState"
     columnHeaderString = columnHeaderString + "\n"
-    print(columnHeaderString)
+    #print(columnHeaderString)
     fout.write(columnHeaderString)
 elif(sys.argv[4]=="MAP"):
     msgid="0012"
@@ -61,6 +61,7 @@ fp= csv.reader(fp1,delimiter=',')
 list1=list(fp)
 
 latency_array = []
+prevSpatTimestamp = 0
 
 for dt in list1:
 
@@ -78,24 +79,25 @@ for dt in list1:
         if (msgid == "0013"):
             intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
             intersectionName = msg()['value'][1]['intersections'][0]['name']
+            spatTimestamp = msg()['value'][1]['intersections'][0]['timeStamp']
             instersectionPhaseArray = msg()['value'][1]['intersections'][0]['states']
-            print("Length instersectionPhaseArray: " + str(len(instersectionPhaseArray)))
+            #print("Length instersectionPhaseArray: " + str(len(instersectionPhaseArray)))
             
             for phase in range(len(instersectionPhaseArray)):
             	
                 currentPhase = msg()['value'][1]['intersections'][0]['states'][phase].get('signalGroup')
                 currentState = str(msg()['value'][1]['intersections'][0]['states'][phase]['state-time-speed'][0]['eventState'])
-                print("Phase: " + str(currentPhase))
-                print("  State: " + currentState)
+                #print("Phase: " + str(currentPhase))
+                #print("  State: " + currentState)
                 spatPhaseArray[currentPhase] = currentState
             
-            spatString = str(dt[0]) + "," + str(intersectionID) + "," + intersectionName
+            spatString = str(dt[0]) + "," + str(spatTimestamp) + "," + str(intersectionID) + "," + intersectionName 
             
             for printPhase in range(1,numSpatPhases):
                 spatString = spatString + "," + spatPhaseArray[printPhase]
             spatString = spatString + "\n"
             
-            print(spatString)
+            #print(spatString)
             
             fout.write(spatString)
 
@@ -119,8 +121,8 @@ for dt in list1:
             accel_long = msg()['value'][1]['coreData']['accelSet']['long']
             accel_long_converted = accel_long*0.01 #m^s^2
             
-            #print("dt[0]: " + dt[0])
             #print(" ")
+            #print("dt[0]: " + dt[0])
             #print("secMark: " + str(secMark))
             packet_timestamp = datetime.datetime.fromtimestamp(int(float(dt[0])))
             #print("packet_timestamp: " + str(packet_timestamp))
