@@ -2,7 +2,7 @@
 <scenario>
   <OpenDriveFileName>TFHRC_0917.xodr</OpenDriveFileName>
   <vehicles>
-    <vehicle name="282475248" bsmid="f03ad610" type="vehicle.chevrolet.impala" owner="CARMA-BSM">
+    <vehicle name="286331153" bsmid="11111111" type="vehicle.chevrolet.impala" owner="CARMA-BSM">
     </vehicle>
   </vehicles>
   <intersectionSignalControllers>

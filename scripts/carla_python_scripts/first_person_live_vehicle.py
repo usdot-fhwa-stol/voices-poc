@@ -168,7 +168,8 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, args):
+    #def __init__(self, carla_world, hud, args):
         self.world = carla_world
         self.actor_role_name = args.rolename
         try:
@@ -178,7 +179,7 @@ class World(object):
             print('  The server could not send the OpenDRIVE (.xodr) file:')
             print('  Make sure it exists, has the same name of your town, and is correct.')
             sys.exit(1)
-        self.hud = hud
+        #self.hud = hud
         self.player = None
         self.collision_sensor = None
         self.lane_invasion_sensor = None
@@ -190,13 +191,13 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart()
-        self.world.on_tick(hud.on_world_tick)
+        self.restart(args)
+        #self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
         self.constant_velocity_enabled = False
 
-    def restart(self):
+    def restart(self, args):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -229,17 +230,18 @@ class World(object):
         #self.gnss_sensor = GnssSensor(self.player)
         #self.imu_sensor = IMUSensor(self.player)
         #self.camera_manager = CameraManager(self.world.get_actors().find(18), self.hud, self._gamma)
-        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        #self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        self.camera_manager = CameraManager(self.player, self._gamma, args)
         self.camera_manager.transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
-        self.hud.notification(actor_type)
+        #self.hud.notification(actor_type)
 
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
         self._weather_index %= len(self._weather_presets)
         preset = self._weather_presets[self._weather_index]
-        self.hud.notification('Weather: %s' % preset[1])
+        #self.hud.notification('Weather: %s' % preset[1])
         self.player.get_world().set_weather(preset[0])
 
     def toggle_radar(self):
@@ -249,12 +251,12 @@ class World(object):
             self.radar_sensor.sensor.destroy()
             self.radar_sensor = None
 
-    def tick(self, clock):
-        self.hud.tick(self, clock)
+    #def tick(self, clock):
+    #    self.hud.tick(self, clock)
 
     def render(self, display):
         self.camera_manager.render(display)
-        self.hud.render(display)
+        #self.hud.render(display)
 
     def destroy_sensors(self):
         self.camera_manager.sensor.destroy()
@@ -300,7 +302,7 @@ class KeyboardControl(object):
         else:
             raise NotImplementedError("Actor type not supported")
         self._steer_cache = 0.0
-        world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
+        #world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world, clock):
         if isinstance(self._control, carla.VehicleControl):
@@ -318,10 +320,10 @@ class KeyboardControl(object):
                         world.player.set_autopilot(True)
                     else:
                         world.restart()
-                elif event.key == K_F1:
-                    world.hud.toggle_info()
-                elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
-                    world.hud.help.toggle()
+                #elif event.key == K_F1:
+                #    world.hud.toggle_info()
+                #elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
+                #    world.hud.help.toggle()
                 elif event.key == K_TAB:
                     world.camera_manager.toggle_camera()
                 elif event.key == K_g:
@@ -341,16 +343,16 @@ class KeyboardControl(object):
                         # Use 'L' key to switch between lights:
                         # closed -> position -> low beam -> fog
                         if not self._lights & carla.VehicleLightState.Position:
-                            world.hud.notification("Position lights")
+                            #world.hud.notification("Position lights")
                             current_lights |= carla.VehicleLightState.Position
                         else:
                             world.hud.notification("Low beam lights")
                             current_lights |= carla.VehicleLightState.LowBeam
                         if self._lights & carla.VehicleLightState.LowBeam:
-                            world.hud.notification("Fog lights")
+                            #world.hud.notification("Fog lights")
                             current_lights |= carla.VehicleLightState.Fog
                         if self._lights & carla.VehicleLightState.Fog:
-                            world.hud.notification("Lights off")
+                            #world.hud.notification("Lights off")
                             current_lights ^= carla.VehicleLightState.Position
                             current_lights ^= carla.VehicleLightState.LowBeam
                             current_lights ^= carla.VehicleLightState.Fog
@@ -788,18 +790,18 @@ class RadarSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud, gamma_correction):
+    def __init__(self, parent_actor, gamma_correction, args):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
-        self.hud = hud
+        #self.hud = hud
         self.recording = False
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.30)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=1, y=-0.20, z=1.2)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.25)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.SpringArm),
             (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
             (carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)]
@@ -824,8 +826,11 @@ class CameraManager(object):
         for item in self.sensors:
             bp = bp_library.find(item[0])
             if item[0].startswith('sensor.camera'):
-                bp.set_attribute('image_size_x', str(hud.dim[0]))
-                bp.set_attribute('image_size_y', str(hud.dim[1]))
+            #AJL
+                bp.set_attribute('image_size_x', str(args.width)) 
+                bp.set_attribute('image_size_y', str(args.height))
+                #bp.set_attribute('image_size_x', str(hud.dim[0])) 
+                #bp.set_attribute('image_size_y', str(hud.dim[1]))
                 if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
                 for attr_name, attr_value in item[3].items():
@@ -934,16 +939,16 @@ def game_loop(args):
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-        hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        #hud = HUD(args.width, args.height)
+        world = World(client.get_world(), args)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
         while True:
-            clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
-                return
-            world.tick(clock)
+            #clock.tick_busy_loop(60)
+            #if controller.parse_events(client, world, clock):
+            #    return
+            #world.tick(clock)
             world.render(display)
             pygame.display.flip()
 
