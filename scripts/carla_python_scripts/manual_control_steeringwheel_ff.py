@@ -1001,11 +1001,11 @@ class CameraManager(object):
         self.hud = hud
         self.recording = False
         self._camera_transforms = [
-            carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.15)),
+            carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.25)),
             carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)),
-            carla.Transform(carla.Location(x=0.150, y=-0.30, z=1.15), carla.Rotation(yaw=-55)),
-            carla.Transform(carla.Location(x=0.150, y=-0.30, z=1.15), carla.Rotation(yaw=55)),
-            carla.Transform(carla.Location(x=0.150, y=0, z=1.15), carla.Rotation(yaw=180))
+            carla.Transform(carla.Location(x=0.150, y=-0.30, z=1.25), carla.Rotation(yaw=-55)),
+            carla.Transform(carla.Location(x=0.150, y=-0.30, z=1.25), carla.Rotation(yaw=55)),
+            carla.Transform(carla.Location(x=0.150, y=0, z=1.25), carla.Rotation(yaw=180))
             # carla.Transform(carla.Location(x=1.6, z=1.7)),
             # carla.Transform(carla.Location(x=0.150, y= -0.30, z=1.25), carla.Rotation(pitch=-5)),
             # carla.Transform(carla.Location(x=-1.6, z=1.7))
