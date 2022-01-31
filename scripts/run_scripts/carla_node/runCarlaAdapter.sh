@@ -11,7 +11,7 @@ localAddress='192.168.55.231'
 
 carlaMap='Ubuntu_1222'
 
-adapterVerbosity='4'
+adapterVerbosity='1'
 
 tenaPlatform='u1804-gcc75-64'
 tenaVersion='6.0.7'
