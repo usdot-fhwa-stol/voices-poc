@@ -3,6 +3,10 @@
 ##############################
 #	TODO
 # add download and build of VUG Threads
+#
+# ask if you want to do a git pull? 
+#	will have to check its on the correct branch 
+
 
 
 username=$(whoami)
@@ -10,7 +14,8 @@ username=$(whoami)
 #-------------------| LOCAL VARIABLES |-------------------#
 localTenaDir=/home/$username/TENA 				#root directory of TENA installation
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
-localInstallDir=/home/$username/tenadev/INSTALL		#location to install/build TENA adapters
+localTenadevDir=/home/$username/tenadev			#location of local tenadev
+localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
 #---------------------------------------------------------#
 
 #-------------------| TENA VARIABLES |-------------------#
@@ -25,11 +30,13 @@ tenaSourceScript=$localTenaDir/$tenaVersion/scripts/tenaenv-$tenaBuildVersion-v$
 remoteDownloadsDir=/home/Downloads 		#DO NOT CHANGE: internal docker directory mapped to localTenaPackageDownloadDir
 remoteTenaDir=/home/TENA			#DO NOT CHANGE: internal docker directory mapped to localTenaDir
 remoteInstallDir=/home/INSTALL		#DO NOT CHANGE: internal docker directory mapped to localInstallDir	
+remoteCarlaDir=/home/carla
 #--------------------------------------------------------#
 
 middlewareVersion="MiddlewareSDK-v6.0.8"
 boostVersion="TENA_boost_1.77.0.1_Library"
 vugCombinedVersion="VUG-VOICES-Combined-v0.12.0"
+vugThreadsVersion="vug-threads-2.2.0"
 
 
 v2xhubGitUrl="https://github.com/usdot-fhwa-OPS/V2X-Hub.git"
@@ -100,7 +107,7 @@ else
 	exit
 fi
 
-localAppDir=$localInstallDir/$tenaApp	#location of git directory of application to be built
+localAppDir=$localTenadevDir/$tenaApp	#location of git directory of application to be built
 			
 
 echo
@@ -155,13 +162,19 @@ else
 	exit
 fi
 
+#look for VUG Threads
+if [ -d $localInstallDir/$vugThreadsVersion ]; then
+	echo "$vugThreadsVersion found..."
+else
+	echo "The proper VUG-Threads was not found. Please install version $vugThreadsVersion"
+	exit
+fi
+
 for arg in "$@"; do
 	case $arg in
 		"-d")
 			skipDocker=true;;
 		"-c")
-			skipCmake=true;;
-		"-m")
 			skipMake=true;;
 	esac
 done
@@ -203,8 +216,14 @@ if [[ "$skipDocker" == true ]]
 				
 				echo
 				read -p "V2X-Hub directory not found. Would you like to download from GitHub? [y/n] " downloadApp
+				read -p "What branch would you like to use? [leave blank for develop] " branchToDownload
+
 				if [[ $downloadApp =~ ^[yY]$ ]]; then
-					git clone $v2xhubGitUrl
+					if [[ $branchToDownload == "" ]]; then
+						git clone $v2xhubGitUrl -b develop 
+					else
+						git clone $v2xhubGitUrl -b $branchToDownload 
+					fi
 				else
 					echo "Please clone the latest V2X-Hub directory from Github..."
 					exit
@@ -216,6 +235,8 @@ if [[ "$skipDocker" == true ]]
 			cd ./V2X-Hub
 		fi
 				
+		echo
+		echo "#### Starting Docker Build ####"
 		sudo -E docker build --force-rm --rm -f $localAppDir/docker/Dockerfile -t $dockerContainer .
 		
 		
@@ -266,23 +287,16 @@ if [[ "$skipCmake" == true ]]
 		
 		
 		#check for mw library
-		ls $localTenaDir/lib/cmake
+		#ls $localTenaDir/lib/cmake
 		if [[ ! -d $localTenaDir/lib/cmake/mw ]]; then
 			echo
 			echo mw library not installed in local TENA install $localTenaDir/lib/cmake/mw
 			echo Please add the mw library and try again...; exit
 		fi
-		
-		
-		echo "CMAKE COMMAND: "
-		#echo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_INSTALL_PREFIX=$remoteAppDir/INSTALL -D CMAKE_PREFIX_PATH='$remoteTenaDir/lib/cmake;$remoteInstallDir' -D BOOST_INCLUDEDIR=$remoteTenaDir/$boostVersion/$tenaBuildVersion/include -D VUG_INSTALL_DIR=$remoteAppDir/INSTALL ../"
-		RUN git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
 
-		#-D vug-threads_DIR=$remoteInstallDir/vug-threads-2.2.0/include/cmake
-		
 		echo
 		
-		( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_INSTALL_PREFIX=$remoteAppDir/$tenaApp -D CMAKE_PREFIX_PATH='$remoteTenaDir/lib/cmake;$remoteInstallDir' -D BOOST_INCLUDEDIR=$remoteTenaDir/$boostVersion/$tenaBuildVersion/include -D VUG_INSTALL_DIR=$remoteAppDir/INSTALL ../" )
+		( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=$remoteCarlaDir; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_INSTALL_PREFIX=$remoteAppDir/$tenaApp -D CMAKE_PREFIX_PATH='$remoteTenaDir/lib/cmake;$remoteInstallDir' -D BOOST_INCLUDEDIR=$remoteTenaDir/$boostVersion/$tenaBuildVersion/include -D VUG_INSTALL_DIR=$remoteInstallDir/$tenaApp ../" )
 fi
 
 #--Make example
@@ -299,7 +313,6 @@ if [[ "$skipMake" == true ]]
 		
 		echo
 		echo "MAKE COMMAND: "
-		#echo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make VERBOSE=1"
 		echo
 		( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make VERBOSE=1" )
 		
