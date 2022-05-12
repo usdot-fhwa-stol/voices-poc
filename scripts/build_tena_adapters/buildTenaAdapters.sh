@@ -319,10 +319,10 @@ if [[ "$skipMake" == true ]]
 		if [ isV2xhubPlugin ]; then
 		
 			echo
-			echo "#### Running Make Install ####"
+			echo "#### Running Make Package ####"
 			
 			echo
-			echo "MAKE INSTALL COMMAND: "
-			( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make install VERBOSE=1" )
+			echo "MAKE PACKAGE COMMAND: "
+			( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make package VERBOSE=1" )
 		fi
 fi
