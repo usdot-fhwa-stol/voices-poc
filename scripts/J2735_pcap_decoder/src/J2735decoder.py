@@ -67,7 +67,7 @@ elif (msgType=="SPAT") :
     columnHeaderString="packetTimestamp,spatTimestamp,intersectionID,intersectionName"
     for headerPhase in range(1,numSpatPhases):
         columnHeaderString = columnHeaderString + ",phase" + str(headerPhase) + "_eventState"
-    columnHeaderString = columnHeaderString + "\n" 
+    columnHeaderString = columnHeaderString + ",hex\n"
     fout.write(columnHeaderString)
 elif (msgType=="MAP"):
     fout.write("packetTimestamp,intersectionID,hex\n")  
@@ -119,7 +119,7 @@ for dt in list1:
             
             for printPhase in range(1,numSpatPhases):
                 spatString = spatString + "," + spatPhaseArray[printPhase]
-            spatString = spatString + "\n"
+            spatString = spatString + ',' + str(dt[1]) + "\n"
             
             fout.write(spatString)
 
