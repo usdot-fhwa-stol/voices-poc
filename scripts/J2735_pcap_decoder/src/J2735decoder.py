@@ -205,7 +205,7 @@ for dt in list1:
             bounds = msg()['value'][1]['body'][1]['bounds']
             newReqId = fixID(str(reqid))
 
-            fout.write(str(dt[0])+','+str(newReqId)+','+str(reqseq)+','+str(scale)+','+str(bounds)+'\n')
+            fout.write(str(dt[0])+','+str(newReqId)+','+str(reqseq)+','+str(scale)+','+str(bounds)+','+str(dt[1])+'\n')
         
         elif (msgid == "00f5") :
             reqid = msg()['value'][1]['body'][1]['reqid']
@@ -224,7 +224,7 @@ for dt in list1:
             newTcmId = fixID(str(tcmId))
             newtcId = fixID(str(tcId))
 
-            fout.write(str(dt[0])+','+str(newReqId)+','+str(reqseq)+','+str(msgtot)+','+str(msgnum)+','+str(newTcmId)+','+str(updated)+','+str(label)+','+str(newtcId)+','+str(vclasses)+','+str(schedule)+','+str(detail)+','+str(geometry)+'\n')
+            fout.write(str(dt[0])+','+str(newReqId)+','+str(reqseq)+','+str(msgtot)+','+str(msgnum)+','+str(newTcmId)+','+str(updated)+','+str(label)+','+str(newtcId)+','+str(vclasses)+','+str(schedule)+','+str(detail)+','+str(geometry)+','+str(dt[1])+'\n')
     
         else:
             sys.exit("Invalid message type\n")
