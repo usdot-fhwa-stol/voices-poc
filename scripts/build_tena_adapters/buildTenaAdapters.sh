@@ -59,11 +59,11 @@ fi
 echo
 echo "What application would you like to install? [#]" 
 echo 
-echo "[1] carla-tena-adapter"
-echo "[2] v2xhub-tena-bsm-plugin"
-echo "[3] v2xhub-tena-spat-plugin"
-echo "[4] v2xhub-tena-mobility-plugin"
-echo "[5] v2xhub-tena-traffic-control-plugin"
+echo "    [1] carla-tena-adapter"
+echo "    [2] v2xhub-tena-bsm-plugin"
+echo "    [3] v2xhub-tena-spat-plugin"
+echo "    [4] v2xhub-tena-mobility-plugin"
+echo "    [5] v2xhub-tena-traffic-control-plugin"
 echo
 read -p "--> " tenaAppIndex
 
@@ -128,6 +128,35 @@ if [[ ! -d $localAppDir ]]; then
 	fi
 else
 	echo "$tenaApp directory found"
+fi
+
+cd $localAppDir
+
+gitCommitId=$(git rev-parse HEAD)
+gitBranch=$(git rev-parse --abbrev-ref HEAD)
+gitInfo=$(git show $gitCommitId  | sed 's/^/    /')
+
+echo
+echo Current Branch: $gitBranch
+echo
+read -p "Would you like to switch branches? [y/n] " switchBranch
+
+if [[ $switchBranch =~ ^[yY]$ ]]; then
+	read -p "    Enter the desired branch name --> " newBranch
+
+	git checkout $newBranch
+fi
+
+echo
+echo "Current Commit Info:"
+echo
+echo "$gitInfo"
+
+echo
+read -p "Would you like to pull the latest code? [y/n] " pullLatest
+
+if [[ $pullLatest =~ ^[yY]$ ]]; then
+	git pull || exit
 fi
 
 
