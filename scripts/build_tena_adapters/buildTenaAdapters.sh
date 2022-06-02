@@ -242,7 +242,7 @@ else
 fi
 
 #look for VUG Threads
-if [ -d $localInstallDir/vug-threads ]; then
+if [ $tenaApp != "vug-threads" ] && [ -d $localInstallDir/vug-threads ]; then
 	echo "vug-threads found..."
 else
 	echo "vug-threads was not found. Please install vug-threads"
