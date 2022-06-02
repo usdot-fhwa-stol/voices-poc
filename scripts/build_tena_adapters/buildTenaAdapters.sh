@@ -36,7 +36,6 @@ remoteCarlaDir=/home/carla
 middlewareVersion="MiddlewareSDK-v6.0.8"
 boostVersion="TENA_boost_1.77.0.1_Library"
 vugCombinedVersion="VUG-VOICES-Combined-v0.12.0"
-vugThreadsVersion="vug-threads-2.2.0"
 
 
 v2xhubGitUrl="https://github.com/usdot-fhwa-OPS/V2X-Hub.git"
@@ -59,11 +58,16 @@ fi
 echo
 echo "What application would you like to install? [#]" 
 echo 
-echo "    [1] carla-tena-adapter"
-echo "    [2] v2xhub-tena-bsm-plugin"
-echo "    [3] v2xhub-tena-spat-plugin"
-echo "    [4] v2xhub-tena-mobility-plugin"
-echo "    [5] v2xhub-tena-traffic-control-plugin"
+echo "    [1]  	carla-tena-adapter"
+echo "    [2]  	v2xhub-tena-bsm-plugin"
+echo "    [3]  	v2xhub-tena-spat-plugin"
+echo "    [4]  	v2xhub-tena-mobility-plugin"
+echo "    [5]  	v2xhub-tena-traffic-control-plugin"
+echo "    [6]  	scenario-publisher"
+echo "    [7]  	tena-entity-generator"
+echo "    [8] 	carma-platform-tena-adapter"
+echo "    [9] 	vug-threads"
+echo "    [10] 	vug-udp-protocolio"
 echo
 read -p "--> " tenaAppIndex
 
@@ -73,6 +77,7 @@ if [[ $tenaAppIndex == 1 ]]; then
 	dockerContainer=tena:carla
 	remoteAppDir=/home/$tenaApp 			#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
+	requiresProtocolio=false
 	
 elif [[ $tenaAppIndex == 2 ]]; then
 	tenaApp=v2xhub-tena-bsm-plugin
@@ -80,13 +85,15 @@ elif [[ $tenaAppIndex == 2 ]]; then
 	dockerContainer=tena:v2xhub
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
-	
+	requiresProtocolio=false
+
 elif [[ $tenaAppIndex == 3 ]]; then
 	tenaApp=v2xhub-tena-spat-plugin
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/v2xhub-tena-spat-plugin.git"
 	dockerContainer=tena:v2xhub
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
+	requiresProtocolio=false
 	
 elif [[ $tenaAppIndex == 4 ]]; then
 	tenaApp=v2xhub-tena-mobility-plugin
@@ -94,6 +101,7 @@ elif [[ $tenaAppIndex == 4 ]]; then
 	dockerContainer=tena:v2xhub
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
+	requiresProtocolio=false
 	
 elif [[ $tenaAppIndex == 5 ]]; then
 	tenaApp=v2xhub-tena-traffic-control-plugin
@@ -101,6 +109,47 @@ elif [[ $tenaAppIndex == 5 ]]; then
 	dockerContainer=tena:v2xhub
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
+	requiresProtocolio=false
+
+elif [[ $tenaAppIndex == 6 ]]; then
+	tenaApp=scenario-publisher
+	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/scenario-publisher.git"
+	dockerContainer=tena:carla
+	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
+	isV2xhubPlugin=false
+	requiresProtocolio=false
+
+elif [[ $tenaAppIndex == 7 ]]; then
+	tenaApp=tena-entity-generator
+	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/tena-entity-generator.git"
+	dockerContainer=tena:carla
+	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
+	isV2xhubPlugin=false
+	requiresProtocolio=false
+	
+elif [[ $tenaAppIndex == 8 ]]; then
+	tenaApp=carma-platform-tena-adapter
+	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/carma-platform-tena-adapter.git"
+	dockerContainer=tena:carla
+	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
+	isV2xhubPlugin=false
+	requiresProtocolio=true
+
+elif [[ $tenaAppIndex == 9 ]]; then
+	tenaApp=vug-threads
+	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/vug-threads.git"
+	dockerContainer=tena:carla
+	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
+	isV2xhubPlugin=false
+	requiresProtocolio=false
+	
+elif [[ $tenaAppIndex == 10 ]]; then
+	tenaApp=vug-udp-protocolio
+	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/vug-udp-protocolio.git"
+	dockerContainer=tena:carla
+	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
+	isV2xhubPlugin=false
+	requiresProtocolio=false
 
 else
 	echo "Invalid selection, try again..."
@@ -134,7 +183,8 @@ cd $localAppDir
 
 gitCommitId=$(git rev-parse HEAD)
 gitBranch=$(git rev-parse --abbrev-ref HEAD)
-gitInfo=$(git show $gitCommitId  | sed 's/^/    /')
+gitInfo=$(git show $gitCommitId  | sed 's/^/    /' )
+gitInfo="$(echo $gitInfo | sed 's/diff .*//' )"
 
 echo
 echo Current Branch: $gitBranch
@@ -192,11 +242,21 @@ else
 fi
 
 #look for VUG Threads
-if [ -d $localInstallDir/$vugThreadsVersion ]; then
-	echo "$vugThreadsVersion found..."
+if [ -d $localInstallDir/vug-threads ]; then
+	echo "vug-threads found..."
 else
-	echo "The proper VUG-Threads was not found. Please install version $vugThreadsVersion"
+	echo "vug-threads was not found. Please install vug-threads"
 	exit
+fi
+
+#look for VUG ProtocolIO
+if $requiresProtocolio; then
+	if [ -d $localInstallDir/vug-udp-protocolio ]; then
+		echo "ProtocolIO found..."
+	else
+		echo "vug-udp-protocolio was not found. Please install vug-udp-protocolio"
+		exit
+	fi
 fi
 
 for arg in "$@"; do
@@ -238,7 +298,7 @@ if [[ "$skipDocker" == true ]]
 		sudo docker image rm $dockerContainer
 		
 		#if v2xhub plugin need to build image inside the V2X-Hub dir
-		if [ isV2xhubPlugin ]; then
+		if $isV2xhubPlugin; then
 			
 			#if the v2xhub directory doesnt exist, download it
 			if [[ ! -d ./V2X-Hub ]]; then
@@ -279,7 +339,7 @@ if [[ "$skipDocker" == true ]]
 		fi
 		
 		#if v2xhub plugin go out of the v2xhub directory and remove it
-		if [ isV2xhubPlugin ]; then
+		if $isV2xhubPlugin; then
 			cd ../
 			sudo rm -rf ./V2X-Hub
 		fi
@@ -345,13 +405,33 @@ if [[ "$skipMake" == true ]]
 		echo
 		( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make VERBOSE=1" )
 		
-		if [ isV2xhubPlugin ]; then
+		echo "isV2xhubPlugin: $isV2xhubPlugin"
+
+		if $isV2xhubPlugin
+			then
 		
-			echo
-			echo "#### Running Make Package ####"
+				echo
+				echo "#### Running Make Package ####"
+				
+				echo
+				echo "MAKE PACKAGE COMMAND: "
+				( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make package VERBOSE=1" )
+			else
 			
-			echo
-			echo "MAKE PACKAGE COMMAND: "
-			( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make package VERBOSE=1" )
+				echo
+				echo "#### Running Make Install ####"
+				
+				echo
+				echo "MAKE INSTALL COMMAND: "
+				( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make install VERBOSE=1" )
+
+				if [[ -d $localAppDir/$tenaApp ]]; then
+					echo
+					echo "#### Moving installed app to INSTALL directory ####"
+					echo
+					
+					sudo rm -rf $localInstallDir/$tenaApp
+					sudo mv $localAppDir/$tenaApp $localInstallDir
+				fi
 		fi
 fi
