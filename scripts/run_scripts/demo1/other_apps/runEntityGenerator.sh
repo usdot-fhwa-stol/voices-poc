@@ -37,5 +37,5 @@ carmaPort='55600'
 carmaAdapterAddress=$localAddress
 carmaAdapterPort='56700'
 
-$localCarlaAdapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity
+$localCarlaAdapterPath/bin/TENAEntityGenerator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity
 
