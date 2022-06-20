@@ -1,0 +1,3 @@
+#ignore data and pycache for j2735 decoder
+scripts/J2735_pcap_decoder/data/
+scripts/J2735_pcap_decoder/src/__pycache__/
