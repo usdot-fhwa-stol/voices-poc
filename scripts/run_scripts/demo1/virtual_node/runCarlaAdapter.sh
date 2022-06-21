@@ -31,7 +31,20 @@ localCarlaAdapterPath=$localInstallPath/carla-tena-adapter
 carlaHost=$localAddress
 
 adapterVerbosity='4'
+ 
+mkdir -p $localAdapterLogPath
 
+adapterLogFile=$localAdapterLogPath/carla_adapter_terminal_out.log
 
-$localCarlaAdapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity
+echo "<< ***** Adapter Started **** >>" > $adapterLogFile
+date >> $adapterLogFile
 
+# open a new file descriptor for logging
+exec 4>> $adapterLogFile
+
+# redirect trace logs to fd 4
+BASH_XTRACEFD=4
+
+set -x
+
+$localCarlaAdapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile

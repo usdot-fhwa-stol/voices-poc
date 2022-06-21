@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. $HOME/voices-poc/scripts/run_scripts/demo1/node_info.config
+
 echo
 echo "What vehicle position are you? [#]" 
 echo 
@@ -44,6 +46,13 @@ copyCarmaLogs()
     echo "Copying carma logs"
     latest_logs=$(readlink -f /opt/carma/logs/latest)
     cp -r $latest_logs .
+    
+    echo "Copying adapter logs"    
+    mv $localAdapterLogPath/*.log .
+
+    echo "Copying carma simulation logs"    
+    mv $localCarmaSimLogPath/*.log .
+    
     exit
 }
 

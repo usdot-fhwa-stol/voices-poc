@@ -31,10 +31,19 @@ localCarlaAdapterPath=$localInstallPath/scenario-publisher
 
 adapterVerbosity='4'
 
-carmaAddress=$localAddress
-carmaPort='55600'
+mkdir -p $localAdapterLogPath
 
-carmaAdapterAddress=$localAddress
-carmaAdapterPort='56700'
+adapterLogFile=$localAdapterLogPath/scenario_publisher_terminal_out.log
 
-$localCarlaAdapterPath/bin/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity -scenarioFile $scenarioFile
+echo "<< ***** Adapter Started **** >>" > $adapterLogFile
+date >> $adapterLogFile
+
+# open a new file descriptor for logging
+exec 4>> $adapterLogFile
+
+# redirect trace logs to fd 4
+BASH_XTRACEFD=4
+
+set -x
+
+$localCarlaAdapterPath/bin/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity -scenarioFile $scenarioFile | tee -a $adapterLogFile

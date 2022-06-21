@@ -37,5 +37,20 @@ carmaPort='5398'
 carmaAdapterAddress=$localAddress
 carmaAdapterPort='56700'
 
-( set -x ; $localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $carmaID -verbosity $adapterVerbosity; echo )
+mkdir -p $localAdapterLogPath
+
+adapterLogFile=$localAdapterLogPath/carma_platform_adapter_terminal_out.log
+
+echo "<< ***** Adapter Started **** >>" > $adapterLogFile
+date >> $adapterLogFile
+
+# open a new file descriptor for logging
+exec 4>> $adapterLogFile
+
+# redirect trace logs to fd 4
+BASH_XTRACEFD=4
+
+set -x
+
+$localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $carmaID -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

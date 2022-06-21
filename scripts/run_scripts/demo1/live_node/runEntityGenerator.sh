@@ -31,11 +31,20 @@ localCarlaAdapterPath=$localInstallPath/tena-entity-generator
 
 adapterVerbosity='4'
 
-carmaAddress=$localAddress
-carmaPort='55600'
+mkdir -p $localAdapterLogPath
 
-carmaAdapterAddress=$localAddress
-carmaAdapterPort='56700'
+adapterLogFile=$localAdapterLogPath/entity_generator_terminal_out.log
 
-$localCarlaAdapterPath/bin/TENAEntityGenerator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity
+echo "<< ***** Adapter Started **** >>" > $adapterLogFile
+date >> $adapterLogFile
+
+# open a new file descriptor for logging
+exec 4>> $adapterLogFile
+
+# redirect trace logs to fd 4
+BASH_XTRACEFD=4
+
+set -x
+
+$localCarlaAdapterPath/bin/TENAEntityGenerator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
 
