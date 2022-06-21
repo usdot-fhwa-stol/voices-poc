@@ -53,6 +53,14 @@ copyCarmaLogs()
     echo "Copying carma simulation logs"    
     mv $localCarmaSimLogPath/*.log .
     
+    read -p "Would you like to save the CARMA Platform rosbag? [y/n] " save_rosbag
+	
+	if [[ $save_rosbag =~ ^[yY]$ ]]; then
+        echo "Copying latest bag file" 
+        latest_bag=$(ls -t /opt/carma/logs/*.bag | head -1)
+        cp $latest_bag .
+    fi
+
     exit
 }
 
