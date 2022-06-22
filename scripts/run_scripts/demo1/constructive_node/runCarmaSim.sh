@@ -10,9 +10,6 @@ function cleanup {
 
 . ../node_info.config
 
-CARLA_DIR=$HOME/carla/CARLA_0.9.10_TFHRC_Ubuntu_20220301/LinuxNoEditor
-TOWN="TFHRC"
-
 if [[ $carmaID == "CARMA-TFHRC" ]]
 then
        SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
@@ -46,8 +43,11 @@ echo "<< ***** New Session **** >>" >> $SIM_LOG
 date >> $SIM_LOG
 
 
-$CARLA_DIR/CarlaUE4.sh &>> $CARLA_LOG &
-sleep 4
+$localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
+sleep 5
+
+python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
+
 
 docker run \
 	   -it -d --rm \
@@ -61,7 +61,7 @@ docker exec \
        bash -c \
        "export PYTHONPATH=$PYTHONPATH:/home/PythonAPI/carla-0.9.10-py2.7-linux-x86_64.egg &&
        source /home/carla_carma_ws/devel/setup.bash && 
-       roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$TOWN\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
+       roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$carlaMapName\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
 
 cleanup
 
