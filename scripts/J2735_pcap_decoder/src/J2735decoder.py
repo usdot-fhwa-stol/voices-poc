@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-from binascii import hexlify, unhexlify
-from time import time
+from binascii import unhexlify
 import J2735_201603_combined
 import sys
 import csv
-import datetime
 import numpy
 
 def extract_values(obj, key):
@@ -27,26 +25,25 @@ def extract_values(obj, key):
     results = extract(obj, arr, key)
     return results
 
-# decoding issues exist, fix and update message
-def fixID(anyID) :
-    begID = anyID.find("b'") + 2
-    endID = anyID.find("'", begID)
-    badID = anyID[begID:endID]
-    newID = badID.replace("\\x", '')
+def convID(id, length):
+    id = id.hex()
+    i = 0
+    if (length == 8):
+        while(i<21):
+            id = id[:i+2] + " " + id[i+2:]
+            i += 3
+    else:
+        while(i<45):
+            id = id[:i+2] + " " + id[i+2:]
+            i += 3
 
-    i = 33
-    for x in range(78): # range is # of total unwanted ascii characters (33-47, 58-96, 103-126)
-        if chr(i) in newID:
-            num = newID.index(chr(i))
-            hexed = hexlify(str.encode(newID[num]))
-            newID = newID.replace(newID[num], hexed.decode('utf-8'))
-            i = i+1
-        elif (i == 47)  : i = 58
-        elif (i == 96)  : i = 103
-        elif (i == 126) : i = 33
-        else: i = i+1
+    id = list(id.split(" "))
 
-    return newID
+    for x in range(len(id)):
+        inted = int(id[x], 16)
+        id[x] = inted
+
+    return id
 
 
 if (len(sys.argv) < 4) :
@@ -127,14 +124,14 @@ for dt in list1:
             intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
             #if intersectionID == intersection:
             lat = msg()['value'][1]['intersections'][0]['refPoint']['lat']
-            long = msg()['value'][1]['intersections'][0]['refPoint']['long']
+            longstr = msg()['value'][1]['intersections'][0]['refPoint']['long']
             laneWidth = msg()['value'][1]['intersections'][0]['laneWidth']
-            fout.write(str(dt[0])+','+str(intersectionID)+','+str(lat/10000000.0)+','+str(long/10000000.0)+','+str(laneWidth)+','+str(dt[1])+'\n')
+            fout.write(str(dt[0])+','+str(intersectionID)+','+str(lat/10000000.0)+','+str(longstr/10000000.0)+','+str(laneWidth)+','+str(dt[1])+'\n')
 
         elif (msgid == "0014") : # if bsm , look for lat, long, speed along with time
             bsmId = msg()['value'][1]['coreData']['id']
             lat= msg()['value'][1]['coreData']['lat']
-            long = msg()['value'][1]['coreData']['long']
+            longstr = msg()['value'][1]['coreData']['long']
             speed = msg()['value'][1]['coreData']['speed']
             elevation = msg()['value'][1]['coreData']['elev']
             secMark = msg()['value'][1]['coreData']['secMark']
@@ -142,7 +139,6 @@ for dt in list1:
             speed_converted = speed*0.02 #m/s
             accel_long = msg()['value'][1]['coreData']['accelSet']['long']
             accel_long_converted = accel_long*0.01 #m^s^2
-            bsmIdfix = fixID(str(bsmId))
             
             packet_timestamp = datetime.datetime.fromtimestamp(int(float(dt[0])))
             roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
@@ -155,7 +151,7 @@ for dt in list1:
             
             latency_array.append(latency)
             
-            fout.write(str(dt[0])+','+str(bsmIdfix)+','+str(secMark)+','+str(latency)+','+str(lat/10000000.0)+','+str(long/10000000.0)+','+str(speed_converted)+','+str(heading)+','+str(accel_long_converted)+','+ str(elevation)+','+str(dt[1])+'\n')
+            fout.write(str(dt[0])+','+str(bsmId.hex())+','+str(secMark)+','+str(latency)+','+str(lat/10000000.0)+','+str(longstr/10000000.0)+','+str(speed_converted)+','+str(heading)+','+str(accel_long_converted)+','+ str(elevation)+','+str(dt[1])+'\n')
 
         elif (msgid == "00f0") :
             hostStaticId = msg()['value'][1]['header']['hostStaticId']
@@ -203,9 +199,10 @@ for dt in list1:
             reqseq = msg()['value'][1]['body'][1]['reqseq']
             scale = msg()['value'][1]['body'][1]['scale']
             bounds = msg()['value'][1]['body'][1]['bounds']
-            newReqId = fixID(str(reqid))
 
-            fout.write(str(dt[0])+','+str(newReqId)+','+str(reqseq)+','+str(scale)+','+str(bounds)+','+str(dt[1])+'\n')
+            newReqId = str(convID(reqid, 8)).replace(",", " ")
+
+            fout.write(str(dt[0])+','+newReqId+','+str(reqseq)+','+str(scale)+','+str(bounds)+','+str(dt[1])+'\n')
         
         elif (msgid == "00f5") :
             reqid = msg()['value'][1]['body'][1]['reqid']
@@ -215,16 +212,17 @@ for dt in list1:
             tcmId = msg()['value'][1]['body'][1]['id']
             updated = msg()['value'][1]['body'][1]['updated']
             label = msg()['value'][1]['body'][1]['package']['label']
-            tcId = msg()['value'][1]['body'][1]['package']['tcids']
+            tcId = msg()['value'][1]['body'][1]['package']['tcids'][0]
             vclasses = msg()['value'][1]['body'][1]['params']['vclasses']
             schedule = msg()['value'][1]['body'][1]['params']['schedule']
             detail = msg()['value'][1]['body'][1]['params']['detail']
             geometry = msg()['value'][1]['body'][1]['geometry']
-            newReqId = fixID(str(reqid))
-            newTcmId = fixID(str(tcmId))
-            newtcId = fixID(str(tcId))
 
-            fout.write(str(dt[0])+','+str(newReqId)+','+str(reqseq)+','+str(msgtot)+','+str(msgnum)+','+str(newTcmId)+','+str(updated)+','+str(label)+','+str(newtcId)+','+str(vclasses)+','+str(schedule)+','+str(detail)+','+str(geometry)+','+str(dt[1])+'\n')
+            newReqId = str(convID(reqid, 8)).replace(",", " ")
+            newTcmId = str(convID(tcmId, 16)).replace(",", " ")
+            newtcId = str(convID(tcId, 16)).replace(",", " ")
+
+            fout.write(str(dt[0])+','+newReqId+','+str(reqseq)+','+str(msgtot)+','+str(msgnum)+','+newTcmId+','+str(updated)+','+str(label)+','+newtcId+','+str(vclasses)+','+str(schedule)+','+str(detail)+','+str(geometry)+','+str(dt[1])+'\n')
     
         else:
             sys.exit("Invalid message type\n")
@@ -237,3 +235,4 @@ if (msgid == "0014") :
     print("Latency Average: " + str(latency_avg))
     latency_std = numpy.std(latency_array)
     print("Latency Standard Deviation (Jitter): " + str(latency_std))
+
