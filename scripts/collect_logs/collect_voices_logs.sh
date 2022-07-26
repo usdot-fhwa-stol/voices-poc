@@ -10,11 +10,49 @@ if [[ ! $is_live_vehicle =~ ^[yY]$ ]]; then
     read -p "Is this a V2X Hub? [y/n] " is_v2xhub
 fi
 
+if [[ $is_v2xhub =~ ^[yY]$ ]]; then
+    
+    vehicle_position='v2xhub'
+    
+else
+    
+    echo
+    echo "What vehicle position are you? [#]" 
+    echo 
+    echo "    [1]  	lead vehicle"
+    echo "    [2]  	second vehicle"
+    echo "    [3]  	third vehicle"
+    echo "    [4]  	virtual vehicle"
+
+    echo
+    read -p "--> " positionIndex
+
+
+    if [[ $positionIndex == 1 ]]; then
+        vehicle_position='lead_vehicle'
+    elif [[ $positionIndex == 2 ]]; then
+        vehicle_position='second_vehicle'
+    elif [[ $positionIndex == 3 ]]; then
+        vehicle_position='third_vehicle'
+    elif [[ $positionIndex == 4 ]]; then
+        vehicle_position='virtual_vehicle'
+    else
+        echo "Invalid selection, try again..."
+        exit
+    fi
+
+fi
+
 if [[ $is_live_vehicle =~ ^[yY]$ ]]; then
     obu_interface_name=$(ifconfig | grep -B1 "192.168.88.100" | head -n 1 | sed 's/:.*//')
     
     tcpdump_out="sudo tcpdump -i $obu_interface_name dst 192.168.88.40 and port 1516 -w carma_platform_out.pcap"
     tcpdump_in="sudo tcpdump -i $obu_interface_name src 192.168.88.40 and port 5398 -w carma_platform_in.pcap"
+elif [[ $vehicle_position == 'virtual_vehicle' ]]; then
+
+    tcpdump_out=""
+    tcpdump_in=""
+
 elif [[ $is_v2xhub =~ ^[yY]$ ]]; then
     
     echo
@@ -38,36 +76,6 @@ else
     tcpdump_out="sudo tcpdump -i lo port 56700 -w carma_platform_out.pcap"
     tcpdump_in="sudo tcpdump -i lo port 5398 -w carma_platform_in.pcap"
 fi
-
-if [[ $is_v2xhub =~ ^[yY]$ ]]; then
-    
-    vehicle_position='v2xhub'
-    
-else
-    
-    echo
-    echo "What vehicle position are you? [#]" 
-    echo 
-    echo "    [1]  	lead vehicle"
-    echo "    [2]  	second vehicle"
-    echo "    [3]  	third vehicle"
-
-    echo
-    read -p "--> " positionIndex
-
-
-    if [[ $positionIndex == 1 ]]; then
-        vehicle_position='lead_vehicle'
-    elif [[ $positionIndex == 2 ]]; then
-        vehicle_position='second_vehicle'
-    elif [[ $positionIndex == 3 ]]; then
-        vehicle_position='third_vehicle'
-    else
-        echo "Invalid selection, try again..."
-        exit
-    fi
-
-fi 
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
@@ -137,10 +145,13 @@ copyCarmaLogs()
     exit
 }
 
-echo
-echo "Starting tcpdumps - when finished press [CTRL + C]"
-echo
-echo $tcpdump_out
-echo $tcpdump_in
-echo 
-$tcpdump_out & $tcpdump_in && fg
+#not collecting tcpdumps for virtual vehicle
+if [[ ! $vehicle_position == "virtual_vehicle" ]]; then
+    echo
+    echo "Starting tcpdumps - when finished press [CTRL + C]"
+    echo
+    echo $tcpdump_out
+    echo $tcpdump_in
+    echo 
+    $tcpdump_out & $tcpdump_in && fg
+fi
