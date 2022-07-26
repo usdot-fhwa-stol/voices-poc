@@ -201,10 +201,15 @@ class World(object):
         blueprint = self._blueprint_list[self._blueprint_index]
         blueprint.set_attribute('role_name', 'hero')
         while self.player is None:
-            spawn_points = self.world.get_map().get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-
+            #spawn_points = self.world.get_map().get_spawn_points()
+            #spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            #self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            carlaVehicles = self.world.get_actors().filter('vehicle.*')
+            #self.player = carlaVehicles[1]
+            for vehicle in carlaVehicles:
+                currentAttributes = vehicle.attributes
+                if currentAttributes["role_name"] == "CARLA-MANUAL-1":
+            	    self.player = vehicle
 
 #        while self.player is None:
 #            for event in pygame.event.get():
@@ -251,7 +256,7 @@ class World(object):
         #    print("No actors -- waiting for respawn")
         #    return True
 
-        #self.hud.tick(self, clock)
+        self.hud.tick(self, clock)
         return True
 
     def nextVehicle(self):
@@ -304,16 +309,17 @@ class World(object):
             spawn_point.location.z += 2.0
             spawn_point.rotation.roll = 0.0
             spawn_point.rotation.pitch = 0.0
-            self.destroy()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            carlaVehicles = self.world.get_actors().filter('vehicle.*')
+            for vehicle in carlaVehicles:
+                currentAttributes = vehicle.attributes
+                if currentAttributes["role_name"] == "CARLA-MANUAL-1":
+                    self.player = vehicle
         while self.player is None:
-            if not self.map.get_spawn_points():
-                print('There are no spawn points available in your map/town.')
-                print('Please add some Vehicle Spawn Point to your UE4 scene.')
-                sys.exit(1)
-            spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            carlaVehicles = self.world.get_actors().filter('vehicle.*')
+            for vehicle in carlaVehicles:
+                currentAttributes = vehicle.attributes
+                if currentAttributes["role_name"] == "CARLA-MANUAL-1":
+                    self.player = vehicle
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -366,7 +372,7 @@ class DualControl(object):
         #if joystick_count > 1:
         #    raise ValueError("Please Connect Just One Joystick")
 
-        self._joystick = pygame.joystick.Joystick(1)
+        self._joystick = pygame.joystick.Joystick(0)
         self._joystick.init()
         # evdev references to the steering wheel (force feedback)
         self._device = evdev.list_devices()[0]
@@ -617,12 +623,12 @@ class HUD(object):
         self._font_mono = pygame.font.Font(mono, 20)
         self._notifications = textHUD(font, width, height)
         self._image = FadingImage(font, width, height)
-        #self.help = HelpText(pygame.font.Font(mono, 24), width, height)
+        self.help = HelpText(pygame.font.Font(mono, 24), width, height)
 
         self.server_fps = 0
         self.frame_number = 0
         self.simulation_time = 0
-        self._show_info = False
+        self._show_info = True
         self._info_text = []
         self._server_clock = pygame.time.Clock()
 
@@ -798,9 +804,9 @@ class HUD(object):
                     surface = self._font_mono.render(item, True, (255, 255, 255))
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
-        #self._notifications.render(display)
+        self._notifications.render(display)
         self._image.render(display)
-        #self.help.render(display)
+        self.help.render(display)
 
 
 # ==============================================================================
@@ -1201,7 +1207,7 @@ def game_loop(args):
         clock = pygame.time.Clock()
 
         while True:
-            clock.tick_busy_loop(30)
+            clock.tick_busy_loop(60)
             ##GameTime.get_time() - self._start_time
             if controller.parse_events(world, clock):
                 break
@@ -1218,8 +1224,8 @@ def game_loop(args):
 
 
     finally:
-        if world is not None:
-            world.destroy()
+        #if world is not None:
+            #world.destroy()
 
         pygame.quit()
 

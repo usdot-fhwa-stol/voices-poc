@@ -1,0 +1,6 @@
+#ignore data and pycache for j2735 decoder
+scripts/J2735_pcap_decoder/data/
+scripts/J2735_pcap_decoder/src/__pycache__/
+
+#ignore log directories
+scripts/collect_logs/log_files

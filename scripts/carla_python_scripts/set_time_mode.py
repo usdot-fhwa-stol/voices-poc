@@ -12,7 +12,6 @@ import glob
 import os
 import sys
 import time
-
 import fnmatch
 from os.path import expanduser
 
@@ -72,8 +71,6 @@ except IndexError:
     pass
 
 import carla
-
-from carla import VehicleLightState as vls
 
 import argparse
 import logging
@@ -156,15 +153,43 @@ def main():
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
-        print(client.get_available_maps())
+        world = client.get_world()
+
+        ### Simulation time that goes by between simulation steps ###
+        settings = world.get_settings()
+        print("fixed_delta_seconds before: " + str(settings.fixed_delta_seconds))
+        print("synchronous_mode before: " + str(settings.synchronous_mode))
+        settings.synchronous_mode = False # True
+        settings.fixed_delta_seconds = None # 0
+        world.apply_settings(settings)
+        ### Simulation time that goes by between simulation steps ###
+
+        settings = world.get_settings()
+        print("fixed_delta_seconds after: " + str(settings.fixed_delta_seconds))
+        print("synchronous_mode after: " + str(settings.synchronous_mode))
         
-        #world = client.load_world('Carla_v14_10_1_2021')
-        #world = client.get_world()
+        
+        #while True:
+            #goal_step = 0.05 #0.025 
+
+            #t_prev = world.get_snapshot().timestamp.elapsed_seconds
+
+            #world.tick()
+
+            #t_curr = world.get_snapshot().timestamp.elapsed_seconds
+            #t_diff = t_curr - t_prev
+
+            #print("t_diff: " + str(t_diff))
+            #additional_sleep = max(0.0, goal_step - t_diff)
+
+            #print("need to sleep: " + str(additional_sleep))
+            #time.sleep(additional_sleep)
         
 
     finally:
 
         if args.sync and synchronous_master:
+            print('\nENDING SYNCHRONOUS MODE')
             settings = world.get_settings()
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
