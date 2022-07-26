@@ -2,8 +2,10 @@ import json
 import sys
 from csv import reader, writer
 
+
+#print("ARGS: " + sys.argv[0] + "," + sys.argv[1] + "," + sys.argv[2] + "," + sys.argv[3] + "," + sys.argv[4])
 inFile = sys.argv[1]
-payloadType=sys.argv[3]
+payloadType=sys.argv[4]
 print("Payload Type: " + payloadType)
 fileName = inFile.split(".")
 
@@ -29,7 +31,7 @@ open(fileName[0]+'_payload.csv', 'w', newline='') as write_obj:
         smallerIndex = 10000
         
         #remove newlines for ascii
-        if( payloadType == "ascii" ):
+        if payloadType == "ascii":
             row[1] = row[1].replace("\\n","")
         
         for k in substr:
