@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 
 #  *                                                                              
 #  * Copyright (C) 2022 LEIDOS.                                              
@@ -17,32 +17,33 @@
 #  * the License.                                                                 
 #  *
 
-echo
-echo "Checking for SpatPlugin_West.zip"
 
-eastLs=$(sudo docker exec -it v2xhub ls -1 /home/V2X-Hub/src/v2i-hub | grep SpatPlugin_West.zip)
-#echo $eastLs
+. ../node_info.config
 
-echo
-if [[ -z $eastLs ]]; then
-	echo "SpatPlugin_West.zip does not exist, copying to v2xhub and installing..."
-	sudo docker cp SpatPlugin_West.zip v2xhub:/home/V2X-Hub/src/v2i-hub
-	sudo docker exec -it -w '/home/V2X-Hub/src/v2i-hub/' v2xhub tmxctl --plugin-install SpatPlugin_West.zip
-else
-	echo "SpatPlugin_West.zip exists..."
+if [[ $? -ne 0 ]] ; then
+    echo
+    echo "[!!!] .config file not found, please run the start script from its containing folder"
+    echo
+    exit 1
 fi
 
-echo
-echo "Checking for SpatPlugin_East.zip"
+localCarlaAdapterPath=$localInstallPath/scenario-publisher
 
-eastLs=$(sudo docker exec -it v2xhub ls -1 /home/V2X-Hub/src/v2i-hub | grep SpatPlugin_East.zip)
-#echo $eastLs
+adapterVerbosity='4'
 
-echo
-if [[ -z $eastLs ]]; then
-        echo "SpatPlugin_East.zip does not exist, copying to v2xhub and installing..."
-        sudo docker cp SpatPlugin_East.zip v2xhub:/home/V2X-Hub/src/v2i-hub
-        sudo docker exec -it -w '/home/V2X-Hub/src/v2i-hub/' v2xhub tmxctl --plugin-install SpatPlugin_East.zip
-else
-        echo "SpatPlugin_East.zip exists..."
-fi
+mkdir -p $localAdapterLogPath
+
+adapterLogFile=$localAdapterLogPath/scenario_publisher_terminal_out.log
+
+echo "<< ***** Adapter Started **** >>" > $adapterLogFile
+date >> $adapterLogFile
+
+# open a new file descriptor for logging
+exec 4>> $adapterLogFile
+
+# redirect trace logs to fd 4
+BASH_XTRACEFD=4
+
+set -x
+
+$localCarlaAdapterPath/bin/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity -scenarioFile $scenarioFile | tee -a $adapterLogFile

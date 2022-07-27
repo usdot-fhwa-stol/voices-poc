@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 
 #  *                                                                              
 #  * Copyright (C) 2022 LEIDOS.                                              
@@ -17,32 +17,24 @@
 #  * the License.                                                                 
 #  *
 
-echo
-echo "Checking for SpatPlugin_West.zip"
+localCarlaAdapterPath=$HOME/tenadev/INSTALL/carlaadapter
+localTenaPath=$HOME/TENA
 
-eastLs=$(sudo docker exec -it v2xhub ls -1 /home/V2X-Hub/src/v2i-hub | grep SpatPlugin_West.zip)
-#echo $eastLs
+emAddress='192.168.55.230'
+emPort='55100'
 
-echo
-if [[ -z $eastLs ]]; then
-	echo "SpatPlugin_West.zip does not exist, copying to v2xhub and installing..."
-	sudo docker cp SpatPlugin_West.zip v2xhub:/home/V2X-Hub/src/v2i-hub
-	sudo docker exec -it -w '/home/V2X-Hub/src/v2i-hub/' v2xhub tmxctl --plugin-install SpatPlugin_West.zip
-else
-	echo "SpatPlugin_West.zip exists..."
-fi
+dockerInternalAddress='172.17.0.2'
+localAddress='192.168.55.231'
 
-echo
-echo "Checking for SpatPlugin_East.zip"
+carlaMap='Ubuntu_1222'
 
-eastLs=$(sudo docker exec -it v2xhub ls -1 /home/V2X-Hub/src/v2i-hub | grep SpatPlugin_East.zip)
-#echo $eastLs
+adapterVerbosity='1'
 
-echo
-if [[ -z $eastLs ]]; then
-        echo "SpatPlugin_East.zip does not exist, copying to v2xhub and installing..."
-        sudo docker cp SpatPlugin_East.zip v2xhub:/home/V2X-Hub/src/v2i-hub
-        sudo docker exec -it -w '/home/V2X-Hub/src/v2i-hub/' v2xhub tmxctl --plugin-install SpatPlugin_East.zip
-else
-        echo "SpatPlugin_East.zip exists..."
-fi
+tenaPlatform='u1804-gcc75-64'
+tenaVersion='6.0.7'
+
+carlaDockerName='tena:carla'
+
+sudo docker run -it --rm -p 56100:56100 -v $localCarlaAdapterPath:/home/CarlaAdapter -v $localTenaPath:/home/TENA  $carlaDockerName bash -c "cd /home/CarlaAdapter/build/src; export TENA_PLATFORM=$tenaPlatform; export TENA_HOME=/home/TENA; export TENA_VERSION=$tenaVersion; export LD_LIBRARY_PATH=/home/TENA/lib; ./CarlaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $dockerInternalAddress:56100/hostname_in_ior=$localAddress -carlaHost $localAddress -verbosity $adapterVerbosity -mapPath '$carlaMap' -timeout 60000"
+
+
