@@ -23,19 +23,18 @@ directory="`dirname \"$0\"`"
 directory="`( cd \"$directory\" && cd ../ && pwd )`"
 cd $directory
 
-if [ -d data ]; then
-	echo
-	echo "Existing data folder found, would you like to delete it? [y/n]"
+# Section propably not needed. I'd like to place files in the data folder before running script and the script will just add to the existing data folder
+#if [ -d data ]; then
+#	printf "\nExisting data folder found, would you like to delete it? [y/n]"
 	
-	read -p "---> " delete_old_data
-	if [[ $delete_old_data =~ ^[Yy]$ ]]; then
-		rm -rf data
-	else
-		echo
-		echo "Please move or rename existing data folder and try again"
-		exit
-	fi
-fi
+#	read delete_old_data
+#	if [[ $delete_old_data =~ ^[Yy]$ ]]; then
+#		rm -rf data
+#	else
+#		printf "\nPlease move or rename existing data folder and try again"
+#		exit
+#	fi
+#fi
 
 mkdir data
 cd data
@@ -44,67 +43,84 @@ mkdir -p tsharkOutput
 mkdir -p payloadOutput
 mkdir -p decodedOutput
 
-cd ../
+cd $directory
 
-echo
-echo "What type of J2735 message was captured?"
-echo "MAP"
-echo "SPAT"
-echo "BSM"
-echo
-read -p "--> " message_type
+printf "\nWhat type of J2735 message was captured?\n"
+printf "MAP\nSPAT\nBSM\nMobility\nTraffic Control\n\n"
+IFS= read -r message_type
 
-if [ $message_type == "MAP" ]; then
+if [ "$message_type" == "MAP" ]; then
 	message_type_id=0012
-elif [ $message_type == "SPAT" ]; then
+elif [ "$message_type" == "SPAT" ]; then
 	message_type_id=0013
-elif [ $message_type == "BSM" ]; then
+elif [ "$message_type" == "BSM" ]; then
 	message_type_id=0014
-else
-	echo "Invalid J2735 message type..."
+elif [ "$message_type" == "Mobility" ]; then
+	printf "\nRequest, Response, Path, or Operation?\n"
+	read message_second
+	if [ $message_second == "Request" ]; then
+		message_type_id=00f0
+	elif [ $message_second == "Response" ]; then
+		message_type_id=00f1
+	elif [ $message_second == "Path" ]; then	
+		message_type_id=00f2
+	elif [ $message_second == "Operation" ]; then
+		message_type_id=00f3
+	else 
+		echo "Invalid J2735 message type..."
+		exit
+	fi
+	message_type+=" $message_second"
+elif [ "$message_type" == "Traffic Control" ]; then
+	echo "Request or Message?"
+	read message_second
+	if [ $message_second == "Request" ]; then
+		message_type_id=00f4
+	elif [ $message_second == "Message" ]; then	
+		message_type_id=00f5
+	else 
+		echo "Invalid J2735 message type..."
+		exit
+	fi
+	message_type+=" $message_second"
+else echo "Invalid J2735 message type..."
 	exit
 fi
 
 payloadType="hex"
 messageTypeIdFound=false
 
-searchForMessageTypeIdInFile() { 
-
+searchForMessageTypeIdInFile(){
 fileToCheck=$1
 messageTypeIdToFind=$2
 numPacketsToCheck=$3
-
 messageTypeIdFound=false
 
 echo
-#check the first 10 packets for the desired mesasge type ID
+#check the first 10 packets for the desired message type ID
 for (( c=1; c<=$numPacketsToCheck; c++ ))
 do
 	currentPayload=$(sed '$cq;d' $fileToCheck | awk -F ',' '{print $2}')
-	echo "Checking packet $c..."
-	#echo "Packet $c:" $currentPayload
-	
+#id=int(sys.argv[2])
 	if [[ "$currentPayload" == *"$messageTypeIdToFind"* ]]; then
 		messageTypeIdFound=true
-		echo "--> Found desired message ID ($messageTypeIdToFind) in packet $c:"
+		echo "Found desired message ID ($messageTypeIdToFind) in packet $c"
 		#echo $currentPayload
 		break
 	fi
 done
-
-
 }
 
 
-
-
-extractPackets() { 
-
+extractPackets(){ 
 echo
+cd $directory/data
 ls *.pcap
 echo 
+
 while true; do
-	read -p "Input Filename: " file_to_read
+	read -rep "Input filename from list: " file_to_read
+	file_to_write="${file_to_read//pcap/csv}"
 	if [ ! -f $file_to_read ]; then
 		echo "File not found!"
 	else
@@ -112,48 +128,36 @@ while true; do
 	fi
 done
 
-read -p "Output Filename (.csv): " file_to_write
-
-tshark -r $file_to_read --disable-protocol wsmp -Tfields -Eseparator=, -e frame.time_epoch -e data.data > $directory/data/tsharkOutput/$file_to_write  
-
-
+tshark -r $file_to_read --disable-protocol wsmp -Tfields -Eseparator=, -e frame.time_epoch -e data.data > $directory/data/tsharkOutput/$file_to_write
 
 searchForMessageTypeIdInFile $directory/data/tsharkOutput/$file_to_write $message_type_id 10
 
-
-
 if [ $messageTypeIdFound == true ]; then
         # The first packet contains the message id
-        echo
-        echo "Successfully decoded pcap into hex payloads"
+        printf "\nSuccessfully decoded pcap into hex payloads\n"
         payloadType="hex"
 else
         # The first packet does not contain the message id. This is most likely becuase payload is contained in ASCII
-        echo
-        echo "Could not find message ID in hex decoded payloads, trying ascii"
+        printf "\nCould not find message ID in hex decoded payloads, trying ascii\n"
         tshark -r $file_to_read -o data.show_as_text:TRUE --disable-protocol wsmp -T fields -E separator=, -e frame.time_epoch -e data.text > $directory/data/tsharkOutput/$file_to_write
         payloadType="ascii"
         
         searchForMessageTypeIdInFile $directory/data/tsharkOutput/$file_to_write $message_type_id 10
         
         if [ $messageTypeIdFound ]; then
-        	echo
-        	echo "Successfully decoded pcap into ascii payloads"
+        	printf "\nSuccessfully decoded pcap into ascii payloads\n\n"
         else
-        	echo
-        	echo "Decoding in ascii still resulted in an empty file, exiting..."
+        	printf "\nDecoding in ascii still resulted in an empty file, exiting...\n"
         	exit
         fi
         
-fi
-
-
-    
+fi 
 }
 
-getPayload() {
+
+getPayload(){
   cd $directory/data/tsharkOutput
-  #parse tshark output to get rid of unnecessary bytes in front of BSM/SPAT/MAP
+  #parse tshark output to get rid of unnecessary bytes in front of payloads
   for i in *
   do
     python3 $directory/src/tshark_OutputParser.py $i $message_type $payloadType
@@ -161,26 +165,28 @@ getPayload() {
   mv *_payload.csv $directory/data/payloadOutput
 }
 
-decodePackets() {
 
+decodePackets(){
   cd $directory/data/payloadOutput
-  
+  printf 'Decoding...\n'
   for i in $(find . -name "*.csv")
   do
     file=$(basename -- "$i")
-    fileName="${file%.*}"
-    python3 $directory/src/J2735decoder.py $i 0 decoded_${fileName}.csv $message_type
+    fileName="decoded_${file%.*}.csv"
+	echo "$fileName"
+    python3 $directory/src/J2735decoder.py $i ${fileName} "$message_type" $message_type_id
   done
 
   mv *decoded* $directory/data/decodedOutput
+  printf 'Complete.\n'
 }
 
 
 generateKml(){ 
-	echo 
-	echo "Generating KML from CSV"
+echo 
+echo "Generating KML from CSV"
 	
-	mkdir -p $directory/data/kmlOutput
+mkdir -p $directory/data/kmlOutput
 
 cat << EOF > $directory/data/kmlOutput/kmlOutput.kml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -241,19 +247,14 @@ EOF
 
 	echo "</Document>" >> $directory/data/kmlOutput/kmlOutput.kml
 	echo "</kml>" >> $directory/data/kmlOutput/kmlOutput.kml
-
-
-
-
 }
-
 
 
 processing(){
   extractPackets
   getPayload
   decodePackets
-  if [ $message_type == "BSM" ]; then
+  if [ "$message_type" == "BSM" ]; then
   	generateKml
   fi
 }
