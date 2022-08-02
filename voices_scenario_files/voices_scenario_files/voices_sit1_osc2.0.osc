@@ -1,0 +1,63 @@
+scenario voices_sit1_platooning:
+
+#Initial positions
+sut_position: odr_point = map.create_odr_point(road_id: 0, lane_id: sut_init_position_lane_id, s: 0m)
+sut_target_position: odr_point = map.create_odr_point(road_id: 0, lane_id: ego_init_position_lane_id, s: 5m)
+s_ego: path = map.create_path([sut_position, sut_target_position], smooth)
+
+cv1_position: odr_point = map.create_odr_point(road_id: 0, lane_id: cv1_init_position_lane_id, s: 5m)
+cv1_target_position: odr_point = map.create_odr_point(road_id: 0, lane_id: cv1_init_position_lane_id, s: 10m)
+s_cv1: path = map.create_path([cv1_position, cv1_target_position], smooth)
+
+cv2_position: odr_point = map.create_odr_point(road_id: 0, lane_id: cv2_init_position_lane_id, s: 10m)
+cv2_target_position: odr_point = map.create_odr_point(road_id: 0, lane_id: cv2_init_position_lane_id, s: 15m)
+s_cv2: path = map.create_path([cv2_position, cv2_target_position], smooth)
+
+vv_position: odr_point = map.create_odr_point(road_id: 0, lane_id: vv_init_position_lane_id, s: 200m)
+vv_target_position: odr_point = map.create_odr_point(road_id: 0, lane_id: vv_init_position_lane_id, s: 220m)
+s_vv: path = map.create_path([vv_position, vv_target_position], smooth)
+
+environment:environment
+
+	do serial():
+		
+		environment.sun_position(azimuth: 135deg, elevation: 33deg, intensity: 100000lx)
+		keep(hour_of_day >= 15)
+		keep(hour_of_day <= 17)
+		environment.temperature(60 F)
+		environment.wind(speed: 5 mph, direction: 45 degree)
+		environment.cloudiness(2)
+		
+		start_driving: parallel():    
+            sut.vehicle.drive() with: speed(30 kph)      
+            constructive_vehicle_1.drive()      
+            constructive_vehicle_2.drive()
+			virtual_vehicle.drive()
+		platoon: parallel():    
+            sut.vehicle.drive()
+            constructive_vehicle_1.drive() with:
+                lane(same_as: sut.vehicle, at: end)
+                position([2..4]m, behind: sut.vehicle, at: end)
+            constructive_vehicle_2.drive() with:
+                lane(same_as: sut.vehicle, at: end)
+                position([2..4]m, behind: constructive_vehicle_1, at: end)
+			virtual_vehicle.drive()
+		platoon_new_space_gap: parallel():    
+            sut.vehicle.drive()
+            constructive_vehicle_1.change_space_gap(target: 2m, direction: behind, reference: sut)
+			constructive_vehicle_2.change_space_gap(target: 3m, direction: behind, reference: constructive_vehicle_1)
+			virtual_vehicle.drive()
+		platoon_keep_space_gap: parallel():
+			constructive_vehicle_1.keep_space_gap(direction: longitudinal, reference: sut)
+			constructive_vehicle_2.keep_space_gap(direction: lateral, reference: constructive_vehicle_1)
+		break_up_platoon_in_work_zone: parallel():
+			sut.vehicle.drive()
+            constructive_vehicle_1.drive() with:
+                lane(same_as: sut.vehicle, at: end)
+                position([5..7]m, behind: sut.vehicle, at: end)
+            constructive_vehicle_2.drive() with:
+                lane(same_as: sut.vehicle, at: end)
+                position([5..7]m, behind: constructive_vehicle_1, at: end)
+			virtual_vehicle.drive()
+		sut_vehicle_exits: parallel():
+			sut_vehicle.

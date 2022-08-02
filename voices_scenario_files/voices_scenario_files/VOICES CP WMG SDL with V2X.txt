@@ -1,0 +1,162 @@
+SCENERY_ELEMENTS:
+
+DO: Map -roads and junctions network [Network 1] as:
+
+CJ1: Junction type [T-junction] as [TJ1] which has [Traffic light] connection control and [4] connection with [R1, R2, R3, R4] with
+Angles between roads [R1 -> R2, R2 -> R3, R3 -> R4, R4 -> R1][85 to 95, 85 to 95, 85 to 95, 85 to 95]
+Road lane connections [R1.L1 -> R2.L-1 + R4.L-1 + R3.L-1, R2.L1 -> R1.L-1 + R3.L-1 + R4.L-1, R3.L1 -> R1.L-1 + R2.L-1 + R4.L-1, R4.L1 -> R1.L-1 + R2.L-1 + R3.L-1]
+Dimensions [Width: 10 to 12, Depth: 10 to 12]
+Traffic light [With pedestrian crossing] as [TL1 -> R1.L1, TL2 -> R2.L1, TL3 -> R3.L1, TL4 -> R4.L1]
+
+ 
+
+Roads:
+R1:START
+Road type [Distributor road] as [R1] with zone as [N/A] AND speed limit of [35] in an [Urban] environment with
+Number of lanes [3] as [R1.L1, R1.L-1, R1.L-2]
+Road traffic direction [Right-handed] with lane type [Traffic lane]
+Lane markings [Broken line]
+Road surface type [Uniform] with surface condition [Dry]
+Horizontal road geometry [Straight]
+Vertical road geometry [Level plane]
+Transverse road geometry [Undivided]
+Roadway edge features [Pavements, Divided]
+
+Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+
+Fixed road structures [Trees, Buildings]
+Length [100] AND lane width [3.4 to 3.7]
+END
+
+R2:START
+Road type [Distributor road] as [R2] with zone as [N/A] AND speed limit of [35] in an [Urban] environment with
+Number of lanes [3] as [R2.L1, R2.L-1, R2.L-2]
+Road traffic direction [Right-handed] with lane type [Traffic lane]
+Lane markings [Broken line]
+Road surface type [Uniform] with surface condition [Dry]
+Horizontal road geometry [Straight]
+Vertical road geometry [Level plane]
+Transverse road geometry [Undivided]
+Roadway edge features [Pavements, Divided]
+
+Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+
+Fixed road structures [Trees, Buildings]
+Length [100] AND lane width [3.4 to 3.7]
+END
+
+R3:START
+Road type [Distributor road] as [R3] with zone as [N/A] AND speed limit of [35] in an [Urban] environment with
+Number of lanes [2] as [R3.L1, R3.L-1]
+Road traffic direction [Right-handed] with lane type [Traffic lane]
+Lane markings [Broken line]
+Road surface type [Uniform] with surface condition [Dry]
+Horizontal road geometry [Straight]
+Vertical road geometry [Level plane]
+Transverse road geometry [Undivided]
+Roadway edge features [Pavements, Divided]
+
+Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+
+Fixed road structures [Trees, Buildings]
+Length [100] AND lane width [3.4 to 3.7]
+END
+
+R4:START
+Road type [Distributor road] as [R4] with zone as [N/A] AND speed limit of [35] in an [Urban] environment with
+Number of lanes [2] as [R4.L1, R4.L-1]
+Road traffic direction [Right-handed] with lane type [Traffic lane]
+Lane markings [Broken line]
+Road surface type [Uniform] with surface condition [Dry]
+Horizontal road geometry [Straight]
+Vertical road geometry [Level plane]
+Transverse road geometry [Undivided]
+Roadway edge features [Pavements, Divided]
+
+Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+
+Fixed road structures [Trees, Buildings]
+Length [100] AND lane width [3.4 to 3.7]
+END
+
+ 
+
+DYNAMIC_ELEMENTS:
+
+INITIAL: Vehicle [SV] in [R1.L]
+
+AND Pedestrian [P1] in [Crosswalk] at relative position [FSR]
+
+with relative heading angle [85 to 95]
+
+AND at a [lateral] offset of [3.9 to 4.1]
+
+AND at a [longitudinal] offset of [21.4 to 23.9]
+
+AND Vehicle [TV1] in [R1.L-1] at relative position [FSR]
+
+with relative heading angle [0 to 5]
+
+AND at a [lateral] offset of [2.9 to 3.1]
+
+AND at a [longitudinal] offset of [16.0 to 16.3]
+
+AND Vehicle [TV2] in [R1.L-1] at relative position [FSR]
+
+with relative heading angle [0 to 5]
+
+AND at a [lateral] offset of [2.9 to 3.1]
+
+AND at a [longitudinal] offset of [14.0 to 14.3]
+
+AND Vehicle [TV3] in [R1.L-2] at relative position [FSR]
+
+with relative heading angle [0 to 5]
+
+AND at a [lateral] offset of [5.9 to 6.1]
+
+AND at a [longitudinal] offset of [14.0 to 14.3]
+
+AND Vehicle [TV4] in [R1.L-2] at relative position [FSR]
+
+with relative heading angle [0 to 5]
+
+AND at a [lateral] offset of [5.9 to 6.1]
+
+AND at a [longitudinal] offset of [12.0 to 12.3]
+
+AND Global timer [T1] = [0]
+
+WHEN: [SV] is [Going_Ahead]
+
+            DO: [P1] manoeuvres as:
+
+                        Phase 1: [WalkForward_Cross][-, 1.32 to 1.46, 0][SV: -8.89, FSR]
+
+            DO: [TV1] AND [TV2] manoeuvres as:
+
+                        Phase 1: [Stop_Away][-, 0, 0][SV: -8.89, FSR]
+
+END: [T1] = [40]
+
+            OR Collision = True
+
+ 
+
+ENVIRONMENT ELEMENTS:
+
+DO: [Env1] as:
+
+  Wind [0 to 0.2]
+
+  Clouds [0 to 1]
+
+  Particulates [Rain, Snow]
+
+  Rainfall [0-0.5]
+
+  Snowfall [0-4.5]
+
+  Time [06:00 to 20:00]
+
+  Illumination [daylight] with [Sun] as light source at [10 to 30] degree elevation AND [Front] position

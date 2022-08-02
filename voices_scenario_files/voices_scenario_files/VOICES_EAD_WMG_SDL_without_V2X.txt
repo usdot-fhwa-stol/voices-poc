@@ -1,0 +1,59 @@
+SCENERY ELEMENTS: 
+
+Junctions: 
+
+[Junction 1] is a [4Way-Junction] with connections to [Road 1, Road 2, Road3, Road4] 
+
+AND with connection control [Traffic Light] 
+
+Connection from [Road 1] to [Road 3] is [Straight] 
+
+Connection from [Road 4] to [Road 2] is [Straight] 
+
+Roads:  
+
+[Road 2, Road 3, Road 4, Road 5, Road 6] are [Distributor roads] with [Straight] geometries 
+
+DYNAMIC ELEMENTS: 
+
+INITIAL: Vehicle [V1] on [Road 1] AND vehicle [Live] on [Road 1] AND vehicle [Virtual] on [Road 1] AND vehicle [V2] on [Road 4] AND vehicle [V3] on [Road 4] AND vehicle [V4] on [Road 4] AND vehicle [V5] on [Road 4] 
+
+ 
+
+WHEN [Live] is [Going ahead] on [Road 1] AND [far] from [Junction 1]:
+
+[Virtual] [Drives towards] [Live] with [Accelerating] speed at [Rear] position 
+
+[V1] [Drives away] from [Live] with [Accelerating] speed at [front] position
+
+[V2] [Drives toward] [Live] with [Accelerating] speed at [Front Right] position
+
+[V3] [Drives towards] [Live] with [Accelerating] speed at [Front Right] position
+
+[V4] [Drives towards] [Live] with [Accelerating] speed at [Front Right] position
+
+[V5] [Drives towards] [Live] with [Accelerating] speed at [Front Right] position
+
+ 
+
+ 
+
+END: [Vehicle [V1] on [Road 3] AND vehicle [Live] on [Road 3] AND vehicle [Virtual] on [Road 3] AND vehicle [V2] on [Road 2] AND vehicle [V3] on [Road 2] AND vehicle [V4] on [Road 2] AND vehicle [V5] on [Road 2] 
+
+ 
+
+ENVIRONMENT ELEMENTS: 
+
+DO: Environment [ENV1] as: 
+
+Wind [Moderate breeze] 
+
+Clouds [Light] 
+
+Particulate condition [None] 
+
+Rainfall [None] 
+
+Time [Day] 
+
+Illumination [Daylight]
