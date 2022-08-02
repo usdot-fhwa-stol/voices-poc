@@ -1,0 +1,104 @@
+SCENERY ELEMENTS:
+DO: Map -roads and junctions network [Network 1] as:
+Junctions: 
+TJ1: Junction Type [T-Junction] as [TJ1] which has [Traffic light] connection control and [3] connections with [R1, R2, R3]
+  Angles between roads [R1->R2, R1->R3, R2->R3][85 to 95, 175 to 185, 85 to 95]
+  Road lane connections [R1.L-1->R3.L1,
+                               R1.L-2->R2.L1 + R3.L2,
+                               R2.L-1->R1.L2 + R3.L2,
+                               R3.L-1->R1.L1 + R2.L1,
+                               R3.L-2->R1.L2]
+Dimensions [Width: 16 to 16.8, Depth: 8 to 8.4]
+Traffic light [With pedestrian crossing] as [TL1->R1.L-1 + R1.L-2, TL2->R2.L-1, TL3->R3.L-1 + R3.L-2]
+
+Roads:
+R1: START
+Road type [Distributor Road] as [R1] with zone as [N/A] AND speed limit of [50] in an [Urban] environment with 
+  Number of lanes [5] as [R1.L1, R1.L2, R1.L-1, R1.L-2, R1.P-3]
+  Road traffic direction [Right-handed] 
+  Lane type [Traffic lane] AND Lane width [3.4 to 3.6] 
+  Road surface type [Uniform] with surface condition [Dry]
+  Lane markings [Solid line]
+  Horizontal road geometry [Straight] 
+  Vertical road geometry [Level plane]  Transverse road geometry [Divided] with [Yes] roadside feature
+  Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+  Fixed road structures [Trees, Buildings]
+  Special structure [Pedestrian crossing] as [Crossing1] at [0 to 2] distance from [TJ1]
+  Length [100] 
+END
+
+R2: START
+Road type [Distributor Road] as [R2] with zone as [N/A] AND speed limit of [50] in an [Urban] environment with 
+  Number of lanes [2] as [R2.L1, R2.L-1]
+  Road traffic direction [Right-handed] 
+  Lane type [Traffic lane] AND Lane width [3.4 to 3.6] 
+  Road surface type [Uniform] with surface condition [Dry]
+  Lane markings [Solid line]
+  Horizontal road geometry [Straight] 
+  Vertical road geometry [Level plane]  
+  Transverse road geometry [Undivided] with [Yes] roadside feature
+  Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+  Fixed road structures [Trees, Buildings]
+  Special structure [Pedestrian crossing] as [Crossing2] at [0 to 2] distance from [TJ1]
+  Length [200] 
+END
+
+R3: START
+Road type [Distributor Road] as [R3] with zone as [N/A] AND speed limit of [50] in an [Urban] environment with 
+  Number of lanes [4] as [R3.L1, R3.L2, R3.L-1, R3.L-2]
+  Road traffic direction [Right-handed] 
+  Lane type [Traffic lane] AND Lane width [3.4 to 3.6] 
+  Road surface type [Uniform] with surface condition [Dry]
+  Lane markings [Solid line]
+  Horizontal road geometry [Straight] 
+  Vertical road geometry [Level plane]  
+  Transverse road geometry [Undivided] with [Yes] roadside feature
+  Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+  Fixed road structures [Trees, Buildings]
+  Special structure [Pedestrian crossing] as [Crossing3] at [0 to 2] distance from [TJ1]
+  Length [150] 
+END
+
+
+
+DYNAMIC_ELEMENTS:
+INITIAL: 	Vehicle [SV] in [R1.L] with comms capability and [F,R] mounted transceivers for [Unicast, Multicast, Boradcast] signals
+		AND Pedestrian [P1] in [Pavement] at relative position [FSR]
+		with relative heading angle [85 to 95]
+		AND at a [lateral] offset of [3.9 to 4.1]
+		AND at a [longitudinal] offset of [26.4 to 26.9] 
+		AND Vehicle [TV1] in [R1.L-1] with comms capability and [F,R] mounted transceivers for [Unicast, Multicast, Broadcast] signals AND at relative position [FSR] to [SV]
+		with relative heading angle [0 to 5]
+		AND at a [lateral] offset of [2.9 to 3.1]
+		AND at a [longitudinal] offset of [16.0 to 16.3]
+
+		AND Global timer [T1] = [0]
+WHEN: [SV] is [Going_Ahead] in [R.L-2] AND [TL1] is [Red]
+	DO: [P1] manoeuvres as:
+		Phase 1: [Stopped][-, 0 to 0, 0 to 0][SV: -11.2 to -13.4, F]
+COMMS1: Using transmission type [5G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ns-50ns] AND transmission strength [5-11 dBm]. Send [sensor data sharing message] of [P1] to [SV]. Acknowledge messaged received [Yes]. Acknowledge message read [Yes].
+Phase 2: [Stopped][-, 0 to 0, 0 to 0][SV: 0 to 0, F]
+COMMS2: Using transmission type [5G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ns-50ns] AND transmission strength [5-11 dBm]. Send [sensor data sharing message] of [P1] to [SV]. Acknowledge messaged received [Yes]. Acknowledge message read [Yes].
+  AND: [P1]
+     PHASE 1: [Walk_Towards] [Crossing1, 0.5 to 2, 0 to 1] [SV: -12.9 to -9.2, FSR]
+     PHASE 2: [Walk_Cross] [Crossing1, 0.5 to 2, -1 to 1] [SV: 0.5 to 2, F]
+	
+WHEN: [TL1] is [Green]
+  DO: [TV1] AND [TV2] manoeuvres as:
+	    	PHASE 1: [Drive_Away][-, 13.4 to 17.9, 0 to 2][SV: 0 to 2.5, F]
+    COMMS 1: Using transmission type [5G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ns-50ns] AND transmission strength [5-11 dBm]. Send [Collision averted] of [P1] to [SV]. Acknowledge messaged received [Yes]. Acknowledge message read [Yes].
+  AND: [P1]
+    PHASE 1: [Walk Away] [Crossing1, 0.5 to 2, -1 to 0] [SV: -17.4 to -9.2, FSL]
+END: [T1] = [40]
+	OR Collision = True
+OR [SV] in [R3.L2]
+
+ENVIRONMENT ELEMENTS:
+DO: [Env1] as:
+  Wind [0 to 0.2]
+  Clouds [0 to 1]
+  Particulates [None]
+  Rainfall [None]
+  Snowfall [None: N/A]
+  Time [03:00 to 06:00]
+  Illumination [daylight] with [Sun] as light source at [10 to 30] degree elevation AND [Front] position
