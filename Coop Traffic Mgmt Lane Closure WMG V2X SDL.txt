@@ -1,0 +1,108 @@
+SCENERY_ELEMENTS:
+DO: Map -roads and junctions network [Network 1] as:
+Junctions: none
+Roads:
+R1: START
+Road type [Minor Road] as [R1] AND speed limit of [35] with 
+Number of lanes [2] as [R1.L, R1.L-1] 
+Lane type [Traffic lane] AND Lane width [3.4 to 3.6] 
+Types of lane together [Traffic Lane] 
+Traffic direction [Right-hand] 
+Horizontal road geometry [Straight] 
+Vertical road geometry [Level plane]
+Lane marking [Broken]
+Roadway edge feature [Pavements, Divided]
+Fixed road structures [Street lights: {spacing: 20 to 30, height: 4.5 to 12}]
+Fixed road structures [Trees, Buildings]
+Temporray road structures [Cones: {2-6, diagonal, spacing: 3-5, height: 1 to 1.5}, Work Zone sign: {Physical, “Road Work Ahead”}
+Length [100] 
+Special structure [Communications Unit] as [CU1] at [R3.P-3]
+END
+
+DYNAMIC_ELEMENTS:
+INITIAL: 	Vehicle [CADS1] in [R1.L-1] with comms capability and [F, SL, SR, R] mounted transceivers for [Unicast, Multicast, Broadcast] signals
+		AND Vehicle [CADS2] in [R1.L] with comms capability and [F, SL, SR, R] mounted transceivers for [Unicast, Multicast, Broadcast] signals
+			AND at relative position [RSL] with relative heading angle [0 to 5] to [CADS1]
+			AND at a [longitudinal] margin of [15 to 25] to [CADS1]
+AND Vehicle [CADS3] in [R1.L-1] with comms capability and [F, SL, SR, R] mounted transceivers for [Unicast, Multicast, Broadcast] signals
+			AND at relative position [R] with relative heading angle [0 to 5] to [CADS1]
+			AND at a [longitudinal] margin of [25 to 35] to [CADS1]
+AND Vehicle [CADS4] in [R1.L] with comms capability and [F, SL, SR, R] mounted transceivers for [Unicast, Multicast, Broadcast] signals
+			AND at relative position [R] with relative heading angle [0 to 5] to [CADS2]
+			AND at a [longitudinal] margin of [15 to 25] to [CADS1]
+AND Vehicle [CADS5] in [R1.L-1] with comms capability and [F, SL, SR, R] mounted transceivers for [Unicast, Multicast, Broadcast] signals
+			AND at relative position [R] with relative heading angle [0 to 5] to [CADS3]
+			AND at a [longitudinal] margin of [15 to 25] to [CADS1]
+AND Vehicle [CADS6] in [R1.L-1] with comms capability and [F, SL, SR, R] mounted transceivers for [Unicast, Multicast, Broadcast] signals
+			AND at relative position [R] with relative heading angle [0 to 5] to [CADS5]
+			AND at a [longitudinal] margin of [15 to 25] to [CADS1]
+AND Global timer [T1] = [0]
+
+WHEN: [CADS6] is [Going_Ahead] 
+    DO: [CADS1] manoeuvres as:
+    		Phase 1: [Drive_Away][-.10 to 12.  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Comms 1: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Location data, Velocity data, Acceleration data, Heading data, Location error estimate data, Velocity error estimate data, Acceleration error estimate data, Heading error estimate data] of [CADS1].
+    Comms 2: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Merge Order] of [CADS1, CADS2, CADS3, CADS4, CADS5, CADS6] to [CADS1]. Acknowledge message received [Yes]. Acknowledge message read [Yes].
+    Phase 2: [LaneChangeLeft_CutIn][-0.1 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 3: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 4: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 5: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 6: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+			    AND [CADS2] manoeuvres as:
+    Phase 1: [Drive_Away][-.10 to 12.  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Comms 1: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Location data, Velocity data, Acceleration data, Heading data, Location error estimate data, Velocity error estimate data, Acceleration error estimate data, Heading error estimate data] of [CADS2].
+    Comms 2: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Merge Order] of [CADS1, CADS2, CADS3, CADS4, CADS5, CADS6] to [CADS1]. Acknowledge message received [Yes]. Acknowledge message read [Yes].
+    Phase 2: [Drive_Away][-.10 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 3: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 4: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 5: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 6: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    AND [CADS3] manoeuvres as:
+    Phase 1: [Drive_Away][-.10 to 12.  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Comms 1: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Location data, Velocity data, Acceleration data, Heading data, Location error estimate data, Velocity error estimate data, Acceleration error estimate data, Heading error estimate data] of [CADS3].
+    Comms 2: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Merge Order] of [CADS1, CADS2, CADS3, CADS4, CADS5, CADS6] to [CADS1]. Acknowledge message received [Yes]. Acknowledge message read [Yes].
+    Phase 2: [Drive_Away][-.10 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 3: [LaneChangeLeft_CutIn][-0.1 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 4: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 5: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 6: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    AND [CADS4] manoeuvres as:
+    Phase 1: [Drive_Away][-.10 to 12.  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Comms 1: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Location data, Velocity data, Acceleration data, Heading data, Location error estimate data, Velocity error estimate data, Acceleration error estimate data, Heading error estimate data] of [CADS4].
+    Comms 2: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Merge Order] of [CADS1, CADS2, CADS3, CADS4, CADS5, CADS6] to [CADS1]. Acknowledge message received [Yes]. Acknowledge message read [Yes].
+    Phase 2: [Drive_Away][-.10 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 3: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 4: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 5: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 FSL]
+    Phase 6: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    AND [CADS5] manoeuvres as:
+    Phase 1: [Drive_Away][-.10 to 12.  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Comms 1: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Location data, Velocity data, Acceleration data, Heading data, Location error estimate data, Velocity error estimate data, Acceleration error estimate data, Heading error estimate data] of [CADS5].
+    Comms 2: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Merge Order] of [CADS1, CADS2, CADS3, CADS4, CADS5, CADS6] to [CADS1]. Acknowledge message received [Yes]. Acknowledge message read [Yes].
+    Phase 2: [Drive_Away][-.10 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 3: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 4: [LaneChangeLeft_CutIn][-0.1 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]   
+    Phase 5: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 6: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    AND [CADS6] manoeuvres as:
+    Phase 1: [Drive_Away][-.10 to 12.  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Comms 1: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Location data, Velocity data, Acceleration data, Heading data, Location error estimate data, Velocity error estimate data, Acceleration error estimate data, Heading error estimate data] of [CADS6].
+    Comms 2: Using transmission type [4G] AND casting type [Broadcast] AND transmission size [100-1500] AND transmission time [30ms-50ms] AND transmission strength [5-11 dBm]. Send [Merge Order] of [CADS1, CADS2, CADS3, CADS4, CADS5, CADS6] to [CADS1]. Acknowledge message received [Yes]. Acknowledge message read [Yes].
+    Phase 2: [Drive_Away][-.10 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 3: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 4: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 5: [LaneChangeLeft_CutIn][-0.1 to 12. -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+    Phase 6: [Drive_Away] [-.10 to 12,  -0.1 to 0.1][ CADS6: -0.1 to 0.1 F]
+
+END: [T1] = [40]
+
+ENVIRONMENT ELEMENTS:
+DO: [Env1] as:
+  Wind [0 to 0.2]
+  Clouds [0 to 1]
+  Particulates [None]
+  Rainfall [None]
+  Snowfall [None: N/A]
+  Time [07:00 to 10:00]
+  Illumination [daylight] with [Sun] as light source at [30 to 60] degree elevation AND [Front] position
+ 
