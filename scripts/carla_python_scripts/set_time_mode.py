@@ -159,8 +159,8 @@ def main():
         settings = world.get_settings()
         print("fixed_delta_seconds before: " + str(settings.fixed_delta_seconds))
         print("synchronous_mode before: " + str(settings.synchronous_mode))
-        settings.synchronous_mode = False # True
-        settings.fixed_delta_seconds = None # 0
+        settings.synchronous_mode = True # True
+        settings.fixed_delta_seconds = None #0.025 #0.035 #0.025 #None # 0
         world.apply_settings(settings)
         ### Simulation time that goes by between simulation steps ###
 
@@ -168,22 +168,30 @@ def main():
         print("fixed_delta_seconds after: " + str(settings.fixed_delta_seconds))
         print("synchronous_mode after: " + str(settings.synchronous_mode))
         
-        
-        #while True:
+        # t_diff = 0.0417
+
+        while True:
             #goal_step = 0.05 #0.025 
 
-            #t_prev = world.get_snapshot().timestamp.elapsed_seconds
+            # settings = world.get_settings()
+            # settings.fixed_delta_seconds = t_diff
+            # world.apply_settings(settings)
 
-            #world.tick()
+            # t_prev = world.get_snapshot().timestamp.elapsed_seconds
 
-            #t_curr = world.get_snapshot().timestamp.elapsed_seconds
-            #t_diff = t_curr - t_prev
+            world.tick()
 
-            #print("t_diff: " + str(t_diff))
+            # t_curr = world.get_snapshot().timestamp.elapsed_seconds
+            # t_diff = t_curr - t_prev
+
+            # print("t_diff: " + str(t_diff))
+            
+            
             #additional_sleep = max(0.0, goal_step - t_diff)
 
             #print("need to sleep: " + str(additional_sleep))
             #time.sleep(additional_sleep)
+            #time.sleep(1)
         
 
     finally:
