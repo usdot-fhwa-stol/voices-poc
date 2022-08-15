@@ -206,6 +206,7 @@ echo
 read -p "Would you like to pull the latest code? [y/n] " pullLatest
 
 if [[ $pullLatest =~ ^[yY]$ ]]; then
+	echo
 	git pull || exit
 fi
 
@@ -277,12 +278,26 @@ if [[ $skipDocker == false ]] ; then
 	if [[ -n $currentDockerImages ]] ; then
 	
 		echo
-		read -p "Container $dockerContainer already exists, would you like to rebuild? [y/n] " rebuildContainerYn
+		echo "Build container $dockerContainer already exists, would you like to rebuild? [y/n] "
+		echo 
+		echo "[!!!] WARNING: THIS WILL DESTROY THE EXISTING BUILD CONTAINER AND REBUILD FROM SCRATCH"
+		echo "                               THIS PROCESS CAN TAKE OVER 1 HOUR"
+		echo
+		read -p "    [y/n] --> " rebuildContainerYn
+
 		if [[ $rebuildContainerYn =~ ^[yY]$ ]]; then
-			skipDocker=false
+			echo
+			read -p "    Are you sure you want to rebuild the docker container? [y/n] " rebuildContainerYnConfirm
+			if [[ $rebuildContainerYnConfirm =~ ^[yY]$ ]]; then
+				skipDocker=false
+			else
+				skipDocker=true
+			fi
 		else
 			skipDocker=true
 		fi
+		
+		
 	fi
 fi
 
@@ -295,7 +310,7 @@ if [[ "$skipDocker" == true ]]
 		echo "#### Docker Container Build ####"
 		
 		sudo docker rm -v $dockerContainer 
-		sudo docker image rm $dockerContainer
+		sudo docker image rm -f $dockerContainer
 		
 		#if v2xhub plugin need to build image inside the V2X-Hub dir
 		if $isV2xhubPlugin; then
@@ -341,7 +356,8 @@ if [[ "$skipDocker" == true ]]
 		#if v2xhub plugin go out of the v2xhub directory and remove it
 		if $isV2xhubPlugin; then
 			cd ../
-			sudo rm -rf ./V2X-Hub
+			#changed to not remove v2xhub so we know what branch we used
+			#sudo rm -rf ./V2X-Hub
 		fi
 fi
 
