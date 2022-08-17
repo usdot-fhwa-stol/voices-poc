@@ -46,7 +46,7 @@ date >> $SIM_LOG
 $localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
 sleep 5
 
-python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
+#python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
 
 
 docker run \
