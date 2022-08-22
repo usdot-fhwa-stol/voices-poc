@@ -842,22 +842,10 @@ class CameraManager(object):
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
         self._camera_transforms = [
-            #(carla.Transform(carla.Location(x=5, y=-0.20, z=1.2)), Attachment.Rigid),
-            #(carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.25)), Attachment.Rigid),
-            #(carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
-            
-            #close
-            #(carla.Transform(carla.Location(x=5.5, y=-1.5, z=3)), Attachment.SpringArm)
-            #further - a litle too high
-            #(carla.Transform(carla.Location(x=10, y=-3, z=6)), Attachment.SpringArm)
-
-            #further - a little lower - too straight on? 
-            #(carla.Transform(carla.Location(x=10, y=-3, z=4)), Attachment.SpringArm)
-            
-            #further - a little lower - too straight on? 
-            (carla.Transform(carla.Location(x=10, y=-5, z=4)), Attachment.SpringArm)
-
-
+            #(carla.Transform(carla.Location(x=5, y=-0.20, z=1.2)), Attachment.Rigid)
+            #(carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.25)), Attachment.Rigid)
+            (carla.Transform(carla.Location(x=1, y=-0.20, z=1.2)), Attachment.Rigid)
+            #(carla.Transform(carla.Location(x=5.5, y=1.5, z=3)), Attachment.SpringArm),
             #(carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm)
             #(carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)
             ]
