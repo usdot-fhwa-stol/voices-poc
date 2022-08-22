@@ -261,7 +261,8 @@ class World(object):
         blueprint = self._blueprint_list[self._blueprint_index]
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
-            color = random.choice(blueprint.get_attribute('color').recommended_values)
+            #color = random.choice(blueprint.get_attribute('color').recommended_values)
+            color = blueprint.get_attribute('color').recommended_values[1]
             blueprint.set_attribute('color', color)
         self.restart(blueprint)
     
@@ -272,7 +273,8 @@ class World(object):
         blueprint = self._blueprint_list[self._blueprint_index]
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
-            color = random.choice(blueprint.get_attribute('color').recommended_values)
+            #color = random.choice(blueprint.get_attribute('color').recommended_values)
+            color = blueprint.get_attribute('color').recommended_values[0]
             blueprint.set_attribute('color', color)
         self.restart(blueprint)
 
@@ -366,7 +368,7 @@ class DualControl(object):
         #if joystick_count > 1:
         #    raise ValueError("Please Connect Just One Joystick")
 
-        self._joystick = pygame.joystick.Joystick(0)
+        self._joystick = pygame.joystick.Joystick(1)
         self._joystick.init()
         # evdev references to the steering wheel (force feedback)
         self._device = evdev.list_devices()[0]
