@@ -17,6 +17,10 @@
 #  * the License.                                                                 
 #  *
 
+#exit on error
+#
+set -e
+
 #this takes the location of the executed script as opposed to the current location
 #this allows it to be run anywhere
 directory="`dirname \"$0\"`"
@@ -36,7 +40,12 @@ cd $directory
 #	fi
 #fi
 
-mkdir data
+if [ -d data ]; then
+	printf "\nExisting data folder found"
+else
+	mkdir data
+fi
+
 cd data
 
 mkdir -p tsharkOutput
@@ -45,47 +54,45 @@ mkdir -p decodedOutput
 
 cd $directory
 
-printf "\nWhat type of J2735 message was captured?\n"
-printf "MAP\nSPAT\nBSM\nMobility\nTraffic Control\n\n"
-IFS= read -r message_type
+printf "\n\nWhat type of J2735 message type would you like to decode?\n"
 
-if [ "$message_type" == "MAP" ]; then
+message_type_list=("MAP" "SPAT" "BSM" "Mobility Request" "Mobility Response" "Mobility Path" "Mobility Operation" "Traffic Control Request" "Traffic Control Message")
+
+for i in ${!message_type_list[@]}; do
+  printf "\n[$i] ${message_type_list[$i]}"
+done
+
+printf "\n\n"
+read -p "--> " message_type_index
+
+message_type_name=${message_type_list[$message_type_index]}
+
+if [[ $message_type_name == "MAP" ]]; then
 	message_type_id=0012
-elif [ "$message_type" == "SPAT" ]; then
+elif [[ $message_type_name == "SPAT" ]]; then
 	message_type_id=0013
-elif [ "$message_type" == "BSM" ]; then
+elif [[ $message_type_name == "BSM" ]]; then
 	message_type_id=0014
-elif [ "$message_type" == "Mobility" ]; then
-	printf "\nRequest, Response, Path, or Operation?\n"
-	read message_second
-	if [ $message_second == "Request" ]; then
-		message_type_id=00f0
-	elif [ $message_second == "Response" ]; then
-		message_type_id=00f1
-	elif [ $message_second == "Path" ]; then	
-		message_type_id=00f2
-	elif [ $message_second == "Operation" ]; then
-		message_type_id=00f3
-	else 
-		echo "Invalid J2735 message type..."
-		exit
-	fi
-	message_type+=" $message_second"
-elif [ "$message_type" == "Traffic Control" ]; then
-	echo "Request or Message?"
-	read message_second
-	if [ $message_second == "Request" ]; then
-		message_type_id=00f4
-	elif [ $message_second == "Message" ]; then	
-		message_type_id=00f5
-	else 
-		echo "Invalid J2735 message type..."
-		exit
-	fi
-	message_type+=" $message_second"
-else echo "Invalid J2735 message type..."
+elif [[ $message_type_name == "Mobility Request" ]]; then
+	message_type_id=00f0
+elif [[ $message_type_name == "Mobility Response" ]]; then
+	message_type_id=00f1
+elif [[ $message_type_name == "Mobility Path" ]]; then	
+	message_type_id=00f2
+elif [[ $message_type_name == "Mobility Operation" ]]; then
+	message_type_id=00f3
+elif [[ $message_type_name == "Traffic Control Request" ]]; then
+	message_type_id=00f4
+elif [[ $message_type_name == "Traffic Control Message" ]]; then	
+	message_type_id=00f5
+else 
+	echo "Invalid J2735 message type..."
 	exit
 fi
+
+echo "Message Type Name: "$message_type_name
+echo "Message Type ID: "$message_type_id
+
 
 payloadType="hex"
 messageTypeIdFound=false
@@ -128,12 +135,26 @@ while true; do
 	fi
 done
 
-tshark -r $file_to_read --disable-protocol wsmp -Tfields -Eseparator=, -e frame.time_epoch -e data.data > $directory/data/tsharkOutput/$file_to_write
 
-searchForMessageTypeIdInFile $directory/data/tsharkOutput/$file_to_write $message_type_id 10
+#tshark -r $file_to_read --disable-protocol wsmp -Tfields -Eseparator=, -e frame.time_epoch -e data.data > $directory/data/tsharkOutput/$file_to_write
 
-if [ $messageTypeIdFound == true ]; then
+#searchForMessageTypeIdInFile $directory/data/tsharkOutput/$file_to_write $message_type_id 10
+
+#search first 10 packets in text format and look for Payload=
+#if this exist, string, we are ascii payloads and can decode that way
+#if not, we must grab the payload from the frame_raw (tshark_json_parser)
+search_for_ascii=$(tshark -r $file_to_read -o data.show_as_text:TRUE --disable-protocol wsmp -T fields -E separator=, -e frame.time_epoch -e data.text -c 10 | grep "Payload=")
+
+echo "Search: " $search_for_ascii
+
+
+
+if [  -z $search_for_ascii ]; then
         # The first packet contains the message id
+		printf "\nPCAP is HEX\n"
+
+		python3 $directory/src/tshark_json_parser.py $file_to_read $message_type_id
+
         printf "\nSuccessfully decoded pcap into hex payloads\n"
         payloadType="hex"
 else
@@ -151,7 +172,10 @@ else
         	exit
         fi
         
-fi 
+fi
+
+exit 
+
 }
 
 
