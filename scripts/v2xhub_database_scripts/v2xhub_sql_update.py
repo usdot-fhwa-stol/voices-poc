@@ -92,7 +92,7 @@ if __name__ == '__main__':
         values_file = sys.argv[1]
 
         #Setup connection to the mysql server
-        connection = create_server_connection("127.0.0.1", "root", "ivp")
+        connection = create_server_connection("127.0.0.1", constants.SQL_SERVER_USERNAME, constants.SQL_SERVER_PW)
 
         #Set the desired values in the IVP pluginConfigurationParameter database
         pluginSetValues(values_file)
