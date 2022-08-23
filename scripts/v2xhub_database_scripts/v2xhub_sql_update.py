@@ -84,26 +84,15 @@ def pluginSetValues(fileName):
         for result in results:
             print(result)    
 
-#import current configuration values and save to csv
-def importConfigurationValues():
-    join_query = "SELECT a.pluginId, a.key, a.value, b.exeName FROM " + constants.DATABASE_NAME + "." + constants.PLUGIN_CONFIGURATION_TABLE \
-    + " a LEFT JOIN " + constants.DATABASE_NAME + "." + constants.PLUGIN_NAME_TABLE + " b ON a.pluginId = b.pluginId"
-    join_results = read_query(connection, join_query)
-    df = pd.DataFrame(join_results)
-    df.columns=["pluginId", "key", "value", "pluginName"]
-    df.to_csv("current_configuration.csv", index=False)
-
-
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Pass the name of database values file: "python3 v2xhub_sql.py <filename>"')
     else:
         #Read in name of database values file
-        # values_file = sys.argv[1]
+        values_file = sys.argv[1]
 
         #Setup connection to the mysql server
         connection = create_server_connection("127.0.0.1", "root", "ivp")
-        importConfigurationValues()
 
         #Set the desired values in the IVP pluginConfigurationParameter database
-        # pluginSetValues(values_file)
+        pluginSetValues(values_file)
