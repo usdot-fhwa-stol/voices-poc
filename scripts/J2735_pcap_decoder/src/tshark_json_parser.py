@@ -4,15 +4,15 @@ from csv import reader, writer
 import subprocess as sp
 import re
 
-print("\nARG LIST:")
-for i, arg in enumerate(sys.argv):
-    print(str(i) + ": " + str(arg))
-print("")
+print("\n----- EXTRACTING RAW PACKET FRAMES FROM PCAP -----")
+
+# print("\nARG LIST:")
+# for i, arg in enumerate(sys.argv):
+#     print(str(i) + ": " + str(arg))
+# print("")
 
 inFile = sys.argv[1]
 outfile = sys.argv[2]
-
-print("Getting JSON payloads for packets")
 
 cmds = ["tshark", "-x", "-r",inFile , "-T", "json"]
 frames_text = sp.check_output(cmds, text=True)
@@ -36,7 +36,6 @@ with open(outfile, 'w', newline='') as write_obj:
         csv_writer.writerow([total_packets,timestamp,frame_raw])
         
 
-# print("Total Found Packets: " + str(found_packets))
-print("Total Packets: " + str(total_packets))
+print("\n --> Total Packets: " + str(total_packets))
 
 

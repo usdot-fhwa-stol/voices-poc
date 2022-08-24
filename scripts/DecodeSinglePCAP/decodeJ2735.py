@@ -1,5 +1,5 @@
 #SAE J275 DECODER
-import J2735_201603_combined
+import J2735_201603_combined_voices_mr_fix as J2735
 import socket
 import json
 import csv
@@ -27,15 +27,19 @@ output_filename = input_with_prefill("Captured packet filename: ", "decoded_pack
 data = input_filename
 print('hex data = ', data)
 
-#specify message type inside J2735.py
-decoded_msg = J2735_201603_combined.DSRC.MessageFrame
-#convert from hex using unhexlify then from uper using library
-decoded_msg.from_uper(ba.unhexlify(data))
-#format data into json
-decoded_msg_json = decoded_msg.to_json()
+try:
+  #specify message type inside J2735.py
+  decoded_msg = J2735.DSRC.MessageFrame
+  #convert from hex using unhexlify then from uper using library
+  decoded_msg.from_uper(ba.unhexlify(data))
+  #format data into json
+  decoded_msg_json = decoded_msg.to_json()
 
-print('')
-print(decoded_msg_json)
+  print('')
+  print(decoded_msg_json)
+except Exception as err:
+  print(f"Unexpected {err=}, {type(err)=}")
+  raise
 
 
 

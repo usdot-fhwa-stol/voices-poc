@@ -4,15 +4,15 @@ from csv import reader, writer
 import subprocess as sp
 import re
 
-print("\nARG LIST:")
-for i, arg in enumerate(sys.argv):
-    print(str(i) + ": " + str(arg))
-print("")
+print("\n----- EXTRACTING PAYLOADS FROM PCAP -----")
+
+# print("\nARG LIST:")
+# for i, arg in enumerate(sys.argv):
+#     print(str(i) + ": " + str(arg))
+# print("")
 
 inFile = sys.argv[1]
 outfile = sys.argv[2]
-
-print("Getting JSON payloads for packets")
 
 #tshark 
 #-r infile                  - select file to read
@@ -27,15 +27,11 @@ cmds = ["tshark", "-r",inFile , "-o", "data.show_as_text:TRUE", "--disable-proto
 payloads_text = sp.run(cmds, text=True, stdout=sp.PIPE)
 payloads_split = payloads_text.stdout.split("\n")
 
-
-
-
-
 total_packets = 0
 
 with open(outfile, 'w', newline='') as write_obj:
     csv_writer = writer(write_obj)
-    
+
     csv_writer.writerow(["packet_index","timestamp","payload"])
 
     for packet in payloads_split:
@@ -44,11 +40,16 @@ with open(outfile, 'w', newline='') as write_obj:
             packet_list = packet.split(",")
             
             timestamp = str(packet_list[0])
-            payload = str(packet_list[1]).replace("\\n","").split("Payload=")[1]
+            if len(packet_list[1]) > 10:
+                payload = str(packet_list[1]).replace("\\n","").split("Payload=")[1].lower()
+            else:
+                print("\nERROR: INVALID PACKET: " + packet)
+                # payload=""
+                continue
             
-            print("timestamp: " + str(timestamp))
-            print("payload: " + str(payload))
-            print("")
+            # print("timestamp: " + str(timestamp))
+            # print("payload: " + str(payload))
+            # print("")
 
             total_packets += 1
 
@@ -57,7 +58,6 @@ with open(outfile, 'w', newline='') as write_obj:
         #     print("Bad Packet: " + packet)
         
 
-# print("Total Found Packets: " + str(found_packets))
-print("Total Packets: " + str(total_packets))
+print("\n --> Total Packets: " + str(total_packets))
 
 

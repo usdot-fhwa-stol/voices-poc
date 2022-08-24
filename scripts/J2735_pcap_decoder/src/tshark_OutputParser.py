@@ -23,16 +23,16 @@ import sys
 from csv import reader, writer
 import re
 
-print("\nARG LIST:")
-for i, arg in enumerate(sys.argv):
-    print(str(i) + ": " + str(arg))
-print("")
+print("\n----- CHOPPING HEADERS AND IDENTIFYING PACKETS -----")
 
-#print("ARGS: " + sys.argv[0] + "," + sys.argv[1] + "," + sys.argv[2] + "," + sys.argv[3] + "," + sys.argv[4])
+# print("\nARG LIST:")
+# for i, arg in enumerate(sys.argv):
+#     print(str(i) + ": " + str(arg))
+# print("")
+
 inFile = sys.argv[1]
 outfile = sys.argv[2]
-# payload_type_id=sys.argv[3]
-
+payload_type = sys.argv[3]
 
 message_type_list = [
     {
@@ -78,100 +78,136 @@ open(outfile, 'w', newline='') as write_obj:
     csv_reader = reader(read_obj)
     csv_writer = writer(write_obj)
 
-    # substr = {
-    #     'map': '0012',
-    #     'spat':'0013',
-    #     'bsm': '0014',
-    #     'req': '00f0',
-    #     'res': '00f1',
-    #     'mop': '00f2',
-    #     'mom': '00f3',
-    #     'tcr': '00f4',
-    #     'tcm': '00f5'
-    # }
-
-    # for row in csv_reader:
-    #     index = {}
-    #     smallerIndex = 10000
-        
-    #     #remove newlines for ascii
-    #     if payloadType == "ascii":
-    #         row[1] = row[1].replace("\\n","")
-        
-    #     for k in substr:
-    #         if substr[k] in row[1]:
-    #             index[k] = row[1].find(substr[k])
-    #             if index[k] < smallerIndex:
-    #                 smallerIndex = index[k]
-    #                 msg = row[1][smallerIndex:]
-        
-    #     csv_writer.writerow([row[0],msg])
-
     found_packets = 0
 
-    csv_writer.writerow(["packet_index","timestamp","frame_raw","message_type","message_type_id","filtered_payload"])
+    # write the headers for the output csv
+    if payload_type == "hex":
+        csv_writer.writerow(["packet_index","timestamp","frame_raw","message_type","message_type_id","cleaned_payload"])
+    elif payload_type == "ascii":
+        csv_writer.writerow(["packet_index","timestamp","payload","message_type","message_type_id","cleaned_payload"])
+    else:
+        print("\nERROR: Invalid payload type")
+        exit
 
-    #skip first row for headers
+    # skip first row for headers
     next(csv_reader)
+
+    fixed_header_mode = False
 
     for row in csv_reader:
         
         packet_index = row[0]
         timestamp = row[1]
-        current_packet_frame_raw = row[2]
+        current_packet_data = row[2]
 
         # print("packet_index: " + str(packet_index))
         # print("timestamp: " + str(timestamp))
-        # print("current_packet_frame_raw: " + str(current_packet_frame_raw))
+        # print("current_packet_data: " + str(current_packet_data))
         
-        #this is the message type id which appears closest to the header
-        #this starts at an arbitrary value
-        closest_message_type = {
-            "name"  : "NA",
-            "id"    : "0000",
-            "pos"   : 99999   
-        }
-
-        num_matching_message_types = 0
-
-        for message_type in message_type_list:
+        if payload_type == "hex":
+        # look for all message types in the raw packet frame (HEX) or payload (ascii)
+        # identify where the pattern is found and choose the pattern that is closest to the beginning of the packet 
+        # For hex, we know that all HEX J2735 payloads start with 0380 and varying number of hex values before the message type id
             
-            j2735_payload_with_header_search = re.search('0380.*'+ message_type['id'],current_packet_frame_raw)
-
-            # print("Search: " + str(j2735_payload_with_header_search))
             
-            if j2735_payload_with_header_search != None:
-                # print("Found: " + message_type['name'])
-                num_matching_message_types += 1
+            if not fixed_header_mode:
+                # this is the message type id which appears closest to the header
+                # this starts at an arbitrary value
+                closest_message_type = {
+                    "name"  : "NA",
+                    "id"    : "0000",
+                    "pos"   : 99999   
+                }
 
-                j2735_payload_with_header = str(j2735_payload_with_header_search.group(0))
-                search_result_start = j2735_payload_with_header_search.start()
-                search_result_end = j2735_payload_with_header_search.end()
-                # print("Start: " + str(search_result_start))
-                # print("End: " + str(search_result_end))
-                # print("With Header: " + str(j2735_payload_with_header))
+                num_matching_message_types = 0
                 
-                if search_result_end < closest_message_type["pos"]:
-                    closest_message_type["name"] = message_type['name']
-                    closest_message_type["id"] = message_type['id']
-                    closest_message_type["pos"] = search_result_end
-        # print("num_matching_message_types: " + str(num_matching_message_types))
+                for message_type in message_type_list:
+                    
+                    j2735_payload_with_header_search = re.search('0380.*'+ message_type['id'],current_packet_data)
+
+                    # print("Search: " + str(j2735_payload_with_header_search))
+                    
+                    if j2735_payload_with_header_search != None:
+                        # print("Found: " + message_type['name'])
+                        num_matching_message_types += 1
+
+                        j2735_payload_with_header = str(j2735_payload_with_header_search.group(0))
+                        search_result_start = j2735_payload_with_header_search.start()
+                        search_result_end = j2735_payload_with_header_search.end()
+                        # print("Start: " + str(search_result_start))
+                        # print("End: " + str(search_result_end))
+                        # print("With Header: " + str(j2735_payload_with_header))
+                        
+                        if search_result_end < closest_message_type["pos"]:
+                            closest_message_type["name"] = message_type['name']
+                            closest_message_type["id"] = message_type['id']
+                            closest_message_type["pos"] = search_result_end
+                # print("num_matching_message_types: " + str(num_matching_message_types))
+                    
+                # print("Closest Message Type: " + closest_message_type["name"])
+                final_message_type_name = closest_message_type["name"]
+                final_message_type_id = closest_message_type["id"]
+                
+
+                if closest_message_type['name'] == "NA":
+
+                    print("\n --> No matching message types for payload, switching to fixed header mode")
+                    # print("[" + str(packet_index)+'] ' + str(current_packet_data))
+                    fixed_header_mode = True
+                else:
+                    # now that we know which message type we want, we want to grab the entire packet not just the pattern
+                    final_j2735_payload_with_header_search = re.search('0380.*'+ closest_message_type['id'] + '.*',current_packet_data)
+                    final_j2735_payload_with_header = str(final_j2735_payload_with_header_search.group(0))
+                    
+                    # trim off the 0380*** header
+                    final_j2735_payload_with_header_cleaned_search = re.search(closest_message_type['id'] + '.*',final_j2735_payload_with_header)
+                    final_j2735_payload_cleaned = str(final_j2735_payload_with_header_cleaned_search.group(0))
+                            
+                    
+                    
+
+            if fixed_header_mode:
+                final_message_type_id = current_packet_data[84:88]
+                final_message_type_obj = next((x for x in message_type_list if x["id"] == final_message_type_id), None)
+                final_message_type_name = final_message_type_obj["name"]
+                final_j2735_payload_cleaned = current_packet_data[84:]
+
+                if final_message_type_obj == None:
+                    print("\nERROR: INVALID PAYLOAD TYPE FOR FIXED HEADER MODE. UNABLE TO IDENTIFY PACKET")
+                    print("[" + str(packet_index)+'] ' + str(current_packet_data))
+
+            # print("\nfinal_message_type_id: " + final_message_type_id)
+            # print("final_message_type_name: " + final_message_type_name)
+            # # print("timestamp: " + timestamp)
+            # print("final_j2735_payload_cleaned: " + final_j2735_payload_cleaned)
+
             
-                
-        # print("Closest Message Type: " + closest_message_type["name"])
 
-        final_j2735_payload_with_header_search = re.search('0380.*'+ closest_message_type['id'] + '.*',current_packet_frame_raw)
-        final_j2735_payload_with_header = str(final_j2735_payload_with_header_search.group(0))
-        final_j2735_payload_with_header_cleaned_search = re.search(closest_message_type['id'] + '.*',final_j2735_payload_with_header)
-        final_j2735_payload_with_header_cleaned = str(final_j2735_payload_with_header_cleaned_search.group(0))
-                
-        # print("Timestamp: " + timestamp)
-        # print("Clean: " + final_j2735_payload_with_header_cleaned)
+            csv_writer.writerow([packet_index,timestamp,current_packet_data,final_message_type_name,final_message_type_id,final_j2735_payload_cleaned])
 
-        csv_writer.writerow([packet_index,timestamp,current_packet_frame_raw,closest_message_type["name"],closest_message_type["id"],final_j2735_payload_with_header_cleaned])
+            # print("")
+        elif payload_type == "ascii":
+            
+            current_payload_id = current_packet_data[0:4]
+            
+            current_packet_message_type = {
+                    'name'  : 'NA',
+                    'id'    : '0000'
+                }
 
-        # print("")
+            for message_type in message_type_list:
+                if message_type['id'] == current_payload_id:
+                    current_packet_message_type = message_type
 
+            if current_packet_message_type['name'] == "NA":
+                print("\nERROR: NO MATCHING MESSAGE TYPES FOR PAYLOAD: ")
+                print("[" + str(packet_index)+'] ' + str(current_packet_data))
+
+            csv_writer.writerow([packet_index,timestamp,current_packet_data,current_packet_message_type["name"],current_packet_message_type["id"],current_packet_data])
+        
+        else:
+            print("\nERROR: NO MATCHING MESSAGE TYPES FOR PAYLOAD: ")
+            print("[" + str(packet_index)+'] ' + str(current_packet_data) )
 
 # Old for Kapsch payloads. Testing with Kapsch payloads needed to include in updated 
 
