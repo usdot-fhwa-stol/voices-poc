@@ -29,9 +29,13 @@ source_out_params = {
     "BSM" : {
         "skip_if_neqs"      : [
             {
-                "key"   : "bsm id",
-                "value" : desired_bsm_id,
-                "round" : False,
+                "key"           : "bsm id",         # key(column) to check
+                "value"         : desired_bsm_id,   # value to check
+                "round"         : False,            # round the value before checking (important for TENA data)
+                "round_decimals": 0,                # decimal places to round to (only needed if round == True, shown here for example)
+                "start_only"    : False,            # only skip through rows matching this condition to align the start of the data set 
+                                                    #    had to add this becuase we want to use speed == 0 to find the start of the data (when the vehicle starts moving)
+                                                    #    but we do not want to throw out any values which contain speed == 0 (vehicle stops during run)
             }
 
         ],
@@ -42,6 +46,7 @@ source_out_params = {
                 "value"  : "0.0",
                 "round" : True,
                 "round_decimals": 2,
+                "start_only" : True, 
             }
         ],
 
@@ -97,19 +102,21 @@ v2xhub_in_pcap_params = {
     "BSM" : {
         "skip_if_neqs"      : [
             {
-                "key"   : "bsm id",
-                "value" : desired_bsm_id,
-                "round" : False,
+                "key"           : "bsm id",
+                "value"         : desired_bsm_id,
+                "round"         : False,
+                "start_only"    : False,
             }
 
         ],
         
         "skip_if_eqs"       : [
             {
-                "key"    : "speed(m/s)",
-                "value"  : "0.0",
-                "round" : True,
+                "key"           : "speed(m/s)",
+                "value"         : "0.0",
+                "round"         : True,
                 "round_decimals": 2,
+                "start_only"    : True, 
             }
         ],
 
@@ -165,24 +172,27 @@ v2xhub_tdcs_params = {
     "BSM" : {
         "skip_if_neqs"      : [
             {
-                "key"   : "const^identifier,String",
-                "value" : desired_tena_identifier,
-                "round" : False,
+                "key"           : "const^identifier,String",
+                "value"         : desired_tena_identifier,
+                "round"         : False,
+                "start_only"    : False, 
             }
 
         ],
         
         "skip_if_eqs"       : [
             {
-                "key"    : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
-                "value"  : "0.0",
-                "round" : True,
+                "key"           : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
+                "value"         : "0.0",
+                "round"         : True,
                 "round_decimals": 2,
+                "start_only"    : True, 
             },
             {
                 "key"   : "Metadata,Enum,Middleware::EventType",
                 "value" : "Discovery",
                 "round" : False,
+                "start_only" : False, 
             }
         ],
 
@@ -267,13 +277,15 @@ def is_number(s):
 def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_list,source_packet_params,data_to_search_params):
     
     search_starting_row = None
+    source_to_match_offset = None
     
 
     for search_i,search_packet in enumerate(data_to_search_list):
 
         # iterate through the neqs to check
-        # print("\n----- SKIPPING DATA NEQS -----")
         all_neqs_pass = True
+
+        # print("\nLooking at data at index: " + source_packet_to_match["packetIndex"] + " : " + search_packet["packetIndex"])
 
         for current_neq in data_to_search_params[J2735_message_type_name]["skip_if_neqs"]:
 
@@ -282,6 +294,13 @@ def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_l
             neq_param_value = current_neq["value"]
 
             # print("NEQ CHECK: " + str(search_packet_neq_value) + " != " + str(neq_param_value))
+
+            # if we have already found the start of the data set (and therefore the offset),
+            # and the current neq is for the start_only, skip this neq
+            if source_to_match_offset != None and current_neq["start_only"]:
+                # print("Skipping NEQ since it is start only: " + current_neq["key"])
+                continue
+
 
             # if the source_packet_value is a number and we want to round, round both values to the same number of decimals
             if is_number(search_packet_neq_value) and current_neq["round"]:
@@ -296,11 +315,16 @@ def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_l
         
         if not all_neqs_pass:
             # print("Continuing because not all NEQs passed")
+            
+            # remove the bad data from the array so we do not encounter it later
+            # the pop function is a change in place and therefore the original array is modified
+            if source_to_match_offset != None:
+                source_to_match_offset -+ 1
+            
+            data_to_search_list.pop(search_i)
             continue
         
         #iterate through the eqs to check
-        # print("\n----- SKIPPING DATA EQS -----")
-
         all_eqs_pass = True
 
         for current_eq in data_to_search_params[J2735_message_type_name]["skip_if_eqs"]:
@@ -311,6 +335,11 @@ def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_l
 
             # print("EQ CHECK: " + str(search_packet_eq_value) + " != " + str(eq_param_value))
 
+            # if we have already found the start of the data set (and therefore the offset),
+            # and the current eq is for the start_only, skip this neq
+            if source_to_match_offset != None and current_eq["start_only"]:
+                # print("Skipping EQ since it is start only: " + current_eq["key"])
+                continue
 
             # if the source_packet_value is a number and we want to round, round both values to the same number of decimals
             if current_eq["round"]:
@@ -325,66 +354,75 @@ def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_l
         
         if not all_eqs_pass:
             # print("Continuing because not all EQs passed")
+            
+            #remove the bad data from the array so we do not encounter it later
+            # the pop function is a change in place and therefore the original array is modified
+            if source_to_match_offset != None:
+                source_to_match_offset -+ 1
+
+            data_to_search_list.pop(search_i)
             continue
 
         if search_starting_row == None:
             search_starting_row = search_i
             print("search_starting_row: " + str(search_starting_row))
         
-        # print("Looking at data: " + source_packet_to_match["latitude"] + " == " + search_packet["latitude"])
+        
         
         all_fields_match = True
 
-        for match_i in range(0,5):
-            source_packet_key = source_packet_params[J2735_message_type_name]["match_keys"][match_i]["key"]
-            search_packet_key = data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["key"]
+        # the first time all fields match, this is the start of the data we want
+        # get the offset between the source start index and the search start index
+        if all_fields_match and source_to_match_offset == None:
 
-            # print("source_packet_key: " + str(source_packet_key))
-            # print("search_packet_key: " + str(search_packet_key))
+            for match_i in range(0,5):
+                source_packet_key = source_packet_params[J2735_message_type_name]["match_keys"][match_i]["key"]
+                search_packet_key = data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["key"]
 
-            if (
-                    source_packet_key == None or
-                    search_packet_key == None
-            ):
-                # print("Skipping match key " + str(match_i) + " since one or more keys are None: " + str(source_packet_key) + "," + str(search_packet_key))
-                continue
+                # print("source_packet_key: " + str(source_packet_key))
+                # print("search_packet_key: " + str(search_packet_key))
 
-            
-            source_packet_value = source_packet_to_match[source_packet_key]
-            search_packet_value = search_packet[search_packet_key]
+                if (
+                        source_packet_key == None or
+                        search_packet_key == None
+                ):
+                    # print("Skipping match key " + str(match_i) + " since one or more keys are None: " + str(source_packet_key) + "," + str(search_packet_key))
+                    continue
 
-            
-
-            if source_packet_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
-                source_packet_value = math.degrees(float(source_packet_value))
-            
-            if data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
-                search_packet_value = math.degrees(float(search_packet_value))
-
-            if source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
-                source_packet_value = round(float(source_packet_value),source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
-            
-            if data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
-                search_packet_value = round(float(search_packet_value),data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
-
-
-            if  ( source_packet_value != search_packet_value ):
-                print("[!!!] VALUES DO NOT MATCH [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
                 
-                all_fields_match = False
-                break
-            else:
-                print("Values Match [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
+                source_packet_value = source_packet_to_match[source_packet_key]
+                search_packet_value = search_packet[search_packet_key]
+
+                
+
+                if source_packet_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
+                    source_packet_value = math.degrees(float(source_packet_value))
+                
+                if data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
+                    search_packet_value = math.degrees(float(search_packet_value))
+
+                if source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
+                    source_packet_value = round(float(source_packet_value),source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
+                
+                if data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
+                    search_packet_value = round(float(search_packet_value),data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
+
+
+                if  ( source_packet_value != search_packet_value ):
+                    print("[!!!] VALUES DO NOT MATCH [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
+                    all_fields_match = False
+                    break
+                else:
+                    print("Values Match [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
             
         
-        if all_fields_match:
 
             source_to_match_offset = search_i - source_packet_i
 
-            print("\nAll Fields match: ")
+            print("\nAll Fields match")
             print("\nsource_to_match_offset = " + str(source_to_match_offset))
 
-            return source_to_match_offset
+    return source_to_match_offset
 
 
 
@@ -425,9 +463,6 @@ for sv_out_i,sv_out_packet in enumerate(source_vehicle_out_data_list):
         if not all_neqs_pass:
             # print("Continuing because not all NEQs passed")
             continue
-        
-        # print("\n----- SKIPPING SOURCE EQS -----")
-        # iterate through the eqs to check
 
         all_eqs_pass = True
 
@@ -471,18 +506,27 @@ for sv_out_i,sv_out_packet in enumerate(source_vehicle_out_data_list):
 
     # get row offset for sv and v2xhub in pcap
     if sv_out_to_v2x_in_offset == None:
-        print("----- GETTING ROW OFFSET FOR SV AND V2XHUB IN PCAP -----")
+        print("\n----- GETTING ROW OFFSET FOR SV AND V2XHUB IN PCAP -----")
+        print("Before v2xhub_pcap_in_data_list length: " + str(len(v2xhub_pcap_in_data_list)))
         sv_out_to_v2x_in_offset = find_data_row_offset(sv_out_packet,sv_out_i,v2xhub_pcap_in_data_list,source_out_params,v2xhub_in_pcap_params)
+        total_v2xhub_in_packets = len(v2xhub_pcap_in_data_list)
+        print("Cleaned v2xhub_pcap_in_data_list length: " + str(total_v2xhub_in_packets))
     
     # get row offset for sv and v2xhub tdcs
     
     if sv_out_to_v2x_tdcs_offset == None:
-        print("----- GETTING ROW OFFSET FOR SV AND V2XHUB TDCS -----")
+        print("\n----- GETTING ROW OFFSET FOR SV AND V2XHUB TDCS -----")
+        print("Before v2xhub_tdcs_data_list length: " + str(len(v2xhub_tdcs_data_list)))
         sv_out_to_v2x_tdcs_offset = find_data_row_offset(sv_out_packet,sv_out_i,v2xhub_tdcs_data_list,source_out_params,v2xhub_tdcs_params)
+        total_v2xhub_tdcs_packets = len(v2xhub_tdcs_data_list)
+        print("Cleaned v2xhub_tdcs_data_list length: " + str(total_v2xhub_tdcs_packets))
 
-    print("\n----- TESTING EARLY EXIT -----")
-    sys.exit()
+    # print("\n----- TESTING EARLY EXIT -----")
+    # sys.exit()
 
+    # print("sv_out index: " + str(sv_out_i))
+    # print("v2x_in index: " + str(sv_out_i + sv_out_to_v2x_in_offset))
+    # print("v2x_tdcs index: " + str(sv_out_i + sv_out_to_v2x_tdcs_offset))
 
     if(
             sv_out_packet["latitude"] == v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["latitude"] and 
@@ -507,22 +551,36 @@ for sv_out_i,sv_out_packet in enumerate(source_vehicle_out_data_list):
             bsm_broadcast_latency
 
         ])
-        # print("Found matching data: ")
-        # print("  - " + sv_out_packet["latitude"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["latitude"])
-        # print("  - " + sv_out_packet["longitude"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["longitude"])
-        # print("  - " + sv_out_packet["heading"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["heading"])
-        # print("  - " + sv_out_packet["speed(m/s)"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["speed(m/s)"])
 
-    else:
-        print("[!!!] Found dropped packet: ")
+        print("Found matching data [" + sv_out_packet["packetIndex"] + ":" + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["packetIndex"] + "]: ")
         print("  - " + sv_out_packet["latitude"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["latitude"])
         print("  - " + sv_out_packet["longitude"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["longitude"])
         print("  - " + sv_out_packet["heading"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["heading"])
         print("  - " + sv_out_packet["speed(m/s)"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["speed(m/s)"])
 
+    else:
+        print("[!!!] Found dropped packet [" + sv_out_packet["packetIndex"] + ":" + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["packetIndex"] + "]: ")
+        print("  - " + sv_out_packet["latitude"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["latitude"])
+        print("  - " + sv_out_packet["longitude"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["longitude"])
+        print("  - " + sv_out_packet["heading"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["heading"])
+        print("  - " + sv_out_packet["speed(m/s)"] + " == " + v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["speed(m/s)"])
+
+
+        results_outfile_writer.writerow([
+            sv_out_packet["packetIndex"],
+            "",                                     # v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["packetIndex"],
+            sv_out_packet["packetTimestamp"],
+            "",                                     # v2xhub_pcap_in_data_list[sv_out_i + sv_out_to_v2x_in_offset]["packetTimestamp"],
+            "",                                     # v2x_adjusted_timestamp,
+            "",                                     # sv_to_v2x_latency,
+            bsm_broadcast_latency
+
+        ])
+
         sv_out_to_v2x_in_offset -= 1
         continue
 
+    
 
     if (sv_out_i + sv_out_to_v2x_in_offset + 2 > total_v2xhub_in_packets):
         print("\nReached end of v2x in file, exiting")
