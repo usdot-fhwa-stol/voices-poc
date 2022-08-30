@@ -4,6 +4,7 @@ import csv
 # import numpy
 import datetime
 import math
+import re
 
 print("\n==========================================================")
 print(  "========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
@@ -14,7 +15,31 @@ print(  "==========================================================")
 sv_out_start = 0
 sv_out_to_v2xhub_in_offset = 0
 sv_out_to_v2xhub_tdcs_offset = 0
-# sv_starting_row = 0
+
+all_data = []
+
+# example schema for all_data
+# all_data = [
+#     {
+#         "dataset_name"              : "some_dataset_name",
+#         "data_order"                : 1,
+#         "original_data_list"        : [ {},{},{},{}... ],
+#         "filtered_data_list"        : [ {},{},{},{}...  ],
+#         "dataset_params"            : {},
+#         "source_to_match_offset"    : int,
+#     },
+#     {
+#         "dataset_name"              : "some_other_dataset_name",
+#         "data_order"                : 2,
+#         "original_data_list"        : [ {},{},{},{}... ],
+#         "filtered_data_list"        : [ {},{},{},{}...  ],
+#         "dataset_params"            : {},
+#         "source_to_match_offset"    : int,
+#     },
+#     ...
+
+# ]
+
 
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
@@ -26,85 +51,85 @@ desired_bsm_id = "f03ad610"
 
 desired_tena_identifier = "CARMA-TFHRC-LIVE"
 
-############################## LOAD IN SOURCE VEHICLE DATA ##############################
+# ############################## LOAD IN SOURCE VEHICLE DATA ##############################
 
-print("\n----- LOADING DATA FOR SOURCE VEHICLE -----")
+# print("\n----- LOADING DATA FOR SOURCE VEHICLE -----")
 
-source_out_pcap_file = "source_vehicle_data/lead_carma_platform_out_decoded_packets_BSM.csv"
+# source_out_pcap_file = "source_vehicle_data/lead_carma_platform_out_decoded_packets_BSM.csv"
 
-source_vehicle_out_data_infile_obj = open(source_out_pcap_file,'r')
-source_vehicle_out_data_infile_reader = csv.DictReader(source_vehicle_out_data_infile_obj,delimiter=',')
-source_vehicle_out_data_infile_headers = source_vehicle_out_data_infile_reader.fieldnames
-# print("source_vehicle_data_infile_headers: " + str(source_vehicle_out_data_infile_headers))
+# source_vehicle_out_data_infile_obj = open(source_out_pcap_file,'r')
+# source_vehicle_out_data_infile_reader = csv.DictReader(source_vehicle_out_data_infile_obj,delimiter=',')
+# source_vehicle_out_data_infile_headers = source_vehicle_out_data_infile_reader.fieldnames
+# # print("source_vehicle_data_infile_headers: " + str(source_vehicle_out_data_infile_headers))
 
-source_vehicle_out_data_list = list(source_vehicle_out_data_infile_reader)
-total_source_vehicle_out_packets = len(source_vehicle_out_data_list)
+# source_vehicle_out_data_list = list(source_vehicle_out_data_infile_reader)
+# total_source_vehicle_out_packets = len(source_vehicle_out_data_list)
 
-print("Total Source Vehicle Packets: " + str(total_source_vehicle_out_packets))
+# print("Total Source Vehicle Packets: " + str(total_source_vehicle_out_packets))
 
-############################## LOAD IN V2X HUB DATA ##############################
+# ############################## LOAD IN V2X HUB DATA ##############################
 
-print("\n----- LOADING DATA FOR V2X-HUB IN PCAP DATA -----")
+# print("\n----- LOADING DATA FOR V2X-HUB IN PCAP DATA -----")
 
-v2xhub_in_pcap_file = "v2xhub_data/v2xhub_in_decoded_packets_BSM.csv"
+# v2xhub_in_pcap_file = "v2xhub_data/v2xhub_in_decoded_packets_BSM.csv"
 
-v2xhub_pcap_in_data_infile_obj = open(v2xhub_in_pcap_file,'r')
-v2xhub_pcap_in_data_infile_reader = csv.DictReader(v2xhub_pcap_in_data_infile_obj,delimiter=',')
-v2xhub_pcap_in_data_infile_headers = v2xhub_pcap_in_data_infile_reader.fieldnames
-# print("v2xhub_data_infile_headers: " + str(v2xhub_pcap_in_data_infile_headers))
+# v2xhub_pcap_in_data_infile_obj = open(v2xhub_in_pcap_file,'r')
+# v2xhub_pcap_in_data_infile_reader = csv.DictReader(v2xhub_pcap_in_data_infile_obj,delimiter=',')
+# v2xhub_pcap_in_data_infile_headers = v2xhub_pcap_in_data_infile_reader.fieldnames
+# # print("v2xhub_data_infile_headers: " + str(v2xhub_pcap_in_data_infile_headers))
 
-v2xhub_pcap_in_data_list = list(v2xhub_pcap_in_data_infile_reader)
-total_v2xhub_in_packets = len(v2xhub_pcap_in_data_list)
+# v2xhub_pcap_in_data_list = list(v2xhub_pcap_in_data_infile_reader)
+# total_v2xhub_in_packets = len(v2xhub_pcap_in_data_list)
 
-print("Total Packets: " + str(total_v2xhub_in_packets))
+# print("Total Packets: " + str(total_v2xhub_in_packets))
 
-############################## LOAD IN V2X-HUB TDCS DATA ##############################
+# ############################## LOAD IN V2X-HUB TDCS DATA ##############################
 
-print("\n----- LOADING DATA FOR V2X-HUB TDCS DATA -----")
+# print("\n----- LOADING DATA FOR V2X-HUB TDCS DATA -----")
 
-v2xhub_in_tdcs_file = "v2xhub_data/VUG-Track-BSM-20220822124130.csv"
+# v2xhub_in_tdcs_file = "v2xhub_data/VUG-Track-BSM-20220822124130.csv"
 
-v2xhub_tdcs_data_infile_obj = open(v2xhub_in_tdcs_file,'r')
-v2xhub_tdcs_data_infile_reader = csv.DictReader(v2xhub_tdcs_data_infile_obj,delimiter=',')
-v2xhub_tdcs_data_infile_headers = v2xhub_tdcs_data_infile_reader.fieldnames
-# print("v2xhub_tdcs_data_infile_headers: " + str(v2xhub_tdcs_data_infile_headers))
+# v2xhub_tdcs_data_infile_obj = open(v2xhub_in_tdcs_file,'r')
+# v2xhub_tdcs_data_infile_reader = csv.DictReader(v2xhub_tdcs_data_infile_obj,delimiter=',')
+# v2xhub_tdcs_data_infile_headers = v2xhub_tdcs_data_infile_reader.fieldnames
+# # print("v2xhub_tdcs_data_infile_headers: " + str(v2xhub_tdcs_data_infile_headers))
 
-v2xhub_tdcs_data_list = list(v2xhub_tdcs_data_infile_reader)
-total_v2xhub_tdcs_packets = len(v2xhub_tdcs_data_list)
+# v2xhub_tdcs_data_list = list(v2xhub_tdcs_data_infile_reader)
+# total_v2xhub_tdcs_packets = len(v2xhub_tdcs_data_list)
 
-print("Total Packets: " + str(total_v2xhub_tdcs_packets))
+# print("Total Packets: " + str(total_v2xhub_tdcs_packets))
 
-############################## LOAD IN DEST VEHICLE TDCS DATA ##############################
+# ############################## LOAD IN DEST VEHICLE TDCS DATA ##############################
 
-print("\n----- LOADING DATA FOR DEST VEH TDCS DATA -----")
+# print("\n----- LOADING DATA FOR DEST VEH TDCS DATA -----")
 
-dest_veh_tdcs_file = "destination_vehicle_data/VUG-Track-BSM-20220822125045.csv"
+# dest_veh_tdcs_file = "destination_vehicle_data/VUG-Track-BSM-20220822125045.csv"
 
-dest_veh_tdcs_data_infile_obj = open(dest_veh_tdcs_file,'r')
-dest_veh_tdcs_data_infile_reader = csv.DictReader(dest_veh_tdcs_data_infile_obj,delimiter=',')
-dest_veh_tdcs_data_infile_headers = dest_veh_tdcs_data_infile_reader.fieldnames
-# print("dest_veh_tdcs_data_infile_headers: " + str(dest_veh_tdcs_data_infile_headers))
+# dest_veh_tdcs_data_infile_obj = open(dest_veh_tdcs_file,'r')
+# dest_veh_tdcs_data_infile_reader = csv.DictReader(dest_veh_tdcs_data_infile_obj,delimiter=',')
+# dest_veh_tdcs_data_infile_headers = dest_veh_tdcs_data_infile_reader.fieldnames
+# # print("dest_veh_tdcs_data_infile_headers: " + str(dest_veh_tdcs_data_infile_headers))
 
-dest_veh_tdcs_data_list = list(dest_veh_tdcs_data_infile_reader)
-total_dest_veh_tdcs_packets = len(dest_veh_tdcs_data_list)
+# dest_veh_tdcs_data_list = list(dest_veh_tdcs_data_infile_reader)
+# total_dest_veh_tdcs_packets = len(dest_veh_tdcs_data_list)
 
-print("Total Packets: " + str(total_dest_veh_tdcs_packets))
+# print("Total Packets: " + str(total_dest_veh_tdcs_packets))
 
-############################## LOAD IN DEST VEH PCAP DATA ##############################
+# ############################## LOAD IN DEST VEH PCAP DATA ##############################
 
-print("\n----- LOADING DATA FOR DEST VEH IN PCAP DATA -----")
+# print("\n----- LOADING DATA FOR DEST VEH IN PCAP DATA -----")
 
-dest_veh_in_pcap_file = "destination_vehicle_data/second_carma_platform_in_decoded_packets_BSM.csv"
+# dest_veh_in_pcap_file = "destination_vehicle_data/second_carma_platform_in_decoded_packets_BSM.csv"
 
-dest_veh_pcap_in_data_infile_obj = open(dest_veh_in_pcap_file,'r')
-dest_veh_pcap_in_data_infile_reader = csv.DictReader(dest_veh_pcap_in_data_infile_obj,delimiter=',')
-dest_veh_pcap_in_data_infile_headers = dest_veh_pcap_in_data_infile_reader.fieldnames
-# print("dest_veh_data_infile_headers: " + str(dest_veh_pcap_in_data_infile_headers))
+# dest_veh_pcap_in_data_infile_obj = open(dest_veh_in_pcap_file,'r')
+# dest_veh_pcap_in_data_infile_reader = csv.DictReader(dest_veh_pcap_in_data_infile_obj,delimiter=',')
+# dest_veh_pcap_in_data_infile_headers = dest_veh_pcap_in_data_infile_reader.fieldnames
+# # print("dest_veh_data_infile_headers: " + str(dest_veh_pcap_in_data_infile_headers))
 
-dest_veh_pcap_in_data_list = list(dest_veh_pcap_in_data_infile_reader)
-total_dest_veh_in_packets = len(dest_veh_pcap_in_data_list)
+# dest_veh_pcap_in_data_list = list(dest_veh_pcap_in_data_infile_reader)
+# total_dest_veh_in_packets = len(dest_veh_pcap_in_data_list)
 
-print("Total Packets: " + str(total_dest_veh_in_packets))
+# print("Total Packets: " + str(total_dest_veh_in_packets))
 
 
 ############################## DEFINE DATA PARAMS ##############################
@@ -112,6 +137,140 @@ print("Total Packets: " + str(total_dest_veh_in_packets))
 # defines the required fields to be used in analysis for each message type
 # skip if keys and values are used to skip non-relevant data (collected before run started, for different vehicle)
 # match_keys are the data columns that will be used to verify the data matches
+
+data_params = {
+    "pcap_params" :{
+        "BSM" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "bsm id",         # key(column) to check
+                    "value"         : desired_bsm_id,   # value to check
+                    "round"         : False,            # round the value before checking (important for TENA data)
+                # "round_decimals": 0,                # decimal places to round to (only needed if round == True, shown here for example)
+                    "start_only"    : False,            # only skip through rows matching this condition to align the start of the data set 
+                                                        #    had to add this becuase we want to use speed == 0 to find the start of the data (when the vehicle starts moving)
+                                                        #    but we do not want to throw out any values which contain speed == 0 (vehicle stops during run)
+                }
+
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"    : "speed(m/s)",
+                    "value"  : "0.0",
+                    "round" : True,
+                    "round_decimals": 2,
+                    "start_only" : True, 
+                }
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "latitude",
+                    "round"     : True,
+                    "round_decimals": 7,
+                    "buffer"    : 0.0000001,
+                    "radians"   : False,
+                },
+                {
+                    "key"       : "longitude",
+                    "round"     : True,
+                    "round_decimals": 7,
+                    "buffer"    : 0.0000001,
+                    "radians"   : False,
+                },
+                {
+                    # "key"       : "heading",
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False,
+                    "round_decimals": 6,
+                    # "buffer"    : 0.0000001,
+                    "j2735_heading": True,
+                },
+                {
+                    "key"       : "secMark",
+                    "round"     : False,
+                    "radians"   : False,
+                },
+                {
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False,
+                }
+            ]
+
+            
+        }
+    },
+    "tdcs_params" : {
+        "BSM" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "const^identifier,String",
+                    "value"         : desired_tena_identifier,
+                    "round"         : False,
+                    "start_only"    : False, 
+                }
+
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"           : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
+                    "value"         : "0.0",
+                    "round"         : True,
+                    "round_decimals": 2,
+                    "start_only"    : True, 
+                },
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Discovery",
+                    "round" : False,
+                    "start_only" : False, 
+                }
+            ],
+
+            
+            
+            "match_keys"        : [
+                {
+                    "key"       : "tspi.velocity.ltpENU_asTransmitted.srf.latitudeInDegrees,Float64 (optional)",
+                    "round"     : True,
+                    "round_decimals": 7,
+                    "buffer"    : 0.0000001,
+                    "radians"   : False
+                },
+                {
+                    "key"       : "tspi.velocity.ltpENU_asTransmitted.srf.longitudeInDegrees,Float64 (optional)",
+                    "round"     : True,
+                    "round_decimals": 7,
+                    "buffer"    : 0.0000001,
+                    "radians"   : False
+                },
+                {
+                    #"key"       : "tspi.orientation.frdWRTltpENUbodyFixedZYX_asTransmitted.srf.azimuthInRadians,Float64 (optional)",
+                    "key"       : None,
+                    "round"     : True,
+                    "round_decimals": 6,
+                    # "buffer"    : 0.0000001,
+                    "radians"   : True
+                },
+                {
+                    "key"       : "msWithinMinute,UInt16",
+                    "round"     : False,
+                    "radians"   : False
+                },
+                {
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False
+                }
+            ]
+        }
+    }
+}
+
 pcap_params = {
     "BSM" : {
         "skip_if_neqs"      : [
@@ -285,12 +444,24 @@ def is_number(s):
         return False
 
 # finds the offset of two sources of data
-def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_list,source_packet_params,data_to_search_params,find_source_offset):
+def find_data_row_offset(data_to_search):
     
     search_starting_row = None
     source_to_match_offset = None
     cleaned_data_to_search_list = []
     
+    
+    if data_to_search["data_order"] != 1:
+        source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
+        source_data_obj = all_data[source_data_obj_index]
+        source_data_list_filtered = source_data_obj["filtered_data_list"]
+        source_packet_to_match = source_data_list_filtered[0]
+        source_packet_params = source_data_obj["dataset_params"]
+
+    data_to_search_list = data_to_search["original_data_list"]
+    data_to_search_params = data_to_search["dataset_params"]
+
+
 
     for search_i,search_packet in enumerate(data_to_search_list):
 
@@ -387,7 +558,7 @@ def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_l
 
 
         # if we are filtering the source data, we are not matching it against anything so skip this bottom part
-        if find_source_offset:
+        if data_to_search["data_order"] == 1:
             source_to_match_offset = 0
             continue
             # return source_offset
@@ -410,12 +581,14 @@ def find_data_row_offset(source_packet_to_match,source_packet_i,data_to_search_l
                 print("\nsource_to_match_offset = " + str(source_to_match_offset))
     
 
-    data_to_return = { 
-        "cleaned_data_to_search_list" : cleaned_data_to_search_list,
-        "source_to_match_offset" : source_to_match_offset
-    }
+    # data_to_return = { 
+    #     "cleaned_data_to_search_list" : cleaned_data_to_search_list,
+    #     "source_to_match_offset" : source_to_match_offset
+    # }
 
-    return data_to_return
+    data_to_search["filtered_data_list"] = cleaned_data_to_search_list
+    data_to_search["source_to_match_offset"] = source_to_match_offset
+    # return data_to_return
 
 # checks all match params for two give packets
 def check_if_data_matches(source_packet_params,data_to_search_params,source_packet_to_match,search_packet):
@@ -496,53 +669,130 @@ def print_keys(source_params,check_params,source_packet,check_packet):
 
         print("  - " + source_packet[source_key] + " == " + check_packet[check_key])
 
+def clean_name(input_name):
+    print("Dirty Name: " + input_name)
+    clean_name = re.sub('[^A-Za-z0-9 ]+', '', input_name)
+    clean_name = re.sub(' ', '_', clean_name)
+    clean_name = clean_name.lower()
+    
+    print("Clean Name: " + clean_name)
+    return clean_name
 
-# get row offset for sv and v2xhub in pcap
-print("\n----- GETTING ROW OFFSET SOURCE VEHICLE -----")
-print("Before total_source_vehicle_out_packets length: " + str(len(source_vehicle_out_data_list)))
-filtered_source_vehicle_out_data_object = find_data_row_offset(None,None,source_vehicle_out_data_list,None,pcap_params,True)
-filtered_source_vehicle_out_data_list = filtered_source_vehicle_out_data_object["cleaned_data_to_search_list"]
-filtered_total_source_vehicle_out_packets = len(filtered_source_vehicle_out_data_list)
-print("Cleaned total_source_vehicle_out_packets length: " + str(len(filtered_source_vehicle_out_data_list)))
-print("Last packetIndex: " + filtered_source_vehicle_out_data_list[filtered_total_source_vehicle_out_packets -1]["packetIndex"])
 
-# get row offset for sv and v2xhub in pcap
-print("\n----- GETTING ROW OFFSET FOR SV AND V2XHUB IN PCAP -----")
-print("Before v2xhub_pcap_in_data_list length: " + str(len(v2xhub_pcap_in_data_list)))
-filtered_v2xhub_pcap_in_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,v2xhub_pcap_in_data_list,pcap_params,pcap_params,False)
-filtered_v2xhub_pcap_in_data_list = filtered_v2xhub_pcap_in_data_object["cleaned_data_to_search_list"]
-sv_out_to_v2xhub_in_offset = filtered_v2xhub_pcap_in_data_object["source_to_match_offset"]
-filtered_total_v2xhub_in_packets = len(filtered_v2xhub_pcap_in_data_list)
-print("filtered_v2xhub_pcap_in_data_list length: " + str(filtered_total_v2xhub_in_packets))
-print("Last packetIndex: " + filtered_v2xhub_pcap_in_data_list[filtered_total_v2xhub_in_packets -1]["packetIndex"])
+def load_data(dataset_name,dataset_infile,dataset_type):
 
-# get row offset for sv and v2xhub tdcs
-print("\n----- GETTING ROW OFFSET FOR SV AND V2XHUB TDCS -----")
-print("Before v2xhub_tdcs_data_list length: " + str(len(v2xhub_tdcs_data_list)))
-filtered_v2xhub_tdcs_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,v2xhub_tdcs_data_list,pcap_params,tdcs_params,False)
-filtered_v2xhub_tdcs_data_list = filtered_v2xhub_tdcs_data_object["cleaned_data_to_search_list"]
-sv_out_to_v2xhub_tdcs_offset = filtered_v2xhub_tdcs_data_object["source_to_match_offset"]
-filtered_total_v2xhub_tdcs_packets = len(filtered_v2xhub_tdcs_data_list)
-print("Cleaned v2xhub_tdcs_data_list length: " + str(filtered_total_v2xhub_tdcs_packets))
+    dataset_name_clean = clean_name(dataset_name)
 
-# get row offset for sv and dest veh tdcs
-print("\n----- GETTING ROW OFFSET FOR SV AND DEST VEH TDCS -----")
-print("Before dest_veh_tdcs_data_list length: " + str(len(dest_veh_tdcs_data_list)))
-filtered_dest_veh_tdcs_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,dest_veh_tdcs_data_list,pcap_params,tdcs_params,False)
-filtered_dest_veh_tdcs_data_list = filtered_dest_veh_tdcs_data_object["cleaned_data_to_search_list"]
-sv_out_to_dest_veh_tdcs_offset = filtered_dest_veh_tdcs_data_object["source_to_match_offset"]
-filtered_total_dest_veh_tdcs_packets = len(filtered_dest_veh_tdcs_data_list)
-print("Cleaned dest_veh_tdcs_data_list length: " + str(filtered_total_dest_veh_tdcs_packets))
+    print("\n----- LOADING DATA FOR " + dataset_name_clean + " -----")
 
-# get row offset for sv and dest veh in pcap
-print("\n----- GETTING ROW OFFSET FOR SV AND DEST VEH IN PCAP -----")
-print("Before dest_veh_pcap_in_data_list length: " + str(len(dest_veh_pcap_in_data_list)))
-filtered_dest_veh_pcap_in_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,dest_veh_pcap_in_data_list,pcap_params,pcap_params,False)
-filtered_dest_veh_pcap_in_data_list = filtered_dest_veh_pcap_in_data_object["cleaned_data_to_search_list"]
-sv_out_to_dest_veh_in_offset = filtered_dest_veh_pcap_in_data_object["source_to_match_offset"]
-filtered_total_dest_veh_in_packets = len(filtered_dest_veh_pcap_in_data_list)
-print("filtered_dest_veh_pcap_in_data_list length: " + str(filtered_total_dest_veh_in_packets))
-print("Last packetIndex: " + filtered_dest_veh_pcap_in_data_list[filtered_total_dest_veh_in_packets -1]["packetIndex"])
+    data_infile_obj = open(dataset_infile,'r')
+    data_infile_reader = csv.DictReader(data_infile_obj,delimiter=',')
+    data_infile_headers = data_infile_reader.fieldnames
+    print("  Data Headers: " + str(data_infile_headers))
+
+    data_list = list(data_infile_reader)
+    total_packets = len(data_list)
+
+    print("  Total Packets: " + str(total_packets))
+
+    if dataset_type == "pcap":
+        dataset_params = data_params["pcap_params"]
+    elif dataset_type == "tdcs":
+        dataset_params = data_params["tdcs_params"]
+
+    
+    num_datasets_loaded = len(all_data)
+    
+    all_data.append({
+        "dataset_name"              : dataset_name_clean,
+        "data_order"                : num_datasets_loaded + 1,
+        "original_data_list"        : data_list,
+        "filtered_data_list"        : [],
+        "dataset_params"            : dataset_params,
+    })
+
+def get_obj_by_key_value(obj_array,key,value):
+    for index, element in enumerate(obj_array):
+        if element[key] == value:
+            return index
+
+def get_row_offset(dataset):
+    
+    print("\n----- GETTING ROW OFFSET: " + dataset["dataset_name"] + " -----")
+    print("Before packets total: " + str(len(dataset["original_data_list"])))
+
+    # if we have no other data in the dataset, we have nothing to compare to 
+    filtered_data_object = find_data_row_offset(dataset)
+
+    filtered_data_list = filtered_data_object["cleaned_data_to_search_list"]
+    filtered_total_packets = len(filtered_data_list)
+    print("Cleaned packets total: " + str(filtered_total_packets))
+
+    print("Last packetIndex: " + filtered_data_list[filtered_total_packets -1]["packetIndex"])
+
+
+
+
+load_data("source vehicle","source_vehicle_data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap")
+load_data("v2x in pcap","v2xhub_data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap")
+load_data("v2x tdcs","v2xhub_data/BSM/VUG-Track-BSM-20220822124130.csv","tdcs")
+load_data("dest veh tdcs","destination_vehicle_data/BSM/VUG-Track-BSM-20220822125045.csv","tdcs")
+load_data("dest veh pcap","destination_vehicle_data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap")
+
+for dataset in all_data:
+
+    get_row_offset(dataset)
+
+
+print("\n----- TESTING EARLY EXIT -----")
+sys.exit()
+
+# # get row offset for sv and v2xhub in pcap
+# print("\n----- GETTING ROW OFFSET SOURCE VEHICLE -----")
+# print("Before total_source_vehicle_out_packets length: " + str(len(source_vehicle_out_data_list)))
+# filtered_source_vehicle_out_data_object = find_data_row_offset(None,None,source_vehicle_out_data_list,None,pcap_params,True)
+# filtered_source_vehicle_out_data_list = filtered_source_vehicle_out_data_object["cleaned_data_to_search_list"]
+# filtered_total_source_vehicle_out_packets = len(filtered_source_vehicle_out_data_list)
+# print("Cleaned total_source_vehicle_out_packets length: " + str(len(filtered_source_vehicle_out_data_list)))
+# print("Last packetIndex: " + filtered_source_vehicle_out_data_list[filtered_total_source_vehicle_out_packets -1]["packetIndex"])
+
+# # get row offset for sv and v2xhub in pcap
+# print("\n----- GETTING ROW OFFSET FOR SV AND V2XHUB IN PCAP -----")
+# print("Before v2xhub_pcap_in_data_list length: " + str(len(v2xhub_pcap_in_data_list)))
+# filtered_v2xhub_pcap_in_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,v2xhub_pcap_in_data_list,pcap_params,pcap_params,False)
+# filtered_v2xhub_pcap_in_data_list = filtered_v2xhub_pcap_in_data_object["cleaned_data_to_search_list"]
+# sv_out_to_v2xhub_in_offset = filtered_v2xhub_pcap_in_data_object["source_to_match_offset"]
+# filtered_total_v2xhub_in_packets = len(filtered_v2xhub_pcap_in_data_list)
+# print("filtered_v2xhub_pcap_in_data_list length: " + str(filtered_total_v2xhub_in_packets))
+# print("Last packetIndex: " + filtered_v2xhub_pcap_in_data_list[filtered_total_v2xhub_in_packets -1]["packetIndex"])
+
+# # get row offset for sv and v2xhub tdcs
+# print("\n----- GETTING ROW OFFSET FOR SV AND V2XHUB TDCS -----")
+# print("Before v2xhub_tdcs_data_list length: " + str(len(v2xhub_tdcs_data_list)))
+# filtered_v2xhub_tdcs_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,v2xhub_tdcs_data_list,pcap_params,tdcs_params,False)
+# filtered_v2xhub_tdcs_data_list = filtered_v2xhub_tdcs_data_object["cleaned_data_to_search_list"]
+# sv_out_to_v2xhub_tdcs_offset = filtered_v2xhub_tdcs_data_object["source_to_match_offset"]
+# filtered_total_v2xhub_tdcs_packets = len(filtered_v2xhub_tdcs_data_list)
+# print("Cleaned v2xhub_tdcs_data_list length: " + str(filtered_total_v2xhub_tdcs_packets))
+
+# # get row offset for sv and dest veh tdcs
+# print("\n----- GETTING ROW OFFSET FOR SV AND DEST VEH TDCS -----")
+# print("Before dest_veh_tdcs_data_list length: " + str(len(dest_veh_tdcs_data_list)))
+# filtered_dest_veh_tdcs_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,dest_veh_tdcs_data_list,pcap_params,tdcs_params,False)
+# filtered_dest_veh_tdcs_data_list = filtered_dest_veh_tdcs_data_object["cleaned_data_to_search_list"]
+# sv_out_to_dest_veh_tdcs_offset = filtered_dest_veh_tdcs_data_object["source_to_match_offset"]
+# filtered_total_dest_veh_tdcs_packets = len(filtered_dest_veh_tdcs_data_list)
+# print("Cleaned dest_veh_tdcs_data_list length: " + str(filtered_total_dest_veh_tdcs_packets))
+
+# # get row offset for sv and dest veh in pcap
+# print("\n----- GETTING ROW OFFSET FOR SV AND DEST VEH IN PCAP -----")
+# print("Before dest_veh_pcap_in_data_list length: " + str(len(dest_veh_pcap_in_data_list)))
+# filtered_dest_veh_pcap_in_data_object = find_data_row_offset(filtered_source_vehicle_out_data_list[0],0,dest_veh_pcap_in_data_list,pcap_params,pcap_params,False)
+# filtered_dest_veh_pcap_in_data_list = filtered_dest_veh_pcap_in_data_object["cleaned_data_to_search_list"]
+# sv_out_to_dest_veh_in_offset = filtered_dest_veh_pcap_in_data_object["source_to_match_offset"]
+# filtered_total_dest_veh_in_packets = len(filtered_dest_veh_pcap_in_data_list)
+# print("filtered_dest_veh_pcap_in_data_list length: " + str(filtered_total_dest_veh_in_packets))
+# print("Last packetIndex: " + filtered_dest_veh_pcap_in_data_list[filtered_total_dest_veh_in_packets -1]["packetIndex"])
 
 
 ############################## LOOP THROUGH SOURCE DATA ##############################
@@ -552,7 +802,6 @@ for sv_out_i,sv_out_packet in enumerate(filtered_source_vehicle_out_data_list):
     
     # this block skips configured neq and eq at the beginning of a file
     # we only want this to run at the start
-    # if a packet makes it through, sv_starting_row will be set, causing these checks to be skipped
 
     # calculate the bsm broadcast latency
     secMark = float(sv_out_packet["secMark"])
@@ -711,5 +960,4 @@ for sv_out_i,sv_out_packet in enumerate(filtered_source_vehicle_out_data_list):
         print("\nReached end of one of the files, exiting")
         sys.exit()
 
-# print("\n----- TESTING EARLY EXIT -----")
-# sys.exit()
+
