@@ -25,6 +25,7 @@ all_data = []
 #         "data_order"                : 1,
 #         "original_data_list"        : [ {},{},{},{}... ],
 #         "filtered_data_list"        : [ {},{},{},{}...  ],
+#         "dataset_type"              : "pcap" or "tdcs"
 #         "dataset_params"            : {},
 #         "source_to_match_offset"    : int,
 #     },
@@ -33,6 +34,7 @@ all_data = []
 #         "data_order"                : 2,
 #         "original_data_list"        : [ {},{},{},{}... ],
 #         "filtered_data_list"        : [ {},{},{},{}...  ],
+#         "dataset_type"              : "pcap" or "tdcs"
 #         "dataset_params"            : {},
 #         "source_to_match_offset"    : int,
 #     },
@@ -271,137 +273,6 @@ data_params = {
     }
 }
 
-pcap_params = {
-    "BSM" : {
-        "skip_if_neqs"      : [
-            {
-                "key"           : "bsm id",         # key(column) to check
-                "value"         : desired_bsm_id,   # value to check
-                "round"         : False,            # round the value before checking (important for TENA data)
-              # "round_decimals": 0,                # decimal places to round to (only needed if round == True, shown here for example)
-                "start_only"    : False,            # only skip through rows matching this condition to align the start of the data set 
-                                                    #    had to add this becuase we want to use speed == 0 to find the start of the data (when the vehicle starts moving)
-                                                    #    but we do not want to throw out any values which contain speed == 0 (vehicle stops during run)
-            }
-
-        ],
-        
-        "skip_if_eqs"       : [
-            {
-                "key"    : "speed(m/s)",
-                "value"  : "0.0",
-                "round" : True,
-                "round_decimals": 2,
-                "start_only" : True, 
-            }
-        ],
-
-        "match_keys"        : [
-            {
-                "key"       : "latitude",
-                "round"     : True,
-                "round_decimals": 7,
-                "buffer"    : 0.0000001,
-                "radians"   : False,
-            },
-            {
-                "key"       : "longitude",
-                "round"     : True,
-                "round_decimals": 7,
-                "buffer"    : 0.0000001,
-                "radians"   : False,
-            },
-            {
-                # "key"       : "heading",
-                "key"       : None,
-                "round"     : False,
-                "radians"   : False,
-                "round_decimals": 6,
-                # "buffer"    : 0.0000001,
-                "j2735_heading": True,
-            },
-            {
-                "key"       : "secMark",
-                "round"     : False,
-                "radians"   : False,
-            },
-            {
-                "key"       : None,
-                "round"     : False,
-                "radians"   : False,
-            }
-        ]
-
-        
-    }
-}
-
-tdcs_params = {
-    "BSM" : {
-        "skip_if_neqs"      : [
-            {
-                "key"           : "const^identifier,String",
-                "value"         : desired_tena_identifier,
-                "round"         : False,
-                "start_only"    : False, 
-            }
-
-        ],
-        
-        "skip_if_eqs"       : [
-            {
-                "key"           : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
-                "value"         : "0.0",
-                "round"         : True,
-                "round_decimals": 2,
-                "start_only"    : True, 
-            },
-            {
-                "key"   : "Metadata,Enum,Middleware::EventType",
-                "value" : "Discovery",
-                "round" : False,
-                "start_only" : False, 
-            }
-        ],
-
-        
-        
-        "match_keys"        : [
-            {
-                "key"       : "tspi.velocity.ltpENU_asTransmitted.srf.latitudeInDegrees,Float64 (optional)",
-                "round"     : True,
-                "round_decimals": 7,
-                "buffer"    : 0.0000001,
-                "radians"   : False
-            },
-            {
-                "key"       : "tspi.velocity.ltpENU_asTransmitted.srf.longitudeInDegrees,Float64 (optional)",
-                "round"     : True,
-                "round_decimals": 7,
-                "buffer"    : 0.0000001,
-                "radians"   : False
-            },
-            {
-                #"key"       : "tspi.orientation.frdWRTltpENUbodyFixedZYX_asTransmitted.srf.azimuthInRadians,Float64 (optional)",
-                "key"       : None,
-                "round"     : True,
-                "round_decimals": 6,
-                # "buffer"    : 0.0000001,
-                "radians"   : True
-            },
-            {
-                "key"       : "msWithinMinute,UInt16",
-                "round"     : False,
-                "radians"   : False
-            },
-            {
-                "key"       : None,
-                "round"     : False,
-                "radians"   : False
-            }
-        ]
-    }
-}
 
 ############################## INITIALIZE CSV WRITER ##############################
 
@@ -708,6 +579,7 @@ def load_data(dataset_name,dataset_infile,dataset_type):
         "data_order"                : num_datasets_loaded + 1,
         "original_data_list"        : data_list,
         "filtered_data_list"        : [],
+        "dataset_type"              : dataset_type,
         "dataset_params"            : dataset_params,
     })
 
@@ -722,13 +594,13 @@ def get_row_offset(dataset):
     print("Before packets total: " + str(len(dataset["original_data_list"])))
 
     # if we have no other data in the dataset, we have nothing to compare to 
-    filtered_data_object = find_data_row_offset(dataset)
+    find_data_row_offset(dataset)
 
-    filtered_data_list = filtered_data_object["cleaned_data_to_search_list"]
-    filtered_total_packets = len(filtered_data_list)
+    # filtered_data_list = dataset["cleaned_data_to_search_list"]
+    filtered_total_packets = len(dataset["filtered_data_list"])
     print("Cleaned packets total: " + str(filtered_total_packets))
 
-    print("Last packetIndex: " + filtered_data_list[filtered_total_packets -1]["packetIndex"])
+    # print("Last packetIndex: " + dataset["filtered_data_list"][filtered_total_packets -1]["packetIndex"])
 
 
 
@@ -744,8 +616,7 @@ for dataset in all_data:
     get_row_offset(dataset)
 
 
-print("\n----- TESTING EARLY EXIT -----")
-sys.exit()
+
 
 # # get row offset for sv and v2xhub in pcap
 # print("\n----- GETTING ROW OFFSET SOURCE VEHICLE -----")
@@ -797,167 +668,206 @@ sys.exit()
 
 ############################## LOOP THROUGH SOURCE DATA ##############################
 
+source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
+source_data_obj = all_data[source_data_obj_index]
+source_data_list_filtered = source_data_obj["filtered_data_list"]
+source_packet_params = source_data_obj["dataset_params"]
+
 print("\n----- ITERATING SOURCE DATA -----")
-for sv_out_i,sv_out_packet in enumerate(filtered_source_vehicle_out_data_list):
+for source_i,source_packet in enumerate(source_data_list_filtered):
     
-    # this block skips configured neq and eq at the beginning of a file
-    # we only want this to run at the start
+    for dataset in all_data:
 
-    # calculate the bsm broadcast latency
-    secMark = float(sv_out_packet["secMark"])
-    packet_timestamp = datetime.datetime.fromtimestamp(int(float(sv_out_packet["packetTimestamp"])))
-    roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
-    packetSecondsAfterMin = (float(sv_out_packet["packetTimestamp"]) - roundDownMinTime)
-    bsm_broadcast_latency = packetSecondsAfterMin*1000 - secMark
+        current_dataset_packet = dataset["filtered_data_list"][ source_i + dataset["source_to_match_offset"]]
 
-    if (bsm_broadcast_latency < 0) :
-        # print("[!!!] Minute mismatch")
-        bsm_broadcast_latency = bsm_broadcast_latency + 60000
+        all_fields_match = check_if_data_matches(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet)
 
-    sv_out_to_v2xhub_in_index = sv_out_i + sv_out_to_v2xhub_in_offset
-    sv_out_to_v2xhub_tdcs_index = sv_out_i + sv_out_to_v2xhub_tdcs_offset
-    sv_out_to_dest_veh_tdcs_index = sv_out_i + sv_out_to_dest_veh_tdcs_offset
-    sv_out_to_dest_veh_in_index = sv_out_i + sv_out_to_dest_veh_in_offset
-
-    # print("\nsv_out index: " + str(sv_out_i))
-    # print("v2x_in index: " + str(sv_out_to_v2xhub_in_index))
-    # print("v2x_tdcs index: " + str(sv_out_to_v2xhub_tdcs_index))
-    # print("dest_veh_tdcs index: " + str(sv_out_to_dest_veh_tdcs_index))
-
-    ############################## CHECK V2X-HUB PCAP IN DATA ##############################
-
-
-    all_fields_match = check_if_data_matches(pcap_params,pcap_params,sv_out_packet,filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index])
-
-    if( all_fields_match ):
+        if dataset["dataset_type"] == "pcap":
+            dataset_row_id_column_name = "packetIndex"
+        elif dataset["dataset_type"] == "tdcs":
+            dataset_row_id_column_name = "rowID"
+        else:
+            print("[???] HOW DID WE GET HERE????")
         
-        v2x_pcap_in_timestamp = float(filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetTimestamp"])
+        if source_data_obj["dataset_type"] == "pcap":
+            source_row_id_column_name = "packetIndex"
+        elif source_data_obj["dataset_type"] == "tdcs":
+            source_row_id_column_name = "rowID"
+        else:
+            print("[???] HOW DID WE GET HERE????")
+
+        if( all_fields_match ):
+
+            print("\nFound matching PCAP data [" + source_packet[source_row_id_column_name] + ":" + current_dataset_packet[dataset_row_id_column_name] + "]: ")
+            print_keys(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet)
+            
+
+        else:
+            print("\n[!!!] Found dropped packet in " + dataset["dataset_name"] +  " [" + source_packet[source_row_id_column_name] + ":" + current_dataset_packet[dataset_row_id_column_name] + "]: ")
+            print_keys(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet)
+
+            dataset["source_to_match_offset"] -= 1
+
+    # print("\n----- TESTING EARLY EXIT -----")
+    # sys.exit()
+
+
+
+    # # calculate the bsm broadcast latency
+    # secMark = float(source_packet["secMark"])
+    # packet_timestamp = datetime.datetime.fromtimestamp(int(float(source_packet["packetTimestamp"])))
+    # roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
+    # packetSecondsAfterMin = (float(source_packet["packetTimestamp"]) - roundDownMinTime)
+    # bsm_broadcast_latency = packetSecondsAfterMin*1000 - secMark
+
+    # if (bsm_broadcast_latency < 0) :
+    #     # print("[!!!] Minute mismatch")
+    #     bsm_broadcast_latency = bsm_broadcast_latency + 60000
+
+    # sv_out_to_v2xhub_in_index = sv_out_i + sv_out_to_v2xhub_in_offset
+    # sv_out_to_v2xhub_tdcs_index = sv_out_i + sv_out_to_v2xhub_tdcs_offset
+    # sv_out_to_dest_veh_tdcs_index = sv_out_i + sv_out_to_dest_veh_tdcs_offset
+    # sv_out_to_dest_veh_in_index = sv_out_i + sv_out_to_dest_veh_in_offset
+
+    # # print("\nsv_out index: " + str(sv_out_i))
+    # # print("v2x_in index: " + str(sv_out_to_v2xhub_in_index))
+    # # print("v2x_tdcs index: " + str(sv_out_to_v2xhub_tdcs_index))
+    # # print("dest_veh_tdcs index: " + str(sv_out_to_dest_veh_tdcs_index))
+
+    # ############################## CHECK V2X-HUB PCAP IN DATA ##############################
+
+
+    # all_fields_match = check_if_data_matches(pcap_params,pcap_params,source_packet,filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index])
+
+    # if( all_fields_match ):
         
-        v2x_adjusted_timestamp = v2x_pcap_in_timestamp + sv_to_v2x_clock_skew
-
-        sv_to_v2x_latency = v2x_adjusted_timestamp - float(sv_out_packet["packetTimestamp"])
+    #     v2x_pcap_in_timestamp = float(filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetTimestamp"])
         
-        # print("\nFound matching PCAP data [" + sv_out_packet["packetIndex"] + ":" + filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetIndex"] + "]: ")
-        # print_keys(pcap_params,pcap_params,sv_out_packet,filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index])
+    #     v2x_adjusted_timestamp = v2x_pcap_in_timestamp + sv_to_v2x_clock_skew
+
+    #     sv_to_v2x_latency = v2x_adjusted_timestamp - float(source_packet["packetTimestamp"])
         
-
-    else:
-        print("\n[!!!] Found dropped packet V2X-Hub IN PCAP [" + sv_out_packet["packetIndex"] + ":" + filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetIndex"] + "]: ")
-        print_keys(pcap_params,pcap_params,sv_out_packet,filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index])
-
-        sv_out_to_v2xhub_in_offset -= 1
-
-
-    ############################## CHECK V2X-HUB TDCS DATA ##############################
-
-    all_fields_match = check_if_data_matches(pcap_params,tdcs_params,sv_out_packet,filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index])
-
-    if( all_fields_match ):
-        
-        v2x_tdcs_time_of_creation = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["const^Metadata,TimeOfCreation"])/1000000000
-        v2x_tdcs_time_of_commit = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["Metadata,TimeOfCommit"])/1000000000
-        v2x_tdcs_time_of_receipt = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["Metadata,TimeOfReceipt"])/1000000000
-
-        j2735_to_sdo_conversion_time = (v2x_tdcs_time_of_commit - v2x_pcap_in_timestamp)*1000
-        # print("\nFound matching TDCS data [" + sv_out_packet["packetIndex"] + ":" + filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["rowID"] + "]: ")
-        # print_keys(pcap_params,tdcs_params,sv_out_packet,filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index])
-        
-
-    else:
-        print("\n[!!!] Found dropped packet V2X TDCS [" + sv_out_packet["packetIndex"] + ":" + filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["rowID"] + "]: ")
-        print_keys(pcap_params,tdcs_params,sv_out_packet,filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index])
-
-        sv_out_to_v2xhub_tdcs_offset -= 1
-
-    ############################## CHECK DEST VEH TDCS DATA ##############################
-
-    all_fields_match = check_if_data_matches(pcap_params,tdcs_params,sv_out_packet,filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index])
-
-    if( all_fields_match ):
-        
-        dest_veh_tdcs_time_of_creation = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["const^Metadata,TimeOfCreation"])/1000000000
-        dest_veh_tdcs_time_of_commit = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["Metadata,TimeOfCommit"])/1000000000
-        dest_veh_tdcs_time_of_receipt = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["Metadata,TimeOfReceipt"])/1000000000
-
-        tena_packet_latency = (dest_veh_tdcs_time_of_receipt - (dest_veh_tdcs_time_of_commit + v2x_to_second_clock_skew/1000) )*1000
-        # print("\nFound matching Dest Veh TDCS data [" + sv_out_packet["packetIndex"] + ":" + filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["rowID"] + "]: ")
-        # print_keys(pcap_params,tdcs_params,sv_out_packet,filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index])
+    #     # print("\nFound matching PCAP data [" + source_packet["packetIndex"] + ":" + filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetIndex"] + "]: ")
+    #     # print_keys(pcap_params,pcap_params,source_packet,filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index])
         
 
-    else:
-        print("\n[!!!] Found dropped packet Dest Veh TDCS [" + sv_out_packet["packetIndex"] + ":" + filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["rowID"] + "]: ")
-        print_keys(pcap_params,tdcs_params,sv_out_packet,filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index])
+    # else:
+    #     print("\n[!!!] Found dropped packet V2X-Hub IN PCAP [" + source_packet["packetIndex"] + ":" + filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetIndex"] + "]: ")
+    #     print_keys(pcap_params,pcap_params,source_packet,filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index])
 
-        sv_out_to_dest_veh_tdcs_offset -= 1
-
-    ############################## CHECK V2X-HUB PCAP IN DATA ##############################
+    #     sv_out_to_v2xhub_in_offset -= 1
 
 
-    all_fields_match = check_if_data_matches(pcap_params,pcap_params,sv_out_packet,filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index])
+    # ############################## CHECK V2X-HUB TDCS DATA ##############################
 
-    if( all_fields_match ):
+    # all_fields_match = check_if_data_matches(pcap_params,tdcs_params,source_packet,filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index])
 
-        dest_veh_pcap_in_timestamp = float(filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetTimestamp"])
+    # if( all_fields_match ):
         
-        sdo_to_j2735_latency = (dest_veh_pcap_in_timestamp - dest_veh_tdcs_time_of_receipt)*1000
+    #     v2x_tdcs_time_of_creation = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["const^Metadata,TimeOfCreation"])/1000000000
+    #     v2x_tdcs_time_of_commit = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["Metadata,TimeOfCommit"])/1000000000
+    #     v2x_tdcs_time_of_receipt = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["Metadata,TimeOfReceipt"])/1000000000
+
+    #     j2735_to_sdo_conversion_time = (v2x_tdcs_time_of_commit - v2x_pcap_in_timestamp)*1000
+    #     # print("\nFound matching TDCS data [" + source_packet["packetIndex"] + ":" + filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["rowID"] + "]: ")
+    #     # print_keys(pcap_params,tdcs_params,source_packet,filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index])
         
-        # print("\nFound matching DEST VEH IN PCAP data [" + sv_out_packet["packetIndex"] + ":" + filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetIndex"] + "]: ")
-        # print_keys(pcap_params,pcap_params,sv_out_packet,filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index])
+
+    # else:
+    #     print("\n[!!!] Found dropped packet V2X TDCS [" + source_packet["packetIndex"] + ":" + filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["rowID"] + "]: ")
+    #     print_keys(pcap_params,tdcs_params,source_packet,filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index])
+
+    #     sv_out_to_v2xhub_tdcs_offset -= 1
+
+    # ############################## CHECK DEST VEH TDCS DATA ##############################
+
+    # all_fields_match = check_if_data_matches(pcap_params,tdcs_params,source_packet,filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index])
+
+    # if( all_fields_match ):
+        
+    #     dest_veh_tdcs_time_of_creation = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["const^Metadata,TimeOfCreation"])/1000000000
+    #     dest_veh_tdcs_time_of_commit = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["Metadata,TimeOfCommit"])/1000000000
+    #     dest_veh_tdcs_time_of_receipt = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["Metadata,TimeOfReceipt"])/1000000000
+
+    #     tena_packet_latency = (dest_veh_tdcs_time_of_receipt - (dest_veh_tdcs_time_of_commit + v2x_to_second_clock_skew/1000) )*1000
+    #     # print("\nFound matching Dest Veh TDCS data [" + source_packet["packetIndex"] + ":" + filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["rowID"] + "]: ")
+    #     # print_keys(pcap_params,tdcs_params,source_packet,filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index])
         
 
-    else:
-        print("\n[!!!] Found dropped packet DEST VEH IN PCAP [" + sv_out_packet["packetIndex"] + ":" + filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetIndex"] + "]: ")
-        print_keys(pcap_params,pcap_params,sv_out_packet,filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index])
+    # else:
+    #     print("\n[!!!] Found dropped packet Dest Veh TDCS [" + source_packet["packetIndex"] + ":" + filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["rowID"] + "]: ")
+    #     print_keys(pcap_params,tdcs_params,source_packet,filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index])
 
-        sv_out_to_dest_veh_in_offset -= 1
+    #     sv_out_to_dest_veh_tdcs_offset -= 1
 
-    # write results to the csv
+    # ############################## CHECK V2X-HUB PCAP IN DATA ##############################
 
-    # [
-    #   "sv_packet_index", "v2x_in_packet_index", "v2x_tdcs_rowID", "dest_veh_tdcs_rowID", 
-    #   "sv_out_timestamp", "v2x_in_timestamp", 
-    #   "v2x_tdcs_time_of_creation", "v2x_tdcs_time_of_commit", "v2x_tdcs_time_of_receipt", 
-    #   "dest_veh_tdcs_time_of_creation", "dest_veh_tdcs_time_of_commit", "dest_veh_tdcs_time_of_receipt", 
-    #   "bsm_broadcast_latency", "v2x_adjusted_timestamp","sv_to_v2x_latency", "j2735_to_sdo_conversion_time", "tena_packet_latency", "sdo_to_j2735_latency"
-    # ]
 
-    results_outfile_writer.writerow([
-            sv_out_packet["packetIndex"],
-            filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetIndex"],
-            filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["rowID"],
-            filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["rowID"],
+    # all_fields_match = check_if_data_matches(pcap_params,pcap_params,source_packet,filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index])
 
-            sv_out_packet["packetTimestamp"],
-            v2x_pcap_in_timestamp,
+    # if( all_fields_match ):
 
-            v2x_tdcs_time_of_creation,
-            v2x_tdcs_time_of_commit,
-            v2x_tdcs_time_of_receipt,
+    #     dest_veh_pcap_in_timestamp = float(filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetTimestamp"])
+        
+    #     sdo_to_j2735_latency = (dest_veh_pcap_in_timestamp - dest_veh_tdcs_time_of_receipt)*1000
+        
+    #     # print("\nFound matching DEST VEH IN PCAP data [" + source_packet["packetIndex"] + ":" + filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetIndex"] + "]: ")
+    #     # print_keys(pcap_params,pcap_params,source_packet,filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index])
+        
 
-            v2x_tdcs_time_of_creation,
-            v2x_tdcs_time_of_commit,
-            v2x_tdcs_time_of_receipt,
+    # else:
+    #     print("\n[!!!] Found dropped packet DEST VEH IN PCAP [" + source_packet["packetIndex"] + ":" + filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetIndex"] + "]: ")
+    #     print_keys(pcap_params,pcap_params,source_packet,filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index])
 
-            bsm_broadcast_latency,
-            v2x_adjusted_timestamp,
-            sv_to_v2x_latency,
-            j2735_to_sdo_conversion_time,
-            tena_packet_latency,
-            sdo_to_j2735_latency,
+    #     sv_out_to_dest_veh_in_offset -= 1
+
+    # # write results to the csv
+
+    # # [
+    # #   "sv_packet_index", "v2x_in_packet_index", "v2x_tdcs_rowID", "dest_veh_tdcs_rowID", 
+    # #   "sv_out_timestamp", "v2x_in_timestamp", 
+    # #   "v2x_tdcs_time_of_creation", "v2x_tdcs_time_of_commit", "v2x_tdcs_time_of_receipt", 
+    # #   "dest_veh_tdcs_time_of_creation", "dest_veh_tdcs_time_of_commit", "dest_veh_tdcs_time_of_receipt", 
+    # #   "bsm_broadcast_latency", "v2x_adjusted_timestamp","sv_to_v2x_latency", "j2735_to_sdo_conversion_time", "tena_packet_latency", "sdo_to_j2735_latency"
+    # # ]
+
+    # results_outfile_writer.writerow([
+    #         source_packet["packetIndex"],
+    #         filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetIndex"],
+    #         filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["rowID"],
+    #         filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["rowID"],
+
+    #         source_packet["packetTimestamp"],
+    #         v2x_pcap_in_timestamp,
+
+    #         v2x_tdcs_time_of_creation,
+    #         v2x_tdcs_time_of_commit,
+    #         v2x_tdcs_time_of_receipt,
+
+    #         v2x_tdcs_time_of_creation,
+    #         v2x_tdcs_time_of_commit,
+    #         v2x_tdcs_time_of_receipt,
+
+    #         bsm_broadcast_latency,
+    #         v2x_adjusted_timestamp,
+    #         sv_to_v2x_latency,
+    #         j2735_to_sdo_conversion_time,
+    #         tena_packet_latency,
+    #         sdo_to_j2735_latency,
 
            
 
             
 
-        ])
+    #     ])
 
     # check to make sure we did not reach the end of the file on any other dataset 
-    if (
-        sv_out_to_v2xhub_in_index > filtered_total_v2xhub_in_packets or 
-        sv_out_to_v2xhub_tdcs_index > filtered_total_v2xhub_tdcs_packets
+    # if (
+    #     sv_out_to_v2xhub_in_index > filtered_total_v2xhub_in_packets or 
+    #     sv_out_to_v2xhub_tdcs_index > filtered_total_v2xhub_tdcs_packets
 
-    ):
-        print("\nReached end of one of the files, exiting")
-        sys.exit()
+    # ):
+    #     print("\nReached end of one of the files, exiting")
+    #     sys.exit()
 
 
