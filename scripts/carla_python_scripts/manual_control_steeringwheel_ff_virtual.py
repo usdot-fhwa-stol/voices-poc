@@ -368,11 +368,15 @@ class DualControl(object):
         # initialize steering wheel
         pygame.joystick.init()
 
-        #joystick_count = pygame.joystick.get_count()
-        #if joystick_count > 1:
-        #    raise ValueError("Please Connect Just One Joystick")
+        try:
+            self._joystick = pygame.joystick.Joystick(1)
+        except:
+            try:
+                self._joystick = pygame.joystick.Joystick(0)
+            except:
+                print("\nERROR: NO JOYSTICK FOUND")
 
-        self._joystick = pygame.joystick.Joystick(0)
+
         self._joystick.init()
         # evdev references to the steering wheel (force feedback)
         self._device = evdev.list_devices()[0]
@@ -566,6 +570,12 @@ class DualControl(object):
         elif throttleCmd > 1:
             throttleCmd = 1
 
+        # v = world.player.get_velocity()
+        # actual_v = (3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2))
+        # print("actual_v: " + str(actual_v))
+        # if actual_v > 10:
+        #     throttleCmd = 0
+
         if (jsInputs[self._brake_idx] == 0.0):
             brakeCmd = 0
         else:
@@ -678,8 +688,8 @@ class HUD(object):
         collision = [x / max_col for x in collision]
         vehicles = world.world.get_actors().filter('vehicle.*')
         self._info_text = [
-            'Server:  % 6.0f FPS' % self.server_fps,
-            'Client:  % 6.0f FPS' % clock.get_fps(),
+            # 'Server:  % 6.0f FPS' % self.server_fps,
+            # 'Client:  % 6.0f FPS' % clock.get_fps(),
             # '',
             # 'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
             # 'Map:     % 20s' % world.map.name,
@@ -707,15 +717,15 @@ class HUD(object):
                 ('Speed:', c.speed, 0.0, 5.556),
                 ('Jump:', c.jump)]
         self._info_text += [
-            '',
-            '',
+            # '',
+            # '',
 #            'Time Left: ' + str(math.ceil(ScenarioTimer.timeLeft)) + ' seconds',
 #            "Completed Route: " + str(math.floor(ScenarioInfo.routePercentageCompleted)) + "%",
-            '',
-            '',
-            'Collision Sensor:',
-            collision,
-            '',
+            # '',
+            # '',
+            # 'Collision Sensor:',
+            # collision,
+            # '',
             # '',
             # 'Number of vehicles: % 8d' % len(vehicles),
             '']

@@ -366,7 +366,14 @@ class DualControl(object):
         #if joystick_count > 1:
         #    raise ValueError("Please Connect Just One Joystick")
 
-        self._joystick = pygame.joystick.Joystick(1)
+        try:
+            self._joystick = pygame.joystick.Joystick(1)
+        except:
+            try:
+                self._joystick = pygame.joystick.Joystick(0)
+            except:
+                print("\nERROR: NO JOYSTICK FOUND")
+                
         self._joystick.init()
         # evdev references to the steering wheel (force feedback)
         self._device = evdev.list_devices()[0]

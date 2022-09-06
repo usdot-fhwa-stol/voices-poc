@@ -177,6 +177,9 @@
     <simulation name="CARLA-TFHRC" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
+    <simulation name="CARLA-TFHRC-REPLAY" type="CARLA">
+      <WeatherState>ClearNoon</WeatherState>
+    </simulation>
     <simulation name="CARLA-AUGUSTA" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
