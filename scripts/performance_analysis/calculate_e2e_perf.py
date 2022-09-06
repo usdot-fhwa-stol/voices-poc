@@ -5,24 +5,16 @@ import math
 import re
 import logging
 import glob
-
-logging.basicConfig(level=logging.INFO,filename='performance_analysis.log', filemode='w', format='%(name)s:%(levelname)s:%(message)s')
-
-
-print("\n==========================================================")
-print("========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
-print("==========================================================")
-
-logging.info("========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
-
+import argparse
+import json
+from pprint import pprint
 
 
 ############################## TODO ##############################
 # - change all data param modifiers (round, buffer, radian) to check if key exists, not value
 # - add checks for all param modifiers to check for the proper datatype before attempting to perform modifier
+# - remove places where underscore is added to message types
 # 
-# 
-
 
 # checks if value is a number
 def is_number(s):
@@ -338,7 +330,6 @@ def get_obj_by_key_value(obj_array,key,value):
     for index, element in enumerate(obj_array):
         if element[key] == value:
             return index
-    
 
 def check_for_dropped_packets():
 
@@ -397,10 +388,7 @@ def check_for_dropped_packets():
     
     print("\nDropped Packet Totals: ")
     for dataset_name in dropped_packet_counts:
-        print("\t" + dataset_name + ": " + str(dropped_packet_counts[dataset_name]))
-    
-        
-                
+        print("\t" + dataset_name + ": " + str(dropped_packet_counts[dataset_name]))             
 
 def calculate_performance_metrics():
 
@@ -560,7 +548,6 @@ def calculate_performance_metrics():
     
     # sdo_to_j2735_latency = (dest_veh_pcap_in_timestamp - dest_veh_tdcs_time_of_receipt)*1000
 
-
 #################### LOAD DATA ####################
 
 def load_data_user_input():
@@ -614,38 +601,45 @@ def load_data_user_input():
             still_loading_data = False
 
 #################### SELECT SOURCE VEHICLE ####################
-def select_vehicle_user_input():
-        
-    voices_vehicles = [
+
+voices_vehicles = [
         {
-            "host_id"       : "CARMA-TFHRC-LIVE",
+            "tena_host_id"       : "CARMA-TFHRC-LIVE",
+            "host_static_id":   "DOT-45243",
             "bsm_id"        : "f03ad610",
         },
         {
-            "host_id"       : "CARMA-TFHRC",
+            "tena_host_id"       : "CARMA-TFHRC",
+            "host_static_id":   "CARMA-TFHRC",
             "bsm_id"        : "f03ad608",
         },
         {
-            "host_id"       : "CARMA-SPRINGFIELD",
+            "tena_host_id"       : "CARMA-SPRINGFIELD",
+            "host_static_id":   "CARMA-SPR",
             "bsm_id"        : "f03ad612",
         },
         {
-            "host_id"       : "CARMA-AUGUSTA",
+            "tena_host_id"       : "CARMA-AUGUSTA",
+            "host_static_id":   "CARMA-AUG",
             "bsm_id"        : "f03ad614",
         },
         {
-            "host_id"       : "CARMA-MITRE",
+            "tena_host_id"       : "CARMA-MITRE",
+            "host_static_id":   "CARMA-MITRE",
             "bsm_id"        : "f03ad616",
         },
         {
-            "host_id"       : "CARLA-MANUAL-1",
+            "tena_host_id"       : "CARLA-MANUAL-1",
+            "host_static_id":   "CARLA-MANUAL-1",
             "bsm_id"        : "f03ad618",
         },
     ]
 
+def select_vehicle_user_input():
+
     print("\nWhat is the source vehicle? [#]\n")
     for vehicle_i,vehicle in enumerate(voices_vehicles):
-        print("\n[" + str(vehicle_i + 1) + "] \tID: " + vehicle["host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
+        print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
 
     vehicle_index = input("\n    --> ")
 
@@ -657,10 +651,9 @@ def select_vehicle_user_input():
         print("[!!!] Invalid selection, try again")
         sys.exit()
 
-
 #################### SELECT MESSAGE TYPE ####################
+
 def select_message_type_user_input():
-    J2735_message_types = ["MAP","SPAT","BSM","Mobility Request","Mobility Response","Mobility Path","Mobility Operation","Traffic Control Request","Traffic Control Message"]
 
     print("\nWhat data type would you like to analyze? [#]\n")
     for type_i,message_type in enumerate(J2735_message_types):
@@ -670,43 +663,12 @@ def select_message_type_user_input():
 
     try:
         J2735_message_type_name = J2735_message_types[int(J2735_message_type_index) -1]
+        J2735_message_type_name = re.sub(" ","_",J2735_message_type_name)
         return J2735_message_type_name
     except:
         print("[!!!] Invalid selection, try again")
 
-############################## MAIN ##############################
-
-
-all_data = []
-
-############################## SET CLOCK SKEWS ##############################
-
-live_to_nist_clock_skew = 0.060723
-virtual_to_nist_clock_skew = -0.051729
-
-live_to_virtual_clock_skew = live_to_nist_clock_skew - virtual_to_nist_clock_skew
-
-virt_to_v2x_clock_skew = -44.806000
-virt_to_second_clock_skew = -45.000999
-virt_to_third_clock_skew = -45.786999
-
-live_to_v2x_clock_skew = live_to_virtual_clock_skew + virt_to_v2x_clock_skew
-live_to_second_clock_skew = live_to_virtual_clock_skew + virt_to_second_clock_skew
-live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
-
-
-############################## USER INPUT ##############################
-
-J2735_message_type_name = select_message_type_user_input()
-print("\n" + J2735_message_type_name + " selected")
-
-vehicle_info = select_vehicle_user_input()
-desired_bsm_id = vehicle_info["bsm_id"]
-desired_tena_identifier = vehicle_info["host_id"]
-print("\n" + desired_tena_identifier + "(" + desired_bsm_id +  ") selected")
-
 ############################## DEFINE GENERAL VARIABLES ##############################
-
 
 # example schema for all_data
 # all_data = [
@@ -739,6 +701,116 @@ print("\n" + desired_tena_identifier + "(" + desired_bsm_id +  ") selected")
 
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
+
+J2735_message_types = ["MAP","SPAT","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operation","Traffic_Control_Request","Traffic_Control_Message"]
+all_data = []
+
+############################## MAIN ##############################
+
+argparser = argparse.ArgumentParser(
+    description='VOICES Performance Calculation Script')
+argparser.add_argument(
+    '-l', '--log_level',
+    metavar='<log_level>',
+    type=str,
+    dest='log_level',
+    default="WARNING",
+    help='set the logging level OPTIONS: [DEBUG,INFO,WARNING,ERROR,CRITICAL]')
+argparser.add_argument(
+    '-t', '--data-type',
+    metavar='<data_type>',
+    dest='data_type',
+    type=str,
+    default=None,
+    help='Data type to be analyzed OPTIONS: [MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operation,Traffic_Control_Request,Traffic_Control_Message]')
+argparser.add_argument(
+    '-s', '--source-vehicle',
+    metavar='<source_vehicle_index>',
+    dest='source_vehicle_index',
+    type=int,
+    default=None,
+    help='Index of vehicle to analyze data for: [#]')
+# argparser.add_argument(
+#     '-p', '--port',
+#     metavar='P',
+#     default=2000,
+#     type=int,
+#     help='TCP port to listen to (default: 2000)')
+# argparser.add_argument(
+#     '-a', '--autopilot',
+#     action='store_true',
+#     help='enable autopilot')
+args = argparser.parse_args()
+
+log_level = getattr(logging, args.log_level)
+
+logging.basicConfig(level=log_level,filename='performance_analysis.log', filemode='w', format='%(name)s:%(levelname)s:%(message)s')
+
+
+print("\n==========================================================")
+print("========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
+print("==========================================================\n")
+
+# print("args: " + str(args))
+
+print("Log Level: " + str(args.log_level))
+
+logging.info("========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
+
+
+
+############################## SET CLOCK SKEWS ##############################
+
+live_to_nist_clock_skew = 0.060723
+virtual_to_nist_clock_skew = -0.051729
+
+live_to_virtual_clock_skew = live_to_nist_clock_skew - virtual_to_nist_clock_skew
+
+virt_to_v2x_clock_skew = -44.806000
+virt_to_second_clock_skew = -45.000999
+virt_to_third_clock_skew = -45.786999
+
+live_to_v2x_clock_skew = live_to_virtual_clock_skew + virt_to_v2x_clock_skew
+live_to_second_clock_skew = live_to_virtual_clock_skew + virt_to_second_clock_skew
+live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
+
+
+############################## USER INPUT ##############################
+
+if args.data_type == None:
+    J2735_message_type_name = select_message_type_user_input()
+else:
+    if not args.data_type in J2735_message_types:
+        print("ERROR: selected message type is not valid, try again")
+        print("\n\tValid Types: " + str(J2735_message_types) + "\n")
+        sys.exit()
+
+    J2735_message_type_name = str(args.data_type)
+
+
+print("Message Type: " + J2735_message_type_name + " selected")
+
+if args.source_vehicle_index == None:
+    vehicle_info = select_vehicle_user_input()
+else:
+    
+    if args.source_vehicle_index >= len(voices_vehicles):
+        print("ERROR: Source Vehicle index out of bounds, try again")
+        print("\nValid Vehicles:")
+        for vehicle_i,vehicle in enumerate(voices_vehicles):
+            print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
+
+        sys.exit()
+    
+    vehicle_info = voices_vehicles[args.source_vehicle_index]
+
+desired_bsm_id = vehicle_info["bsm_id"]
+desired_tena_identifier = vehicle_info["tena_host_id"]
+desired_host_static_id = vehicle_info["host_static_id"]
+
+print("Source Vehicle: " + desired_tena_identifier + "(" + desired_bsm_id +  ") selected")
+
+############################## SET DATA PARAMS ##############################
 
 data_params = {
     "pcap_params" :{
@@ -801,8 +873,56 @@ data_params = {
                     "radians"   : False,
                 }
             ]
+        },
+        "Mobility_Path" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "hostStaticId",
+                    "value"         : desired_host_static_id,  
+                    "round"         : False,           
+                    "start_only"    : False,            
+                                                       
+                },
+                {
+                    "key"           : "hostBSMId",      
+                    "value"         : desired_bsm_id, 
+                    "round"         : False,            
+                    "start_only"    : False,                          
+                }
 
+            ],
             
+            "skip_if_eqs"       : [
+               
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "hostStaticId",
+                    "round"     : False,
+                    "radians"   : False,
+                },
+                {
+                    "key"       : "hostBSMId",
+                    "round"     : False,
+                    "radians"   : False,
+                },
+                {
+                    "key"       : "planId",
+                    "round"     : False,
+                    "radians"   : False,
+                },
+                {
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False,
+                },
+                {
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False,
+                }
+            ]
         }
     },
     "tdcs_params" : {
@@ -869,9 +989,61 @@ data_params = {
                     "radians"   : False
                 }
             ]
+        },
+        "Mobility_Path" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "header.hostBSMId,String",
+                    "value"         : desired_bsm_id,
+                    "round"         : False,
+                    "start_only"    : False, 
+                }
+
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Discovery",
+                    "round" : False,
+                    "start_only" : False, 
+                }
+            ],
+
+            
+            
+            "match_keys"        : [
+                {
+                    "key"       : "header.hostStaticId,String",
+                    "round"     : False,
+                    "radians"   : False
+                },
+                {
+                    "key"       : "header.hostBSMId,String",
+                    "round"     : False,
+                    "radians"   : False
+                },
+                {
+                    "key"       : "header.planId,String",
+                    "round"     : False,
+                    "radians"   : False
+                },
+                {
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False
+                },
+                {
+                    "key"       : None,
+                    "round"     : False,
+                    "radians"   : False
+                }
+            ]
         }
     }
 }
+
+############################## LOAD DATA ##############################
 
 # load_data_user_input()
 
@@ -890,10 +1062,18 @@ data_params = {
 
 
 #  third to second BSM
-load_data("3rd out pcap","data/BSM/third_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-load_data("3rd tdcs","data/BSM/third_VUG-Track-BSM-20220822123937.csv","tdcs",0)
-load_data("2nd tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",0)
-load_data("2nd in pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+# load_data("3rd out pcap","data/BSM/third_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("3rd tdcs","data/BSM/third_VUG-Track-BSM-20220822123937.csv","tdcs",0)
+# load_data("2nd tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",0)
+# load_data("2nd in pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+
+
+#  third to second BSM
+load_data("lead out pcap","data/Mobility_Path/lead_carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
+load_data("v2x in pcap","data/Mobility_Path/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
+load_data("v2x tdcs","data/Mobility_Path/v2x_VUG-CARMA-Mobility-Path-20220822124136.csv","tdcs",0)
+load_data("2nd tdcs","data/Mobility_Path/second_VUG-CARMA-Mobility-Path-20220822125049.csv","tdcs",0)
+load_data("2nd in","data/Mobility_Path/second_carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
 
 
 # print("\ntesting exit early")
@@ -981,8 +1161,4 @@ calculate_performance_metrics()
 
 print("\n----- ANALYSIS COMPLETE -----")
 sys.exit()
-
-
-    
-
 
