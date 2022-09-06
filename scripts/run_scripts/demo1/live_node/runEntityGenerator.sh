@@ -46,5 +46,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/TENAEntityGenerator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localCarlaAdapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
 
