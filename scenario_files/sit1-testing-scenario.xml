@@ -26,16 +26,16 @@
       </initialTSPI>
     </vehicle> -->
 
-    <!-- <vehicle name="CARMA-SPRINGFIELD" bsmid="f03ad612" type="vehicle.chevrolet.impala" owner="CARMA-SPRINGFIELD" material="Steel" lvcIndicator="Live">
-      <userData><CARMA CARLAcosimulationIdentifier="CARLA-SPRINGFIELD" roleName="ego_vehicle"></CARMA></userData>
+    <!-- <vehicle name="CARMA-SPR" bsmid="f03ad612" type="vehicle.chevrolet.impala" owner="CARMA-SPR" material="Steel" lvcIndicator="Live">
+      <userData><CARMA CARLAcosimulationIdentifier="CARLA-SPR" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="38.955737" longitudeInDegrees="-77.151238" heightAboveEllipsoidInMeters="39"> </GeodeticPosition>
         <Heading>38</Heading>
       </initialTSPI>
     </vehicle> -->
 
-    <vehicle name="CARMA-AUGUSTA" bsmid="f03ad614" type="vehicle.chevrolet.impala" owner="CARMA-AUGUSTA" material="Steel" lvcIndicator="Live">
-      <userData><CARMA CARLAcosimulationIdentifier="CARLA-AUGUSTA" roleName="ego_vehicle"></CARMA></userData>
+    <vehicle name="CARMA-AUG" bsmid="f03ad614" type="vehicle.chevrolet.impala" owner="CARMA-AUG" material="Steel" lvcIndicator="Live">
+      <userData><CARMA CARLAcosimulationIdentifier="CARLA-AUG" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="38.955761" longitudeInDegrees="-77.151152" heightAboveEllipsoidInMeters="39"> </GeodeticPosition>
         <Heading>38</Heading>
@@ -168,10 +168,10 @@
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
     -->
-    <simulation name="CARLA-AUGUSTA" type="CARLA">
+    <simulation name="CARLA-AUG" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
-    <simulation name="CARLA-SPRINGFIELD" type="CARLA">
+    <simulation name="CARLA-SPR" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
     <simulation name="CARLA-MITRE" type="CARLA">

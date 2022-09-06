@@ -13,13 +13,13 @@ function cleanup {
 if [[ $carmaID == "CARMA-TFHRC" ]]
 then
        SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
-elif [[ $carmaID == "CARMA-SPRINGFIELD" ]]
+elif [[ $carmaID == "CARMA-SPR" ]]
 then
        SPAWN_PT="-189.9, -508.5, 38, 0, 0, 38"
 elif [[ $carmaID == "CARMA-MITRE" ]]
 then
        SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
-elif [[ $carmaID == "CARMA-AUGUSTA" ]]
+elif [[ $carmaID == "CARMA-AUG" ]]
 then
        SPAWN_PT="-182.6, -511.5, 38, 0, 0, 18"
 fi
