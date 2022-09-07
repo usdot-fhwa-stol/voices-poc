@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/carma-platform-tena-adapter
+localCarlaAdapterPath=$localInstallPath/$carmaPlatformAdapterVersion
 
 adapterVerbosity='4'
 

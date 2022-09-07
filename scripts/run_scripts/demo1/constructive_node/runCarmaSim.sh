@@ -53,7 +53,7 @@ docker run \
 	   -it -d --rm \
        --name carla_carma_integration \
        --net=host \
-       usdotfhwastol/carla-carma-integration:latest \
+       usdotfhwastol/carma-carla-integration:carma-carla-1.0.0-voices-color \
 
 docker exec \
        -it \
@@ -61,7 +61,7 @@ docker exec \
        bash -c \
        "export PYTHONPATH=$PYTHONPATH:/home/PythonAPI/carla-0.9.10-py2.7-linux-x86_64.egg &&
        source /home/carla_carma_ws/devel/setup.bash && 
-       roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$carlaMapName\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
+       roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$carlaMapName\" vehicle_color_ind:=\"0\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
 
 cleanup
 
