@@ -2,10 +2,10 @@
 
 ##############################
 #	TODO
-# add download and build of VUG Threads
-#
-# ask if you want to do a git pull? 
-#	will have to check its on the correct branch 
+# 
+# 
+# 
+# 
 
 
 
@@ -36,6 +36,9 @@ remoteCarlaDir=/home/carla
 middlewareVersion="MiddlewareSDK-v6.0.8"
 boostVersion="TENA_boost_1.77.0.1_Library"
 vugCombinedVersion="VUG-VOICES-Combined-v0.12.0"
+
+vugThreadsVersion="vug-threads-2.2.0"
+vugUdbProtocolioVersion="vug-udp-protocolio-2.2.1"
 
 
 v2xhubGitUrl="https://github.com/usdot-fhwa-OPS/V2X-Hub.git"
@@ -243,7 +246,7 @@ else
 fi
 
 #look for VUG Threads
-if [ $tenaApp == "vug-threads" ] || [ -d $localInstallDir/vug-threads ]; then
+if [ $tenaApp == "vug-threads" ] || [ -d $localInstallDir/$vugThreadsVersion ]; then
 	echo "vug-threads found..."
 else
 	echo "vug-threads was not found. Please install vug-threads"
@@ -252,7 +255,7 @@ fi
 
 #look for VUG ProtocolIO
 if $requiresProtocolio; then
-	if [ -d $localInstallDir/vug-udp-protocolio ]; then
+	if [ -d $localInstallDir/$vugUdbProtocolioVersion ]; then
 		echo "ProtocolIO found..."
 	else
 		echo "vug-udp-protocolio was not found. Please install vug-udp-protocolio"
@@ -363,7 +366,7 @@ fi
 
 
 #-- Cmake example
-#sudo docker run --rm -v /home/ejslattery/dev/carlaadapter:/home/CarlaAdapter -v /home/ejslattery/dev/tenadev/u1804-gcc75-64/TENA:/home/TENA tena:carla bash -c "cd /home/CarlaAdapter/build; export TENA_PLATFORM=u1804-gcc75-64; export TENA_HOME=/home/TENA; export TENA_VERSION=6.0.7; export CARLA_HOME=/home/carla; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_INSTALL_PREFIX=/home/CarlaAdapter/INSTALL -D CMAKE_PREFIX_PATH=/home/TENA/lib/cmake -D BOOST_INCLUDEDIR=/home/TENA/TENA_boost_1.70.0.2_Library/u1804-gcc75-64/include -D VUG_INSTALL_DIR=/home/CarlaAdapter/INSTALL ../"
+#sudo docker run --rm -v /home/ejslattery/dev/carlaadapter:/home/CarlaAdapter -v /home/ejslattery/dev/tenadev/u1804-gcc75-64/TENA:/home/TENA tena:carla bash -c "cd /home/CarlaAdapter/build; export TENA_PLATFORM=u1804-gcc75-64; export TENA_HOME=/home/TENA; export TENA_VERSION=6.0.7; export CARLA_HOME=/home/carla; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_PREFIX_PATH=/home/TENA/lib/cmake -D BOOST_INCLUDEDIR=/home/TENA/TENA_boost_1.70.0.2_Library/u1804-gcc75-64/include -D VUG_INSTALL_DIR=/home/CarlaAdapter/INSTALL ../"
 #-- Cmake
 
 if [[ ! -d $localAppDir/build ]]; then
@@ -401,7 +404,7 @@ if [[ "$skipCmake" == true ]]
 
 		echo
 		
-		( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=$remoteCarlaDir; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_INSTALL_PREFIX=$remoteAppDir/$tenaApp -D CMAKE_PREFIX_PATH='$remoteTenaDir/lib/cmake;$remoteInstallDir' -D BOOST_INCLUDEDIR=$remoteTenaDir/$boostVersion/$tenaBuildVersion/include -D VUG_INSTALL_DIR=$remoteInstallDir/$tenaApp ../" )
+		( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=$remoteCarlaDir; cmake -D CMAKE_EXPORT_COMPILE_COMMANDS=ON -D CMAKE_PREFIX_PATH='$remoteTenaDir/lib/cmake;$remoteInstallDir' -D BOOST_INCLUDEDIR=$remoteTenaDir/$boostVersion/$tenaBuildVersion/include -D VUG_INSTALL_DIR=$remoteInstallDir ../" )
 fi
 
 #--Make example
@@ -441,13 +444,5 @@ if [[ "$skipMake" == true ]]
 				echo "MAKE INSTALL COMMAND: "
 				( set -x ; sudo docker run --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer bash -c "cd $remoteAppDir/build; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make install VERBOSE=1" )
 
-				if [[ -d $localAppDir/$tenaApp ]]; then
-					echo
-					echo "#### Moving installed app to INSTALL directory ####"
-					echo
-					
-					sudo rm -rf $localInstallDir/$tenaApp
-					sudo mv $localAppDir/$tenaApp $localInstallDir
-				fi
 		fi
 fi

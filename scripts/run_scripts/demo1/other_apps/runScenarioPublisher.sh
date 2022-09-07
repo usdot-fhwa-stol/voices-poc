@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/scenario-publisher
+localCarlaAdapterPath=$localInstallPath/$scenarioPublisherVersion
 
 adapterVerbosity='4'
 

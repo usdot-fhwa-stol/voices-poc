@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/tena-entity-generator
+localCarlaAdapterPath=$localInstallPath/$entityGeneratorVersion
 
 adapterVerbosity='4'
 

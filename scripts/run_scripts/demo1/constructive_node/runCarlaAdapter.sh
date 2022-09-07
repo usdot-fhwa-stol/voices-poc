@@ -26,7 +26,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/carla-tena-adapter
+localCarlaAdapterPath=$localInstallPath/$carlaAdapterVersion
 
 carlaHost=$localAddress
 
