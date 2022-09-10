@@ -24,8 +24,8 @@ def is_number(s):
     except ValueError:
         return False
 
-# finds the offset of two sources of data
-def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
+# filter dataset based on specified parameters
+def filter_dataset(data_to_search,desired_num_of_skipped_packets):
 
     logging.info("----- FILTERING DATASET: " + dataset["dataset_name"] + " -----")
     logging.debug("Before packets total: " + str(len(dataset["original_data_list"])))
@@ -33,7 +33,7 @@ def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
     search_starting_row = None
     found_packet_matching_search = False
     cleaned_data_to_search_list = []
-    
+   
     
     if data_to_search["data_order"] != 1:
         source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
@@ -55,9 +55,9 @@ def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
         # iterate through the neqs to check
         all_neqs_pass = True
 
-        logging.debug("Looking at data at index: " + str(search_packet))
-
         for current_neq in data_to_search_params[J2735_message_type_name]["skip_if_neqs"]:
+            
+            neq_bypass = False
 
             # skip if values are not equal (ex: checking for matching bsm id)
             search_packet_neq_value = search_packet[current_neq["key"]]
@@ -67,18 +67,48 @@ def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
 
             # if we have already found the start of the data set (and therefore the offset),
             # and the current neq is for the start_only, skip this neq
-            if not found_packet_matching_search and current_neq["start_only"]:
+            if not found_packet_matching_search and "start_only" in current_neq and current_neq["start_only"]:
                 logging.debug("Skipping NEQ since it is start only: " + current_neq["key"])
                 continue
 
 
             # if the source_packet_value is a number and we want to round, round both values to the same number of decimals
-            if is_number(search_packet_neq_value) and current_neq["round"]:
-                    logging.debug("Rounding NEQ Values")
-                    search_packet_neq_value = round(float(search_packet_neq_value),current_neq["round_decimals"])
-                    neq_param_value = round(float(neq_param_value),current_neq["round_decimals"])
+            if "round" in current_neq and current_neq["round"]:
+                    
+                    try:
+                        search_packet_neq_value = round(float(search_packet_neq_value),current_neq["round_decimals"])
+                    except:
+                        logging.error("Unable to round: " + search_packet_neq_value)
+                    try:
+                        neq_param_value = round(float(neq_param_value),current_neq["round_decimals"])
+                    except:
+                        logging.error("Unable to round: " + neq_param_value)
 
-            if search_packet_neq_value != neq_param_value:
+            # the only way to know which vehicle sent the mobility operations is to check if the timestamps are close together
+            if "mobility_timestamp_check" in current_neq and current_neq["mobility_timestamp_check"]:
+                
+                # if the cleaned data list is empty, this must be the first packet and we need to feed a starting timestamp value
+                logging.debug("len(cleaned_data_to_search_list): " + str(len(cleaned_data_to_search_list)))
+                if len(cleaned_data_to_search_list) == 0:
+                    starting_mobility_timestamp = 1660672330714
+                    previous_timestamp = starting_mobility_timestamp * 1000000 # tdcs timestamps are in nanoseconds, mobility header timestamp is in ms
+                # if we do have something in the list, we can just use the last timestamp
+                else:
+                    previous_timestamp = cleaned_data_to_search_list[-1][current_neq["key"]]
+                
+                logging.debug("previous_timstamp: " + str(previous_timestamp))
+
+                # check if difference is greater than 1 second (1000000000 ns)
+                logging.debug("MATH: " + str(abs(int(search_packet_neq_value) - int(previous_timestamp))) + " > " + "1000000000" )
+
+                if abs(int(search_packet_neq_value) - int(previous_timestamp)) > 1000000000:
+                    logging.debug("Skipping because timestamp doesnt match therefore must be other vehicle")
+                    all_neqs_pass = False
+                    break
+                else:
+                    neq_bypass = True
+
+            if search_packet_neq_value != neq_param_value and not neq_bypass:
                 logging.debug("Skipping non matching value: " + str(search_packet_neq_value) + " != " + str(neq_param_value))
                 all_neqs_pass = False
                 break
@@ -100,13 +130,13 @@ def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
 
             # if we have already found the start of the data set (and therefore the offset),
             # and the current eq is for the start_only, skip this neq
-            if found_packet_matching_search and current_eq["start_only"]:
+            if found_packet_matching_search and "start_only" in current_eq and current_eq["start_only"]:
                 logging.debug("Skipping EQ since it is start only: " + current_eq["key"])
                 continue
 
             # if the source_packet_value is a number and we want to round, round both values to the same number of decimals
-            if current_eq["round"]:
-                    logging.debug("Rounding EQ Values")
+            if "round" in current_eq and current_eq["round"]:
+                    
                     try:
                         search_packet_eq_value = round(float(search_packet_eq_value),current_eq["round_decimals"])
                     except:
@@ -160,13 +190,14 @@ def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
                 found_packet_matching_search = True
 
         # since it was not eliminated from the NEQ and EQs, add the packet to the filtered data list
-        logging.debug("Keeping Packet: " + str(search_i))
         if found_packet_matching_search:
+            logging.debug("Keeping Packet: " + str(search_i))
             cleaned_data_to_search_list.append(search_packet)
 
     if data_to_search["data_order"] == 1 and search_starting_row == None:
         logging.critical("search_starting_row not set - Unable to find a single packet in source that satisfies the EQ and NEQ")
-        logging.critical("    The EQ and NEQ must be changed to find a starting packet ")
+        logging.critical("    The EQ and NEQ must be changed to find a starting packet")
+        print("\nUnable to find a single packet in source data that satisfies the EQ and NEQ, the EQ and NEQ must be changed to find a starting packet")
         sys.exit()
 
         
@@ -181,6 +212,57 @@ def find_data_row_offset(data_to_search,desired_num_of_skipped_packets):
     filtered_total_packets = len(data_to_search["filtered_data_list"])
     logging.info("Cleaned packets total: " + str(filtered_total_packets))
     logging.debug("Last packetIndex: " + dataset["filtered_data_list"][filtered_total_packets -1][dataset["dataset_index_column_name"]])
+
+def extract_dtd_from_mob_ops(ops_params_value):
+    mobility_op_type_search = re.search('^(.*)\|',ops_params_value)
+
+    if not mobility_op_type_search:
+        logging.debug("Error, unable to extract STATUS or INFO from operations params")
+        return None
+
+    mobility_op_type = mobility_op_type_search.group(1)
+
+    if mobility_op_type == "INFO":
+        logging.debug("Got INFO message")
+        
+        dtd_search = re.search('DTD:(.*),ECEFX:',ops_params_value)
+
+        if not dtd_search:
+            logging.debug("Error, unable to extract DTD from operations params")
+            return None
+        
+        try:
+            dtd_value = float(dtd_search.group(1))
+        except:
+            logging.debug("Unable to convert DTD to float: " + dtd_search.group(1))
+            return None
+            
+        
+        logging.debug("dtd_value: " + str(dtd_value))
+        return dtd_value
+        
+    elif mobility_op_type == "STATUS":
+        logging.debug("Got STATUS message")
+        
+        dtd_search = re.search('DTD:(.*),SPEED:',ops_params_value)
+
+        if not dtd_search:
+            logging.debug("Error, unable to extract DTD from operations params")
+            return None
+        
+        try:
+            dtd_value = float(dtd_search.group(1))
+        except:
+            logging.debug("Unable to convert DTD to float: " + dtd_search.group(1))
+            return None
+            
+        
+        logging.debug("dtd_value: " + str(dtd_value))
+
+        return dtd_value
+    else:
+        logging.debug("Got invalid mobility ops message")
+
 
 # checks all match params for two give packets
 def check_if_data_matches(source_packet_params,data_to_search_params,source_packet_to_match,search_packet):
@@ -207,26 +289,82 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
         source_packet_value = source_packet_to_match[source_packet_key]
         search_packet_value = search_packet[search_packet_key]
 
-        if "j2735_heading" in source_packet_params[J2735_message_type_name]["match_keys"][match_i]:
-            source_packet_value = float(source_packet_value)/80
-        
-        if "j2735_heading" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i]:
-            search_packet_value = float(search_packet_value)/80
+        if "extract_mobility_dtd" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["extract_mobility_dtd"]:
             
-        if source_packet_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
-            source_packet_value = math.degrees(float(source_packet_value))
-        
-        if data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
-            search_packet_value = math.degrees(float(search_packet_value))
+            extracted_dtd = extract_dtd_from_mob_ops(source_packet_value)
 
-        if source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
-            source_packet_value = round(float(source_packet_value),source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
+            if extracted_dtd != None:
+                source_packet_value = extracted_dtd
+            else:
+                all_fields_match = False
+                break
+
+
+
+        if "extract_mobility_dtd" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["extract_mobility_dtd"]:
+            
+            extracted_dtd = extract_dtd_from_mob_ops(search_packet_value)
+
+            if extracted_dtd != None:
+                search_packet_value = extracted_dtd
+            else:
+                all_fields_match = False
+                break
+
+        if "divide_by" in source_packet_params[J2735_message_type_name]["match_keys"][match_i]:
+            source_packet_value = float(source_packet_value)/source_packet_params[J2735_message_type_name]["match_keys"][match_i]["divide_by"]
         
-        if data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
+        if "divide_by" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i]:
+            search_packet_value = float(search_packet_value)/data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["divide_by"]
+
+        if "multiply_by" in source_packet_params[J2735_message_type_name]["match_keys"][match_i]:
+            source_packet_value = float(source_packet_value)*source_packet_params[J2735_message_type_name]["match_keys"][match_i]["multiply_by"]
+        
+        if "multiply_by" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i]:
+            search_packet_value = float(search_packet_value)*data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["multiply_by"]
+            
+        if "radians" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
+            try:
+                source_packet_value = math.degrees(float(source_packet_value))
+            except:
+                logging.error("Unable to convert to radians: " + source_packet_value)
+
+        if "radians" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
+            try:
+                search_packet_value = math.degrees(float(search_packet_value))
+            except:
+                logging.error("Unable to convert to radians: " + search_packet_value)
+
+        if "round" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
+            try:
+                source_packet_value = round(float(source_packet_value),source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
+            except:
+                logging.error("Unable to round: " + source_packet_value)
+
+        if "round" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
             try:
                 search_packet_value = round(float(search_packet_value),data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
             except:
-                logging.debug("Unable to round: " + search_packet_value)
+                logging.error("Unable to round: " + search_packet_value)
+
+
+        spat_state_mappings = {
+            "VUG::Entities::Signals::TrafficLightState_Green" : "green",
+            "protected-Movement-Allowed" : "green",
+
+            "VUG::Entities::Signals::TrafficLightState_Red" : "red",
+            "stop-And-Remain" : "red",
+
+            "VUG::Entities::Signals::TrafficLightState_Yellow" : "yellow",
+            "protected-clearance" : "yellow",            
+
+        }
+
+        if "spat_state" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["spat_state"]:
+            source_packet_value = spat_state_mappings[source_packet_value]
+        
+        if "spat_state" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["spat_state"]:
+            search_packet_value = spat_state_mappings[search_packet_value]
 
         if  ( source_packet_value != search_packet_value ):
             
@@ -236,7 +374,7 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                     float(search_packet_value)
                     float(source_packet_value)
                 except:
-                    logging.debug("Unable to apply buffer since one of these is not a number: " + str(search_packet_value) + " : "+ str(source_packet_value))
+                    logging.warning("Unable to apply buffer since one of these is not a number: " + str(search_packet_value) + " : "+ str(source_packet_value))
                     all_fields_match = False
                     break
 
@@ -605,7 +743,7 @@ def load_data_user_input():
 voices_vehicles = [
         {
             "tena_host_id"       : "CARMA-TFHRC-LIVE",
-            "host_static_id":   "DOT-45243",
+            "host_static_id":   "CARMA-TFHRC-LIVE",
             "bsm_id"        : "f03ad610",
         },
         {
@@ -702,7 +840,11 @@ def select_message_type_user_input():
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
 
-J2735_message_types = ["MAP","SPAT","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operation","Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types = ["MAP","SPAT","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations","Traffic_Control_Request","Traffic_Control_Message"]
+
+desired_intersection_name = "TFHRC West Intersection"
+desired_signal_id = "905"
+
 all_data = []
 
 ############################## MAIN ##############################
@@ -722,7 +864,7 @@ argparser.add_argument(
     dest='data_type',
     type=str,
     default=None,
-    help='Data type to be analyzed OPTIONS: [MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operation,Traffic_Control_Request,Traffic_Control_Message]')
+    help='Data type to be analyzed OPTIONS: [MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations,Traffic_Control_Request,Traffic_Control_Message]')
 argparser.add_argument(
     '-s', '--source-vehicle',
     metavar='<source_vehicle_index>',
@@ -790,19 +932,22 @@ else:
 
 print("Message Type: " + J2735_message_type_name + " selected")
 
-if args.source_vehicle_index == None:
-    vehicle_info = select_vehicle_user_input()
-else:
-    
-    if args.source_vehicle_index >= len(voices_vehicles):
-        print("ERROR: Source Vehicle index out of bounds, try again")
-        print("\nValid Vehicles:")
-        for vehicle_i,vehicle in enumerate(voices_vehicles):
-            print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
+if J2735_message_type_name != "SPAT":
+    if args.source_vehicle_index == None:
+        vehicle_info = select_vehicle_user_input()
+    else:
+        
+        if args.source_vehicle_index >= len(voices_vehicles):
+            print("ERROR: Source Vehicle index out of bounds, try again")
+            print("\nValid Vehicles:")
+            for vehicle_i,vehicle in enumerate(voices_vehicles):
+                print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
 
-        sys.exit()
-    
-    vehicle_info = voices_vehicles[args.source_vehicle_index]
+            sys.exit()
+        
+        vehicle_info = voices_vehicles[args.source_vehicle_index]
+else:
+    vehicle_info = voices_vehicles[0]
 
 desired_bsm_id = vehicle_info["bsm_id"]
 desired_tena_identifier = vehicle_info["tena_host_id"]
@@ -844,33 +989,57 @@ data_params = {
                     "round"     : True,
                     "round_decimals": 6,
                     "buffer"    : 0.000001,
-                    "radians"   : False,
                 },
                 {
                     "key"       : "longitude",
                     "round"     : True,
                     "round_decimals": 6,
                     "buffer"    : 0.000001,
-                    "radians"   : False,
-                },
-                {
-                    # "key"       : "heading",
-                    "key"       : None,
-                    "round"     : False,
-                    "radians"   : False,
-                    "round_decimals": 6,
-                    # "buffer"    : 0.0000001,
-                    "j2735_heading": True,
                 },
                 {
                     "key"       : "secMark",
-                    "round"     : False,
-                    "radians"   : False,
                 },
                 {
                     "key"       : None,
-                    "round"     : False,
-                    "radians"   : False,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
+        "SPAT" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "intersectionName",
+                    "value"         : desired_intersection_name,  
+                                                       
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"           : "phase2_eventState",
+                    "value"         : "protected-Movement-Allowed",  # only way to align the data is to skip until a value changes
+                    "start_only"    : True                         
+                },
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "phase2_eventState",
+                    "spat_state": True,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
                 }
             ]
         },
@@ -879,15 +1048,11 @@ data_params = {
                 {
                     "key"           : "hostStaticId",
                     "value"         : desired_host_static_id,  
-                    "round"         : False,           
-                    "start_only"    : False,            
                                                        
                 },
                 {
                     "key"           : "hostBSMId",      
                     "value"         : desired_bsm_id, 
-                    "round"         : False,            
-                    "start_only"    : False,                          
                 }
 
             ],
@@ -899,94 +1064,137 @@ data_params = {
             "match_keys"        : [
                 {
                     "key"       : "hostStaticId",
-                    "round"     : False,
-                    "radians"   : False,
                 },
                 {
                     "key"       : "hostBSMId",
-                    "round"     : False,
-                    "radians"   : False,
                 },
                 {
                     "key"       : "planId",
-                    "round"     : False,
-                    "radians"   : False,
                 },
                 {
                     "key"       : None,
-                    "round"     : False,
-                    "radians"   : False,
                 },
                 {
                     "key"       : None,
-                    "round"     : False,
-                    "radians"   : False,
                 }
             ]
-        }
+        },
+        "Mobility_Operations" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "hostStaticId",
+                    "value"         : desired_host_static_id,  
+                                                       
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+               
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "headerTimestamp",
+                    "multiply_by"  : 1000000,
+                },
+                {
+                    "key"       : "hostBSMId",
+                    "extract_mobility_dtd" : True,
+                    "round"     : True,
+                    "round_decimals" : 3,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
     },
+    
     "tdcs_params" : {
         "BSM" : {
             "skip_if_neqs"      : [
                 {
                     "key"           : "const^identifier,String",
                     "value"         : desired_tena_identifier,
-                    "round"         : False,
-                    "start_only"    : False, 
                 }
 
             ],
             
             "skip_if_eqs"       : [
-                # {
-                #     "key"           : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
-                #     "value"         : "0.0",
-                #     "round"         : True,
-                #     "round_decimals": 2,
-                #     "start_only"    : True, 
-                # },
                 {
                     "key"   : "Metadata,Enum,Middleware::EventType",
                     "value" : "Discovery",
-                    "round" : False,
-                    "start_only" : False, 
-                }
+                },
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Destruction",
+                },
             ],
 
-            
-            
             "match_keys"        : [
                 {
                     "key"       : "tspi.position.geodetic_asTransmitted.latitudeInDegrees,Float64 (optional)",
                     "round"     : True,
                     "round_decimals": 6,
                     "buffer"    : 0.000001,
-                    "radians"   : False
                 },
                 {
                     "key"       : "tspi.position.geodetic_asTransmitted.longitudeInDegrees,Float64 (optional)",
                     "round"     : True,
                     "round_decimals": 6,
                     "buffer"    : 0.000001,
-                    "radians"   : False
-                },
-                {
-                    #"key"       : "tspi.orientation.frdWRTltpENUbodyFixedZYX_asTransmitted.srf.azimuthInRadians,Float64 (optional)",
-                    "key"       : None,
-                    "round"     : True,
-                    "round_decimals": 6,
-                    # "buffer"    : 0.0000001,
-                    "radians"   : True
                 },
                 {
                     "key"       : "msWithinMinute,UInt16",
-                    "round"     : False,
-                    "radians"   : False
                 },
                 {
                     "key"       : None,
-                    "round"     : False,
-                    "radians"   : False
+                },
+                
+                {
+                    "key"       : None,
+                }
+            ]
+        },
+        "SPAT" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "const^signalID,String",
+                    "value"         : desired_signal_id,
+                }
+
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Discovery",
+                },
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "Enum,VUG::Entities::Signals::TrafficLightState,currentState",
+                    "spat_state": True,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                
+                {
+                    "key"       : None,
                 }
             ]
         },
@@ -995,51 +1203,93 @@ data_params = {
                 {
                     "key"           : "header.hostBSMId,String",
                     "value"         : desired_bsm_id,
-                    "round"         : False,
-                    "start_only"    : False, 
                 }
 
             ],
-            
+
             "skip_if_eqs"       : [
                 {
                     "key"   : "Metadata,Enum,Middleware::EventType",
                     "value" : "Discovery",
-                    "round" : False,
-                    "start_only" : False, 
-                }
+                },
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Destruction",
+                },
             ],
 
-            
-            
             "match_keys"        : [
                 {
                     "key"       : "header.hostStaticId,String",
-                    "round"     : False,
-                    "radians"   : False
                 },
                 {
                     "key"       : "header.hostBSMId,String",
-                    "round"     : False,
-                    "radians"   : False
                 },
                 {
                     "key"       : "header.planId,String",
-                    "round"     : False,
-                    "radians"   : False
                 },
                 {
                     "key"       : None,
-                    "round"     : False,
-                    "radians"   : False
                 },
                 {
                     "key"       : None,
-                    "round"     : False,
-                    "radians"   : False
                 }
             ]
-        }
+        },
+        "Mobility_Operations" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "const^hostStaticId,String",
+                    "value"         : desired_host_static_id,
+                },
+                {
+                    "key"           : "urgency,Int32 (optional)",
+                    "value"         : "<UNSET>",
+                },
+                {
+                    "key"           : "Vector,requestedVehicles,count",
+                    "value"         : "0",
+                },
+                {
+                    "key"           : "timestamp.nanosecondsSince1970,Int64",
+                    "value"         : None,
+                    "mobility_timestamp_check" : True,
+                                                       
+                },
+
+            ],
+
+            "skip_if_eqs"       : [
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Discovery",
+                },
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Destruction",
+                },
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "timestamp.nanosecondsSince1970,Int64",
+                },
+                {
+                    "key"       : "downtrackDistanceInMeters,Float32",
+                    "round"     : True,
+                    "round_decimals" : 3,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
     }
 }
 
@@ -1048,17 +1298,17 @@ data_params = {
 # load_data_user_input()
 
 # live to second vehicle BSM
-# load_data("source vehicle","source_vehicle_data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x in pcap","v2xhub_data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",live_to_v2x_clock_skew)
-# load_data("v2x tdcs","v2xhub_data/BSM/VUG-Track-BSM-20220822124130.csv","tdcs",live_to_v2x_clock_skew)
-# load_data("dest veh tdcs","destination_vehicle_data/BSM/VUG-Track-BSM-20220822125045.csv","tdcs",live_to_second_clock_skew)
-# load_data("dest veh pcap","destination_vehicle_data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",live_to_second_clock_skew)
+# load_data("source vehicle","data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("v2x in pcap","data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",live_to_v2x_clock_skew)
+# load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220822124130.csv","tdcs",live_to_v2x_clock_skew)
+# load_data("dest veh tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",live_to_second_clock_skew)
+# load_data("dest veh pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",live_to_second_clock_skew)
 
 # second to third BSM
-# load_data("2nd out pcap","source_vehicle_data/BSM/second_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("2nd tdcs","source_vehicle_data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",0)
-# load_data("3rd tdcs","destination_vehicle_data/BSM/third_VUG-Track-BSM-20220822123937.csv","tdcs",0)
-# load_data("3rd in pcap","destination_vehicle_data/BSM/third_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+# load_data("2nd out pcap","data/BSM/second_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("2nd tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",0)
+# load_data("3rd tdcs","data/BSM/third_VUG-Track-BSM-20220822123937.csv","tdcs",0)
+# load_data("3rd in pcap","data/BSM/third_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
 
 #  third to second BSM
@@ -1068,13 +1318,29 @@ data_params = {
 # load_data("2nd in pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
 
-#  third to second BSM
-load_data("lead out pcap","data/Mobility_Path/lead_carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
-load_data("v2x in pcap","data/Mobility_Path/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
-load_data("v2x tdcs","data/Mobility_Path/v2x_VUG-CARMA-Mobility-Path-20220822124136.csv","tdcs",0)
-load_data("2nd tdcs","data/Mobility_Path/second_VUG-CARMA-Mobility-Path-20220822125049.csv","tdcs",0)
-load_data("2nd in","data/Mobility_Path/second_carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
+#  live to second Mobility Path
+# load_data("lead out pcap","data/Mobility_Path/lead_carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("v2x in pcap","data/Mobility_Path/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("v2x tdcs","data/Mobility_Path/v2x_VUG-CARMA-Mobility-Path-20220822124136.csv","tdcs",0)
+# load_data("2nd tdcs","data/Mobility_Path/second_VUG-CARMA-Mobility-Path-20220822125049.csv","tdcs",0)
+# load_data("2nd in","data/Mobility_Path/second_carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
 
+
+#  v2x to second spat
+# load_data("v2x out pcap","data/SPAT/v2xhub_out_decoded_packets_SPAT.csv","pcap",0)
+# load_data("v2x tdcs","data/SPAT/v2x-VUG-Entities-Signals-TrafficLight-20220822124141.csv","tdcs",0)
+# load_data("2nd tdcs","data/SPAT/second-VUG-Entities-Signals-TrafficLight-20220822125033.csv","tdcs",0)
+
+
+# live to second vehicle BSM
+# load_data("source vehicle","data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+load_data("v2x in pcap","data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
+load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220909154522.csv","tdcs",0)
+load_data("dest veh tdcs","data/BSM/second-VUG-Track-BSM-20220909163226.csv","tdcs",0)
+
+#  v2x to second mobility operations
+# load_data("v2x out pcap","data/Mobility_Operations/lead_carma_platform_out_decoded_packets_Moblity-Operations.csv","pcap",0)
+# load_data("v2x tdcs","data/Mobility_Operations/v2xhub-VUG-CARMA-Platoon-20220822124140.csv","tdcs",0)
 
 # print("\ntesting exit early")
 # sys.exit()
@@ -1125,7 +1391,7 @@ while all_datasets_have_offset == False and packets_to_skip < 30:
     # iterate through all datasets and filter the dataset starting at the matched packet
     for dataset in all_data:
 
-        find_data_row_offset(dataset,packets_to_skip)
+        filter_dataset(dataset,packets_to_skip)
         
         # if we go through the whole dataset and we haven't found the matching packet,
         # break to continue to the next source packet
