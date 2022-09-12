@@ -209,13 +209,13 @@ for packet in packet_list:
         strategy = msg()['value'][1]['body']['strategy']
         planType = msg()['value'][1]['body']['planType']
         urgency = msg()['value'][1]['body']['urgency']
-        strategyParams = str(msg()['value'][1]['body']['strategyParams']).replace(",",";")
-        trajectoryStart = str(msg()['value'][1]['body']['trajectoryStart']).replace(",",";")
+        strategyParams = str(msg()['value'][1]['body']['strategyParams'])
+        trajectoryStart = str(msg()['value'][1]['body']['trajectoryStart'])
         trajectory = msg()['value'][1]['body']['trajectory']
         expiration = msg()['value'][1]['body']['expiration']
 
         mob_req_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
-        platooning_outfile_writer.writerow([str("Mobility_Request" , packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
+        platooning_outfile_writer.writerow(["Mobility_Request" , str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
 
     elif (packet[message_type_id_column] == "00f1") :
         # print("Parsing Mobility Response")
