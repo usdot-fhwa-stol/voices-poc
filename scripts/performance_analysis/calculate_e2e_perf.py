@@ -93,10 +93,25 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             # the only way to know which vehicle sent the mobility operations is to check if the timestamps are close together
             if "mobility_timestamp_check" in current_neq and current_neq["mobility_timestamp_check"]:
                 
+                # we need to use this timesstamp check for filtering pcaps in but it breaks if we dont have a first data point
+                # if data_to_search["data_order"] == 1:
+                #     neq_bypass = True
+                
                 # if the cleaned data list is empty, this must be the first packet and we need to feed a starting timestamp value
                 if len(cleaned_data_to_search_list) == 0:
-                    starting_mobility_timestamp = float(all_data[0]["filtered_data_list"][0]["packetTimestamp"])
-                    previous_timestamp = starting_mobility_timestamp * 1000000000 # tdcs timestamps are in nanoseconds, mobility header timestamp is in ms
+                    
+                    # if we are the first dataset, use the timestamp from the current packet
+                    if data_to_search["data_order"] == 1:
+                        previous_timestamp = float(search_packet["headerTimestamp"])
+                    else:
+                        previous_timestamp = float(all_data[0]["filtered_data_list"][0]["headerTimestamp"])
+                        
+                        if data_to_search["dataset_type"] == "tdcs":
+                            previous_timestamp = previous_timestamp * 1000000 # tdcs timestamps are in nanoseconds, mobility header timestamp is in ms
+
+                    
+                    
+                    
                 # if we do have something in the list, we can just use the last timestamp
                 else:
                     previous_timestamp = cleaned_data_to_search_list[-1][current_neq["key"]]
@@ -177,6 +192,7 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
         # this is accomplished by skipping and counting the number of skipped packets 
         # until it matches the desired skipped packet number
         if data_to_search["data_order"] == 1 and skipped_packets < desired_num_of_skipped_packets:
+                        
             logging.debug("Skipping packet to find one that exists in all datasets")
             skipped_packets += 1
             continue         
@@ -187,6 +203,7 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             found_packet_matching_search = True
             search_starting_row = search_i
             logging.debug("Found source search_starting_row: " + str(search_starting_row))
+            logging.debug("Keeping Packet: " + str(search_packet[data_to_search["dataset_index_column_name"]]))
             cleaned_data_to_search_list.append(search_packet)
             continue
 
@@ -208,14 +225,18 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
 
         # since it was not eliminated from the NEQ and EQs, add the packet to the filtered data list
         if found_packet_matching_search:
-            logging.debug("Keeping Packet: " + str(search_i))
+            logging.debug("Keeping Packet: " + str(search_packet[data_to_search["dataset_index_column_name"]]))
             cleaned_data_to_search_list.append(search_packet)
 
     if data_to_search["data_order"] == 1 and search_starting_row == None:
-        logging.critical("search_starting_row not set - Unable to find a single packet in source that satisfies the EQ and NEQ")
-        logging.critical("    The EQ and NEQ must be changed to find a starting packet")
-        print("\nUnable to find a single packet in source data that satisfies the EQ and NEQ, the EQ and NEQ must be changed to find a starting packet")
-        sys.exit()
+        if desired_num_of_skipped_packets == len(data_to_search_list):
+                logging.critical("Unable to find any packets in source dataset that exits in all other datasets. Consider changing the EQ and NEQ")
+                print("\nUnable to find any packets in source dataset that exits in all other datasets. Consider changing the EQ and NEQ")
+                sys.exit()
+        else:
+            logging.critical("search_starting_row not set - Unable to find a single packet in source that satisfies the EQ and NEQ. Consider changing the EQ and NEQ to find a starting packet")
+            print("\nUnable to find a single packet in source data that satisfies the EQ and NEQ, Consider changing the EQ and NEQ to find a starting packet")
+            sys.exit()
 
         
     if not found_packet_matching_search:
@@ -231,22 +252,22 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
     logging.debug("Last packetIndex: " + dataset["filtered_data_list"][filtered_total_packets -1][dataset["dataset_index_column_name"]])
 
 def extract_dtd_from_mob_ops(ops_params_value):
-    logging.debug("EXTRACTING DTD FROM: " + str(ops_params_value))
+    # logging.debug("  EXTRACTING DTD FROM: " + str(ops_params_value))
     mobility_op_type_search = re.search('^(.*)\|',ops_params_value)
 
     if not mobility_op_type_search:
-        logging.debug("Error, unable to extract STATUS or INFO from operations params")
+        # logging.debug("  Error, unable to extract STATUS or INFO from operations params")
         return None
 
     mobility_op_type = mobility_op_type_search.group(1)
 
     if mobility_op_type == "INFO":
-        logging.debug("Got INFO message")
+        # logging.debug("  Got INFO message")
         
         dtd_search = re.search('DTD:(.*),ECEFX:',ops_params_value)
 
         if not dtd_search:
-            logging.debug("Error, unable to extract DTD from operations params")
+            logging.debug("  Error, unable to extract DTD from operations params")
             return None
         
         try:
@@ -256,11 +277,11 @@ def extract_dtd_from_mob_ops(ops_params_value):
             return None
             
         
-        logging.debug("dtd_value: " + str(dtd_value))
+        # logging.debug("dtd_value: " + str(dtd_value))
         return dtd_value
         
     elif mobility_op_type == "STATUS":
-        logging.debug("Got STATUS message")
+        # logging.debug("Got STATUS message")
         
         dtd_search = re.search('DTD:(.*),SPEED:',ops_params_value)
 
@@ -271,15 +292,15 @@ def extract_dtd_from_mob_ops(ops_params_value):
         try:
             dtd_value = float(dtd_search.group(1))
         except:
-            logging.debug("Unable to convert DTD to float: " + dtd_search.group(1))
+            # logging.debug("Unable to convert DTD to float: " + dtd_search.group(1))
             return None
             
         
-        logging.debug("dtd_value: " + str(dtd_value))
+        logging.debug("  dtd_value: " + str(dtd_value))
 
         return dtd_value
     else:
-        logging.debug("Got invalid mobility ops message")
+        logging.debug("  Got invalid mobility ops message")
 
 
 # checks all match params for two give packets
@@ -291,8 +312,8 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
         source_packet_key = source_packet_params[J2735_message_type_name]["match_keys"][match_i]["key"]
         search_packet_key = data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["key"]
 
-        logging.debug("source_packet_key: " + str(source_packet_key))
-        logging.debug("search_packet_key: " + str(search_packet_key))
+        logging.debug("  source_packet_key: " + str(source_packet_key))
+        logging.debug("  search_packet_key: " + str(search_packet_key))
 
         # if the source or search packet match key are none. the same index of each match key should align. 
         # see definition at the top of the file for more info
@@ -300,7 +321,7 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 source_packet_key == None or
                 search_packet_key == None
         ):
-            logging.debug("Skipping match key " + str(match_i) + " since one or more keys are None: " + str(source_packet_key) + "," + str(search_packet_key))
+            logging.debug("  Skipping match key " + str(match_i) + " since one or more keys are None: " + str(source_packet_key) + "," + str(search_packet_key))
             continue
 
         
@@ -345,25 +366,25 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
             try:
                 source_packet_value = math.degrees(float(source_packet_value))
             except:
-                logging.error("Unable to convert to radians: " + source_packet_value)
+                logging.error("[!!!] Unable to convert to radians: " + source_packet_value)
 
         if "radians" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["radians"]:
             try:
                 search_packet_value = math.degrees(float(search_packet_value))
             except:
-                logging.error("Unable to convert to radians: " + search_packet_value)
+                logging.error("[!!!] Unable to convert to radians: " + search_packet_value)
 
         if "round" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
             try:
                 source_packet_value = round(float(source_packet_value),source_packet_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
             except:
-                logging.error("Unable to round: " + source_packet_value)
+                logging.error("[!!!] Unable to round: " + source_packet_value)
 
         if "round" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round"]:
             try:
                 search_packet_value = round(float(search_packet_value),data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["round_decimals"])
             except:
-                logging.error("Unable to round: " + search_packet_value)
+                logging.error("[!!!] Unable to round: " + search_packet_value)
 
 
         spat_state_mappings = {
@@ -398,19 +419,19 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
 
                 source_buffer = source_packet_params[J2735_message_type_name]["match_keys"][match_i]["buffer"]
                 if abs(source_packet_value - search_packet_value) >  source_buffer:
-                    logging.debug("[!!!] VALUES DO NOT MATCH WITHIN BUFFER [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
+                    logging.debug("  [!!!] VALUES DO NOT MATCH WITHIN BUFFER [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
                     all_fields_match = False
                     break
                 else:
-                    logging.debug("Values Match within buffer [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value) + " +/- " + str(source_buffer))
+                    logging.debug("  Values Match within buffer [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value) + " +/- " + str(source_buffer))
             
             else:
 
-                logging.debug("[!!!] VALUES DO NOT MATCH [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
+                logging.debug("  [!!!] VALUES DO NOT MATCH [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
                 all_fields_match = False
                 break
         else:
-            logging.debug("Values Match [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
+            logging.debug("  Values Match [" + str(source_packet_key) + "] " + str(source_packet_value) + " == " + str(search_packet_value))
     
     
     return all_fields_match
@@ -517,15 +538,14 @@ def check_for_dropped_packets():
 
                 return
             
-            logging.debug("source_i: " + str(source_i))
-            logging.debug("dataset[found_packet_matching_search]: " + str(dataset["found_packet_matching_search"]))
+            logging.debug("Checking against source packet: " + source_packet[source_data_obj["dataset_index_column_name"]])
             
             current_dataset_packet = dataset["filtered_data_list"][source_i]
 
             all_fields_match = check_if_data_matches(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet)            
 
             if not all_fields_match:
-                logging.warning("[!!!] Found dropped packet in " + dataset["dataset_name"] +  " [" + source_packet[source_data_obj["dataset_index_column_name"]] + ":" + current_dataset_packet[dataset["dataset_index_column_name"]] + "]: ")
+                logging.warning("  [!!!] Found dropped packet in " + dataset["dataset_name"] +  " [" + source_packet[source_data_obj["dataset_index_column_name"]] + ":" + current_dataset_packet[dataset["dataset_index_column_name"]] + "]: ")
                 print_keys(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet,"warning")
 
                 dropped_packet_counts[dataset["dataset_name"]] += 1
@@ -539,7 +559,7 @@ def check_for_dropped_packets():
                 dataset["filtered_data_list"].insert(source_i ,dropped_packet_placeholder)
 
             else:
-                logging.debug("Found matching packet in " + dataset["dataset_name"] +  " [" + source_packet[source_data_obj["dataset_index_column_name"]] + ":" + current_dataset_packet[dataset["dataset_index_column_name"]] + "]: ")
+                logging.debug("  Found matching packet in " + dataset["dataset_name"] +  " [" + source_packet[source_data_obj["dataset_index_column_name"]] + ":" + current_dataset_packet[dataset["dataset_index_column_name"]] + "]: ")
                 print_keys(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet,"debug")
     
     print("\nDropped Packet Totals: ")
@@ -557,9 +577,27 @@ def calculate_performance_metrics():
 
         current_row_data = {}
 
+        # add source data packet index
+        current_row_data[ source_data_obj["dataset_name"] + "_" + source_data_obj["dataset_index_column_name"] ] = source_packet[source_data_obj["dataset_index_column_name"]]
+
         source_packet_timestamp = source_packet["packetTimestamp"]
         logging.debug("----- CALCULATING PERFORMANCE FOR SOURCE PACKET " + source_packet[source_data_obj["dataset_index_column_name"]] + " -----")
         logging.debug("source_packet_timestamp: " + str(source_packet_timestamp))
+
+        if J2735_message_type_name == "BSM":
+
+            # calculate the bsm broadcast latency
+            secMark = float(source_packet["secMark"])
+            packet_timestamp = datetime.datetime.fromtimestamp(int(float(source_packet_timestamp)))
+            roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
+            packetSecondsAfterMin = (float(source_packet_timestamp) - roundDownMinTime)
+            bsm_broadcast_latency = packetSecondsAfterMin*1000 - secMark
+
+            if (bsm_broadcast_latency < 0) :
+                logging.debug("[!!!] Minute mismatch")
+                bsm_broadcast_latency = bsm_broadcast_latency + 60000
+
+            current_row_data["bsm_broadcast_latency"] = bsm_broadcast_latency
     
         # loop through all datasets except the first (source)
         for dataset_i in range(1,len(all_data)):
@@ -572,93 +610,103 @@ def calculate_performance_metrics():
             current_dataset_packet = all_data[dataset_i]["filtered_data_list"][ source_i ]
             # current_dataset_packet = all_data[dataset_i]["filtered_data_list"][ source_i]
 
+            # add dataset packet index
+            current_row_data[ all_data[dataset_i]["dataset_name"] + "_" + all_data[dataset_i]["dataset_index_column_name"] ] = current_dataset_packet[all_data[dataset_i]["dataset_index_column_name"]]
+
+
             if all_data[dataset_i]["dataset_type"] == "pcap":
                 logging.debug("" + all_data[dataset_i]["dataset_name"] + "_packet_index: " + current_dataset_packet["packetIndex"])
 
                 if current_dataset_packet["packetIndex"] == "DROPPED PACKET":
-                    logging.debug("SKIPPING DROPPED PACKET")
-                    continue
-                
-                pcap_timestamp = float(current_dataset_packet["packetTimestamp"])
-                logging.debug("pcap_timestamp: " + str(pcap_timestamp))
+                    dataset_total_latency = "DROPPED PACKET"
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_timestamp"] = "DROPPED PACKET"
+                else:
+                    pcap_timestamp = float(current_dataset_packet["packetTimestamp"])
+                    logging.debug("pcap_timestamp: " + str(pcap_timestamp))
 
-                current_row_data[ all_data[dataset_i]["dataset_name"] + "_timestamp"] = pcap_timestamp
-    
-                adjusted_timestamp = pcap_timestamp + all_data[dataset_i]["clock_skew_from_source"]
-                # logging.debug("adjusted_timestamp: " + str(adjusted_timestamp))
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_timestamp"] = pcap_timestamp
+        
+                    dataset_total_latency = pcap_timestamp - float(source_packet_timestamp)
+                    logging.debug("dataset_total_latency: " + str(dataset_total_latency))
 
-                # current_row_data[ all_data[dataset_i]["dataset_name"] + "_adjusted_timestamp"] = adjusted_timestamp
-
-                dataset_total_latency = adjusted_timestamp - float(source_packet_timestamp)
-                logging.debug("dataset_total_latency: " + str(dataset_total_latency))
-
+                # calculate the incremental latency (latency from previous step to this step)
+                # can not calculate incremental latency of the source data (no previous step to subtract from)
                 if (dataset_i != 1):
-                    dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"]
-                    
-                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
-
-                    logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
+                    if current_dataset_packet["packetIndex"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "DROPPED PACKET"
+                    elif current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NA"
+                    else:
+                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"]
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
+                        logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
 
 
                 current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
             
             elif all_data[dataset_i]["dataset_type"] == "tdcs":
                 logging.debug("" + all_data[dataset_i]["dataset_name"] + "_packet_index: " + current_dataset_packet["rowID"])
-
-                if current_dataset_packet["rowID"] == "DROPPED PACKET":
-                    logging.debug("SKIPPING DROPPED PACKET")
-                    continue
-                
-                tdcs_time_of_creation = float(current_dataset_packet["const^Metadata,TimeOfCreation"])/1000000000
-                tdcs_time_of_commit = float(current_dataset_packet["Metadata,TimeOfCommit"])/1000000000
-                tdcs_time_of_receipt = float(current_dataset_packet["Metadata,TimeOfReceipt"])/1000000000
-
-
+                            
+                # if the previous dataset is from a tdcs, we want to know how long it took to go from created (committed) at the source
+                # and received and the dest. this is tdcs_time_of_receipt - tdcs_time_of_commit
                 if all_data[dataset_i-1]["dataset_type"] == "tdcs":
-                    logging.debug("tdcs_time_of_receipt: " + str(tdcs_time_of_receipt))
-    
-                    adjusted_timestamp = tdcs_time_of_receipt + all_data[dataset_i]["clock_skew_from_source"]
-                    # logging.debug("adjusted_timestamp: " + str(adjusted_timestamp))
                     
-                    tdcs_commit_to_receipt = tdcs_time_of_receipt - tdcs_time_of_commit
-                    logging.debug("tdcs_commit_to_receipt: " + str(tdcs_commit_to_receipt))
+                    if current_dataset_packet["rowID"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = "DROPPED PACKET"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "DROPPED PACKET"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = "DROPPED PACKET"
+                    else:
+                        tdcs_time_of_creation = float(current_dataset_packet["const^Metadata,TimeOfCreation"])/1000000000
+                        tdcs_time_of_commit = float(current_dataset_packet["Metadata,TimeOfCommit"])/1000000000
+                        tdcs_time_of_receipt = float(current_dataset_packet["Metadata,TimeOfReceipt"])/1000000000
+                        
+                        logging.debug("tdcs_time_of_receipt: " + str(tdcs_time_of_receipt))
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = tdcs_time_of_receipt
+                       
+                        # this is really a sanity check. it should be the same as the incremental latency
+                        tdcs_commit_to_receipt = tdcs_time_of_receipt - tdcs_time_of_commit
+                        logging.debug("tdcs_commit_to_receipt: " + str(tdcs_commit_to_receipt))
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = tdcs_commit_to_receipt
+
+                        dataset_total_latency = tdcs_time_of_receipt - float(source_packet_timestamp)
+                        logging.debug("dataset_total_latency: " + str(dataset_total_latency))
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
+
+
+                # if the previous dataset is a pcap, we want to know how long it took from the adapter receiving it to it being committed
                 elif all_data[dataset_i-1]["dataset_type"] == "pcap":
-                    logging.debug("tdcs_time_of_commit: " + str(tdcs_time_of_commit))
+                    # if dropped packet, write that row accordingly
+                    if current_dataset_packet["rowID"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = "DROPPED PACKET"
+                    else:
+                        tdcs_time_of_creation = float(current_dataset_packet["const^Metadata,TimeOfCreation"])/1000000000
+                        tdcs_time_of_commit = float(current_dataset_packet["Metadata,TimeOfCommit"])/1000000000
+                        tdcs_time_of_receipt = float(current_dataset_packet["Metadata,TimeOfReceipt"])/1000000000
+                        
+                        logging.debug("tdcs_time_of_commit: " + str(tdcs_time_of_commit))
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "tdcs_time_of_commit"] = tdcs_time_of_commit
+
+                        dataset_total_latency = tdcs_time_of_commit - float(source_packet_timestamp)
+                        logging.debug("dataset_total_latency: " + str(dataset_total_latency))
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
         
-                    adjusted_timestamp = tdcs_time_of_commit + all_data[dataset_i]["clock_skew_from_source"]
-                    logging.debug("adjusted_timestamp: " + str(adjusted_timestamp))
                 else:
                     logging.debug("[???] HOW DID WE GET HERE????")
                     sys.exit()
 
+                # calculate the incremental latency (latency from previous step to this step)
+                # can not calculate incremental latency of the source data (no previous step to subtract from)
 
-                dataset_total_latency = adjusted_timestamp - float(source_packet_timestamp)
-                logging.debug("dataset_total_latency: " + str(dataset_total_latency))
-
-                if (dataset_i != 1):
-                    dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"]
-                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
-                    logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
+                if (dataset_i != 1):                    
+                    if current_dataset_packet["rowID"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "DROPPED PACKET"
+                    elif current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NA"
+                    else:
+                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"]
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
+                        logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
                 
-
-
-                current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
-        
-        # if J2735_message_type_name == "BSM":
-
-        #     # calculate the bsm broadcast latency
-        #     secMark = float(source_packet["secMark"])
-        #     packet_timestamp = datetime.datetime.fromtimestamp(int(float(source_packet_timestamp)))
-        #     roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
-        #     packetSecondsAfterMin = (float(source_packet_timestamp) - roundDownMinTime)
-        #     bsm_broadcast_latency = packetSecondsAfterMin*1000 - secMark
-
-        #     if (bsm_broadcast_latency < 0) :
-        #         logging.debug("[!!!] Minute mismatch")
-        #         bsm_broadcast_latency = bsm_broadcast_latency + 60000
-
-        #     current_row_data["bsm_broadcast_latency"] = bsm_broadcast_latency
-        
         
         # if this is the first iteration, write the headers
         if(source_i) == 0:
@@ -669,43 +717,6 @@ def calculate_performance_metrics():
         results_outfile_writer.writerow(current_row_data.values())
         
 
-    
-
-    # ############################## CALC PERF FOR V2X-HUB PCAP IN DATA ##############################
-
-        
-    # v2x_pcap_in_timestamp = float(filtered_v2xhub_pcap_in_data_list[sv_out_to_v2xhub_in_index]["packetTimestamp"])
-    
-    # v2x_adjusted_timestamp = v2x_pcap_in_timestamp + sv_to_v2x_clock_skew
-
-    # sv_to_v2x_latency = v2x_adjusted_timestamp - float(source_packet["packetTimestamp"])
-    
-
-    # ############################## CALC PERF FOR V2X-HUB TDCS DATA ##############################
-
-        
-    # v2x_tdcs_time_of_creation = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["const^Metadata,TimeOfCreation"])/1000000000
-    # v2x_tdcs_time_of_commit = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["Metadata,TimeOfCommit"])/1000000000
-    # v2x_tdcs_time_of_receipt = float(filtered_v2xhub_tdcs_data_list[sv_out_to_v2xhub_tdcs_index]["Metadata,TimeOfReceipt"])/1000000000
-
-    # j2735_to_sdo_conversion_time = (v2x_tdcs_time_of_commit - v2x_pcap_in_timestamp)
-
-
-    # ############################## CALC PERF FOR DEST VEH TDCS DATA ##############################
-
-    # dest_veh_tdcs_time_of_creation = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["const^Metadata,TimeOfCreation"])/1000000000
-    # dest_veh_tdcs_time_of_commit = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["Metadata,TimeOfCommit"])/1000000000
-    # dest_veh_tdcs_time_of_receipt = float(filtered_dest_veh_tdcs_data_list[sv_out_to_dest_veh_tdcs_index]["Metadata,TimeOfReceipt"])/1000000000
-
-    # tena_packet_latency = (dest_veh_tdcs_time_of_receipt - (dest_veh_tdcs_time_of_commit + v2x_to_second_clock_skew/1000) )*1000
-        
-
-    # ############################## CALC PERF FOR V2X-HUB PCAP IN DATA ##############################
-
-
-    # dest_veh_pcap_in_timestamp = float(filtered_dest_veh_pcap_in_data_list[sv_out_to_dest_veh_in_index]["packetTimestamp"])
-    
-    # sdo_to_j2735_latency = (dest_veh_pcap_in_timestamp - dest_veh_tdcs_time_of_receipt)*1000
 
 #################### LOAD DATA ####################
 
@@ -769,7 +780,7 @@ def load_data_user_input():
 voices_vehicles = [
         {
             "tena_host_id"       : "CARMA-TFHRC-LIVE",
-            "host_static_id":   "CARMA-TFHRC-LIVE",
+            "host_static_id":   "DOT-45243", #CARMA-TFHRC-LIVE",
             "bsm_id"        : "f03ad610",
             "platoon_order" : 1, # this can be used for identifying what fields to look at in platoon sdos 
         },
@@ -996,13 +1007,13 @@ desired_host_static_id = vehicle_info["host_static_id"]
 
 
 if vehicle_info["platoon_order"] == 1:
-    mob_ob_tdcs_field = "downtrackDistanceInMeters,Float32"
+    mob_ops_tdcs_field = "downtrackDistanceInMeters,Float32"
     extract_tdcs_mobility_dtd = False
 elif vehicle_info["platoon_order"] == 2:
-    mob_ob_tdcs_field = "joinedVehicles^strategyParameters,String (1)"
+    mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (1)"
     extract_tdcs_mobility_dtd = True
 elif vehicle_info["platoon_order"] == 3:
-    mob_ob_tdcs_field = "joinedVehicles^strategyParameters,String (2)"
+    mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (2)"
     extract_tdcs_mobility_dtd = True
     
 
@@ -1056,7 +1067,7 @@ data_params = {
                     "key"       : "speed(m/s)",
                     "round"     : True,
                     "round_decimals": 2,
-                    "buffer"    : 0.01,
+                    "buffer"    : 0.03,
                 },
                 {
                     "key"       : None,
@@ -1139,8 +1150,12 @@ data_params = {
             "skip_if_neqs"      : [
                 {
                     "key"           : "hostStaticId",
-                    "value"         : desired_host_static_id,  
-                                                       
+                    "value"         : desired_host_static_id,             
+                },
+                {
+                    "key"           : "headerTimestamp",
+                    "value"         : None,
+                    "mobility_timestamp_check" : True,                        
                 },
             ],
             
@@ -1179,11 +1194,10 @@ data_params = {
         },
         "Mobility_Operations-INFO" : {
             "skip_if_neqs"      : [
-                # {
-                #     "key"           : "hostStaticId",
-                #     "value"         : desired_host_static_id,  
-                                                       
-                # },
+                {
+                    "key"           : "hostStaticId",
+                    "value"         : desired_host_static_id,                              
+                },
             ],
             
             "skip_if_eqs"       : [
@@ -1324,7 +1338,7 @@ data_params = {
                     "key"       : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
                     "round"     : True,
                     "round_decimals": 2,
-                    "buffer"    : 0.01,
+                    "buffer"    : 0.03,
                 },
                 
                 {
@@ -1423,8 +1437,7 @@ data_params = {
                 {
                     "key"           : "timestamp.nanosecondsSince1970,Int64",
                     "value"         : None,
-                    "mobility_timestamp_check" : True,
-                                                       
+                    "mobility_timestamp_check" : True,                        
                 },
 
             ],
@@ -1451,7 +1464,7 @@ data_params = {
                     "multiply_by" : 1,
                 },
                 {
-                    "key"       : mob_ob_tdcs_field,
+                    "key"       : mob_ops_tdcs_field,
                     "extract_mobility_dtd" : extract_tdcs_mobility_dtd,
                     "round"     : True,
                     "round_decimals" : 3,
@@ -1563,7 +1576,7 @@ data_params = {
                     "multiply_by" : 1,
                 },
                 {
-                    "key"       : "requestedVehicles^trajectoryStart.time.nanosecondsSince1970,Int64 (1) (optional)",
+                    "key"       : "requestedVehicles^strategyParameters,String (1)",
                 },
                 {
                     "key"       : None,
@@ -1635,15 +1648,15 @@ data_params = {
 
 # live to second vehicle BSM
 # load_data("source vehicle","data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x in pcap","data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",live_to_v2x_clock_skew)
-# load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220822124130.csv","tdcs",live_to_v2x_clock_skew)
-# load_data("dest veh tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",live_to_second_clock_skew)
-# load_data("dest veh pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",live_to_second_clock_skew)
+# load_data("v2x in pcap","data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
+# load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220822124130.csv","tdcs",0)
+# load_data("dest veh tdcs","data/BSM/second-VUG-Track-BSM-20220822125045.csv","tdcs",0)
+# load_data("dest veh pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
-# second to third BSM
+# second to third BSM - blocked by unset speed - can delete rows and remove speed match
 # load_data("2nd out pcap","data/BSM/second_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("2nd tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",0)
-# load_data("3rd tdcs","data/BSM/third_VUG-Track-BSM-20220822123937.csv","tdcs",0)
+# load_data("2nd tdcs","data/BSM/second-VUG-Track-BSM-20220822125045.csv","tdcs",0)
+# load_data("3rd tdcs","data/BSM/third-VUG-Track-BSM-20220822123937.csv","tdcs",0)
 # load_data("3rd in pcap","data/BSM/third_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
 
@@ -1657,8 +1670,8 @@ data_params = {
 #  live to second Mobility Path
 # load_data("lead out pcap","data/Mobility_Path/lead_carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
 # load_data("v2x in pcap","data/Mobility_Path/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
-# load_data("v2x tdcs","data/Mobility_Path/v2x_VUG-CARMA-Mobility-Path-20220822124136.csv","tdcs",0)
-# load_data("2nd tdcs","data/Mobility_Path/second_VUG-CARMA-Mobility-Path-20220822125049.csv","tdcs",0)
+# load_data("v2x tdcs","data/Mobility_Path/v2xhub-VUG-CARMA-Mobility-Path-20220822124136.csv","tdcs",0)
+# load_data("2nd tdcs","data/Mobility_Path/second-VUG-CARMA-Mobility-Path-20220822125049.csv","tdcs",0)
 # load_data("2nd in","data/Mobility_Path/second_carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
 
 
@@ -1673,11 +1686,12 @@ data_params = {
 # load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220909154522.csv","tdcs",0)
 # load_data("dest veh tdcs","data/BSM/second-VUG-Track-BSM-20220909163226.csv","tdcs",0)
 
-# # v2x to second mobility operations
+# v2x to second mobility operations
+# load_data("lead out pcap","data/Mobility_Operations/lead_carma_platform_out_decoded_packets_Moblity-Operations.csv","pcap",0)
 # load_data("v2x in pcap","data/Mobility_Operations/v2xhub_in_decoded_packets_Moblity-Operations.csv","pcap",0)
-# load_data("v2x tdcs","data/Mobility_Operations/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
-# load_data("second tdcs","data/Mobility_Operations/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
-# load_data("second in pcap","data/Mobility_Operations/second-carma_platform_in_decoded_packets_Moblity-Operations.csv","pcap",0)
+# load_data("v2x tdcs","data/Mobility_Operations/v2xhub-VUG-CARMA-Platoon-20220822124140.csv","tdcs",0)
+# load_data("second tdcs","data/Mobility_Operations/second-VUG-CARMA-Platoon-20220822125038.csv","tdcs",0)
+# load_data("second in pcap","data/Mobility_Operations/second_carma_platform_in_decoded_packets_Moblity-Operations.csv","pcap",0)
 
 # second to v2x mobility operations - there are no info messages for second 
 # load_data("second in pcap","data/Mobility_Operations/second-carma_platform_out_decoded_packets_Moblity-Operations.csv","pcap",0)
@@ -1685,17 +1699,23 @@ data_params = {
 # load_data("v2x tdcs","data/Mobility_Operations/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
 # load_data("v2x out pcap","data/Mobility_Operations/v2xhub_out_decoded_packets_Moblity-Operations.csv","pcap",0)
 
-#  second to v2x mobility reques
+#  second to v2x mobility request
 # load_data("second out pcap","data/Mobility_Request/second-carma_platform_out_decoded_packets_Mobility-Request.csv","pcap",0)
 # load_data("second tdcs","data/Mobility_Request/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
 # load_data("v2x tdcs","data/Mobility_Request/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
 # load_data("v2x out pcap","data/Mobility_Request/v2xhub_out_decoded_packets_Mobility-Request.csv","pcap",0)
 
+#  second to v2x mobility request
+load_data("second out pcap","data/Mobility_Request/second_carma_platform_out_decoded_packets_Mobility-Request.csv","pcap",0)
+load_data("second tdcs","data/Mobility_Request/second-VUG-CARMA-Platoon-20220822125038.csv","tdcs",0)
+load_data("v2x tdcs","data/Mobility_Request/v2xhub-VUG-CARMA-Platoon-20220822124140.csv","tdcs",0)
+load_data("v2x out pcap","data/Mobility_Request/v2xhub_out_decoded_packets_Mobility-Request.csv","pcap",0)
+
 #  v2x to second mobility response
-load_data("v2x in pcap","data/Mobility_Response/v2xhub_in_decoded_packets_Mobility-Response.csv","pcap",0)
-load_data("v2x tdcs","data/Mobility_Response/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
-load_data("second tdcs","data/Mobility_Response/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
-load_data("second in pcap","data/Mobility_Response/second-carma_platform_in_decoded_packets_Mobility-Response.csv","pcap",0)
+# load_data("v2x in pcap","data/Mobility_Response/v2xhub_in_decoded_packets_Mobility-Response.csv","pcap",0)
+# load_data("v2x tdcs","data/Mobility_Response/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
+# load_data("second tdcs","data/Mobility_Response/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
+# load_data("second in pcap","data/Mobility_Response/second-carma_platform_in_decoded_packets_Mobility-Response.csv","pcap",0)
 
 
 # print("\ntesting exit early")
