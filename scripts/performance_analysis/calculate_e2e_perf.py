@@ -110,8 +110,6 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
                             previous_timestamp = previous_timestamp * 1000000 # tdcs timestamps are in nanoseconds, mobility header timestamp is in ms
 
                     
-                    
-                    
                 # if we do have something in the list, we can just use the last timestamp
                 else:
                     previous_timestamp = cleaned_data_to_search_list[-1][current_neq["key"]]
@@ -248,7 +246,8 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
 
     # filtered_data_list = dataset["cleaned_data_to_search_list"]
     filtered_total_packets = len(data_to_search["filtered_data_list"])
-    logging.info("Cleaned packets total: " + str(filtered_total_packets))
+    logging.info("Cleaned packets total - " + data_to_search["dataset_name"] + ": " + str(filtered_total_packets))
+
     logging.debug("Last packetIndex: " + dataset["filtered_data_list"][filtered_total_packets -1][dataset["dataset_index_column_name"]])
 
 def extract_dtd_from_mob_ops(ops_params_value):
@@ -479,6 +478,11 @@ def load_data(dataset_name,dataset_infile,dataset_type,clock_skew_from_source):
     total_packets = len(data_list)
 
     logging.info("  Total Packets: " + str(total_packets))
+    print("\t" + dataset_name_clean + ": " + str(total_packets))
+
+    if total_packets == 0:
+        print("\nERROR: " + dataset_name_clean + " dataset is empty" )
+        sys.exit()
 
     if dataset_type == "pcap":
         dataset_params = data_params["pcap_params"]
@@ -529,14 +533,21 @@ def check_for_dropped_packets():
             dataset = all_data[dataset_i]
 
             # check to make sure we did not reach the end of the file on the dataset 
-            if source_i >= len(dataset["filtered_data_list"]):
-                logging.debug("Reached end of " + dataset["dataset_name"] + ", stopping dropped packet check")
-                
-                print("\nDropped Packet Totals: ")
-                for dataset_name in dropped_packet_counts:
-                    print("\t" + dataset_name + ": " + str(dropped_packet_counts[dataset_name]))
+            if source_i >= len(dataset["filtered_data_list"]):               
+                logging.warning("  [!!!] Reached end of file for " + dataset["dataset_name"] +  ", does not contain source row [" + source_packet[source_data_obj["dataset_index_column_name"]] + "]")
 
-                return
+                # dropped_packet_counts[dataset["dataset_name"]] += 1
+
+                # insert a filler row in the data lists with the dropped packet
+                dropped_packet_placeholder = {}
+
+                for key in dataset["filtered_data_list"][source_i-1]:
+                    dropped_packet_placeholder[key] = "EOF"
+
+                dataset["filtered_data_list"].insert(source_i ,dropped_packet_placeholder)
+
+                continue
+
             
             logging.debug("Checking against source packet: " + source_packet[source_data_obj["dataset_index_column_name"]])
             
@@ -580,6 +591,13 @@ def calculate_performance_metrics():
         # add source data packet index
         current_row_data[ source_data_obj["dataset_name"] + "_" + source_data_obj["dataset_index_column_name"] ] = source_packet[source_data_obj["dataset_index_column_name"]]
 
+        if source_data_obj["dataset_type"] == "pcap":
+            current_row_data[ source_data_obj["dataset_name"] + "_timestamp"] = float(source_packet["packetTimestamp"])
+        elif source_data_obj["dataset_type"] == "tdcs":
+            current_row_data[ source_data_obj["dataset_name"] + "_timestamp"] = float(source_packet["Metadata,TimeOfCommit"])/1000000000
+
+
+
         source_packet_timestamp = source_packet["packetTimestamp"]
         logging.debug("----- CALCULATING PERFORMANCE FOR SOURCE PACKET " + source_packet[source_data_obj["dataset_index_column_name"]] + " -----")
         logging.debug("source_packet_timestamp: " + str(source_packet_timestamp))
@@ -597,7 +615,7 @@ def calculate_performance_metrics():
                 logging.debug("[!!!] Minute mismatch")
                 bsm_broadcast_latency = bsm_broadcast_latency + 60000
 
-            current_row_data["bsm_broadcast_latency"] = bsm_broadcast_latency
+            current_row_data["platform_bsm_generation_to_obu_latency"] = bsm_broadcast_latency/1000
     
         # loop through all datasets except the first (source)
         for dataset_i in range(1,len(all_data)):
@@ -608,19 +626,25 @@ def calculate_performance_metrics():
                 return
 
             current_dataset_packet = all_data[dataset_i]["filtered_data_list"][ source_i ]
+            # logging.debug("current_dataset_packet: " + str(current_dataset_packet))
             # current_dataset_packet = all_data[dataset_i]["filtered_data_list"][ source_i]
 
-            # add dataset packet index
-            current_row_data[ all_data[dataset_i]["dataset_name"] + "_" + all_data[dataset_i]["dataset_index_column_name"] ] = current_dataset_packet[all_data[dataset_i]["dataset_index_column_name"]]
 
 
             if all_data[dataset_i]["dataset_type"] == "pcap":
                 logging.debug("" + all_data[dataset_i]["dataset_name"] + "_packet_index: " + current_dataset_packet["packetIndex"])
 
                 if current_dataset_packet["packetIndex"] == "DROPPED PACKET":
-                    dataset_total_latency = "DROPPED PACKET"
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_packet_index" ] = "DROPPED PACKET"
                     current_row_data[ all_data[dataset_i]["dataset_name"] + "_timestamp"] = "DROPPED PACKET"
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "DROPPED PACKET"
+                elif current_dataset_packet["packetIndex"] == "EOF":
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_packet_index" ] = "EOF"
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_timestamp"] = "EOF"
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "EOF"
                 else:
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_packet_index" ] = current_dataset_packet["packetIndex"]
+                    
                     pcap_timestamp = float(current_dataset_packet["packetTimestamp"])
                     logging.debug("pcap_timestamp: " + str(pcap_timestamp))
 
@@ -629,33 +653,48 @@ def calculate_performance_metrics():
                     dataset_total_latency = pcap_timestamp - float(source_packet_timestamp)
                     logging.debug("dataset_total_latency: " + str(dataset_total_latency))
 
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency
+
                 # calculate the incremental latency (latency from previous step to this step)
                 # can not calculate incremental latency of the source data (no previous step to subtract from)
                 if (dataset_i != 1):
                     if current_dataset_packet["packetIndex"] == "DROPPED PACKET":
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "DROPPED PACKET"
-                    elif current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"] == "DROPPED PACKET":
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NA"
+                    elif current_dataset_packet["packetIndex"] == "EOF":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "EOF"
+                    elif (  current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"] == "DROPPED PACKET" or
+                            current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"] == "EOF" ):
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NO PREV PACKET"
                     else:
-                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"]
+                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"]
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
                         logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
 
 
-                current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
+                
             
             elif all_data[dataset_i]["dataset_type"] == "tdcs":
                 logging.debug("" + all_data[dataset_i]["dataset_name"] + "_packet_index: " + current_dataset_packet["rowID"])
-                            
+                
+
                 # if the previous dataset is from a tdcs, we want to know how long it took to go from created (committed) at the source
                 # and received and the dest. this is tdcs_time_of_receipt - tdcs_time_of_commit
+
                 if all_data[dataset_i-1]["dataset_type"] == "tdcs":
                     
                     if current_dataset_packet["rowID"] == "DROPPED PACKET":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = "DROPPED PACKET"
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = "DROPPED PACKET"
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "DROPPED PACKET"
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = "DROPPED PACKET"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "DROPPED PACKET"
+                    elif current_dataset_packet["rowID"] == "EOF":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = "EOF"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = "EOF"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "EOF"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "EOF"
                     else:
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID" ] = current_dataset_packet["rowID"]
+                        
                         tdcs_time_of_creation = float(current_dataset_packet["const^Metadata,TimeOfCreation"])/1000000000
                         tdcs_time_of_commit = float(current_dataset_packet["Metadata,TimeOfCommit"])/1000000000
                         tdcs_time_of_receipt = float(current_dataset_packet["Metadata,TimeOfReceipt"])/1000000000
@@ -670,25 +709,33 @@ def calculate_performance_metrics():
 
                         dataset_total_latency = tdcs_time_of_receipt - float(source_packet_timestamp)
                         logging.debug("dataset_total_latency: " + str(dataset_total_latency))
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency
 
 
                 # if the previous dataset is a pcap, we want to know how long it took from the adapter receiving it to it being committed
                 elif all_data[dataset_i-1]["dataset_type"] == "pcap":
                     # if dropped packet, write that row accordingly
                     if current_dataset_packet["rowID"] == "DROPPED PACKET":
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = "DROPPED PACKET"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = "DROPPED PACKET"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "DROPPED PACKET"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_commit"] = "DROPPED PACKET"
+                    elif current_dataset_packet["rowID"] == "EOF":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = "EOF"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "EOF"
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_commit"] = "EOF"
                     else:
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = current_dataset_packet["rowID"]
+                        
                         tdcs_time_of_creation = float(current_dataset_packet["const^Metadata,TimeOfCreation"])/1000000000
                         tdcs_time_of_commit = float(current_dataset_packet["Metadata,TimeOfCommit"])/1000000000
                         tdcs_time_of_receipt = float(current_dataset_packet["Metadata,TimeOfReceipt"])/1000000000
                         
                         logging.debug("tdcs_time_of_commit: " + str(tdcs_time_of_commit))
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "tdcs_time_of_commit"] = tdcs_time_of_commit
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_commit"] = tdcs_time_of_commit
 
                         dataset_total_latency = tdcs_time_of_commit - float(source_packet_timestamp)
                         logging.debug("dataset_total_latency: " + str(dataset_total_latency))
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_latency"] = dataset_total_latency
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency
         
                 else:
                     logging.debug("[???] HOW DID WE GET HERE????")
@@ -700,10 +747,13 @@ def calculate_performance_metrics():
                 if (dataset_i != 1):                    
                     if current_dataset_packet["rowID"] == "DROPPED PACKET":
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "DROPPED PACKET"
-                    elif current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"] == "DROPPED PACKET":
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NA"
+                    elif current_dataset_packet["rowID"] == "EOF":
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "EOF"
+                    elif (  current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"] == "DROPPED PACKET" or
+                            current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"] == "EOF"):
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NO PREV PACKET"
                     else:
-                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_latency"]
+                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"]
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
                         logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
                 
@@ -716,8 +766,6 @@ def calculate_performance_metrics():
         logging.debug("current_row_data: " + str(current_row_data) + "\n")
         results_outfile_writer.writerow(current_row_data.values())
         
-
-
 #################### LOAD DATA ####################
 
 def load_data_user_input():
@@ -780,36 +828,43 @@ def load_data_user_input():
 voices_vehicles = [
         {
             "tena_host_id"       : "CARMA-TFHRC-LIVE",
-            "host_static_id":   "DOT-45243", #CARMA-TFHRC-LIVE",
+            "host_static_id":   "CARMA-TFHRC-LIVE", #CARMA-TFHRC-LIVE",
             "bsm_id"        : "f03ad610",
-            "platoon_order" : 1, # this can be used for identifying what fields to look at in platoon sdos 
+            "platoon_order" : 1, # this can be used for identifying what fields to look at in platoon sdos
+            "lvc_designation" : "live",
         },
         {
             "tena_host_id"       : "CARMA-TFHRC",
             "host_static_id":   "CARMA-TFHRC",
             "bsm_id"        : "f03ad608",
+            "lvc_designation" : "constructive",
         },
         {
             "tena_host_id"       : "CARMA-SPR",
             "host_static_id":   "CARMA-SPR",
             "bsm_id"        : "f03ad612",
+            "lvc_designation" : "constructive",
         },
         {
             "tena_host_id"       : "CARMA-AUG",
             "host_static_id":   "CARMA-AUG",
             "bsm_id"        : "f03ad614",
             "platoon_order" : 2,
+            "lvc_designation" : "constructive",
         },
         {
             "tena_host_id"       : "CARMA-MITRE",
             "host_static_id":   "CARMA-MITRE",
             "bsm_id"        : "f03ad616",
             "platoon_order" : 3,
+            "lvc_designation" : "constructive",
         },
         {
             "tena_host_id"       : "CARLA-MANUAL-1",
             "host_static_id":   "CARLA-MANUAL-1",
             "bsm_id"        : "f03ad618",
+            "platoon_order" : 4,
+            "lvc_designation" : "virtual",
         },
     ]
 
@@ -912,6 +967,13 @@ argparser.add_argument(
     type=int,
     default=None,
     help='Index of vehicle to analyze data for: [#]')
+argparser.add_argument(
+    '-o', '--outfile',
+    metavar='<outfile>',
+    dest='outfile',
+    type=str,
+    default=None,
+    help='name of the outfile (no special characters or spaces)')
 # argparser.add_argument(
 #     '-p', '--port',
 #     metavar='P',
@@ -996,6 +1058,14 @@ desired_bsm_id = vehicle_info["bsm_id"]
 desired_tena_identifier = vehicle_info["tena_host_id"]
 desired_host_static_id = vehicle_info["host_static_id"]
 
+# velocity is not set for constructive vehicles, so do not check it
+if vehicle_info["lvc_designation"] == "live":
+    tdcs_bsm_velocity_field = "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)"
+    pcap_bsm_velocity_field = "speed(m/s)"
+else:
+    pcap_bsm_velocity_field = None
+    tdcs_bsm_velocity_field = None
+
 # there is an export issue with TDCS which needs to be fixed manully for platoon SDOs
 # to fix, open in excel and find the column candidateVehicles^trajectoryStart.position.geocentric_asTransmitted.xInMeters,Float64 (1) (optional)
 # find any columns with a value and insert one cell, pushing the entire row to the right (from that point to the right)
@@ -1052,19 +1122,19 @@ data_params = {
                     "key"       : "latitude",
                     "round"     : True,
                     "round_decimals": 6,
-                    "buffer"    : 0.000001,
+                    "buffer"    : 0.000002,
                 },
                 {
                     "key"       : "longitude",
                     "round"     : True,
                     "round_decimals": 6,
-                    "buffer"    : 0.000001,
+                    "buffer"    : 0.000002,
                 },
                 {
                     "key"       : "secMark",
                 },
                 {
-                    "key"       : "speed(m/s)",
+                    "key"       : pcap_bsm_velocity_field,
                     "round"     : True,
                     "round_decimals": 2,
                     "buffer"    : 0.03,
@@ -1249,6 +1319,7 @@ data_params = {
                 {
                     "key"       : "headerTimestamp",
                     "multiply_by"  : 1000000,
+                    # "buffer"    : 100000000,
                 },
                 {
                     "key"       : "strategyParams",
@@ -1323,19 +1394,20 @@ data_params = {
                     "key"       : "tspi.position.geodetic_asTransmitted.latitudeInDegrees,Float64 (optional)",
                     "round"     : True,
                     "round_decimals": 6,
-                    "buffer"    : 0.000001,
+                    "buffer"    : 0.000002,
                 },
                 {
                     "key"       : "tspi.position.geodetic_asTransmitted.longitudeInDegrees,Float64 (optional)",
                     "round"     : True,
                     "round_decimals": 6,
-                    "buffer"    : 0.000001,
+                    "buffer"    : 0.000002,
                 },
                 {
                     "key"       : "msWithinMinute,UInt16",
                 },
                 {
-                    "key"       : "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)",
+                    # velocity is not set in TDCS for constructive BSMs 
+                    "key"       : tdcs_bsm_velocity_field,
                     "round"     : True,
                     "round_decimals": 2,
                     "buffer"    : 0.03,
@@ -1646,81 +1718,111 @@ data_params = {
 
 # load_data_user_input()
 
-# live to second vehicle BSM
-# load_data("source vehicle","data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x in pcap","data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220822124130.csv","tdcs",0)
-# load_data("dest veh tdcs","data/BSM/second-VUG-Track-BSM-20220822125045.csv","tdcs",0)
-# load_data("dest veh pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
-# second to third BSM - blocked by unset speed - can delete rows and remove speed match
-# load_data("2nd out pcap","data/BSM/second_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("2nd tdcs","data/BSM/second-VUG-Track-BSM-20220822125045.csv","tdcs",0)
-# load_data("3rd tdcs","data/BSM/third-VUG-Track-BSM-20220822123937.csv","tdcs",0)
-# load_data("3rd in pcap","data/BSM/third_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+print("\nTotal Packets:")
+
+#=====# SPAT TO AUG #=====#
+# load_data("v2x out pcap","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_out/v2xhub_out_decoded_packets_SPAT.csv","pcap",0)
+# load_data("v2x tdcs","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-Entities-Signals-TrafficLight-20220915143340.csv","tdcs",0)
+# load_data("aug tdcs","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-Entities-Signals-TrafficLight-20220915143226.csv","tdcs",0)
+# load_data("aug in pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_SPAT.csv","pcap",0)
 
 
-#  third to second BSM
-# load_data("3rd out pcap","data/BSM/third_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("3rd tdcs","data/BSM/third_VUG-Track-BSM-20220822123937.csv","tdcs",0)
-# load_data("2nd tdcs","data/BSM/second_VUG-Track-BSM-20220822125045.csv","tdcs",0)
-# load_data("2nd in pcap","data/BSM/second_carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+
+#=====# LIVE TO AUG #=====#
+
+# BSM #
+
+# load_data("live platform out","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_out/live-carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("live out to v2x in","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_in/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
+# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143332.csv","tdcs",0)
+# load_data("v2x to aug SDO transmit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143237.csv","tdcs",0)
+# load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+
+# NO MOB REQUEST SENT BY LIVE # 
+
+# MOBLILITY RESPONSE # 
+
+# load_data("live platform out","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_out/live-carma_platform_out_decoded_packets_Mobility-Response.csv","pcap",0)
+# load_data("live out to v2x in","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_in/v2xhub_in_decoded_packets_Mobility-Response.csv","pcap",0)
+# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143354.csv","tdcs",0)
+# load_data("v2x to aug SDO transmit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143232.csv","tdcs",0)
+# load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_Mobility-Response.csv","pcap",0)
 
 
-#  live to second Mobility Path
-# load_data("lead out pcap","data/Mobility_Path/lead_carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
-# load_data("v2x in pcap","data/Mobility_Path/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
-# load_data("v2x tdcs","data/Mobility_Path/v2xhub-VUG-CARMA-Mobility-Path-20220822124136.csv","tdcs",0)
-# load_data("2nd tdcs","data/Mobility_Path/second-VUG-CARMA-Mobility-Path-20220822125049.csv","tdcs",0)
-# load_data("2nd in","data/Mobility_Path/second_carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
+# MOBILITY PATH # 
 
+# load_data("live platform out","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_out/live-carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("live out to v2x in","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_in/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Mobility-Path-20220915143339.csv","tdcs",0)
+# load_data("v2x to aug SDO transmit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Mobility-Path-20220915143240.csv","tdcs",0)
+# load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
 
-#  v2x to second spat
-# load_data("v2x out pcap","data/SPAT/v2xhub_out_decoded_packets_SPAT.csv","pcap",0)
-# load_data("v2x tdcs","data/SPAT/v2x-VUG-Entities-Signals-TrafficLight-20220822124141.csv","tdcs",0)
-# load_data("2nd tdcs","data/SPAT/second-VUG-Entities-Signals-TrafficLight-20220822125033.csv","tdcs",0)
+# MOBILITY OPERATIONS # 
 
-# live to second vehicle BSM
-# load_data("source vehicle","data/BSM/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x in pcap","data/BSM/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x tdcs","data/BSM/v2xhub-VUG-Track-BSM-20220909154522.csv","tdcs",0)
-# load_data("dest veh tdcs","data/BSM/second-VUG-Track-BSM-20220909163226.csv","tdcs",0)
+# load_data("live platform out","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_out/live-carma_platform_out_decoded_packets_Moblity-Operations.csv","pcap",0)
+# load_data("live out to v2x in","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_in/v2xhub_in_decoded_packets_Moblity-Operations.csv","pcap",0)
+# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143354.csv","tdcs",0)
+# load_data("v2x to aug SDO transmit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143232.csv","tdcs",0)
+# load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_Moblity-Operations.csv","pcap",0)
 
-# v2x to second mobility operations
-# load_data("lead out pcap","data/Mobility_Operations/lead_carma_platform_out_decoded_packets_Moblity-Operations.csv","pcap",0)
-# load_data("v2x in pcap","data/Mobility_Operations/v2xhub_in_decoded_packets_Moblity-Operations.csv","pcap",0)
-# load_data("v2x tdcs","data/Mobility_Operations/v2xhub-VUG-CARMA-Platoon-20220822124140.csv","tdcs",0)
-# load_data("second tdcs","data/Mobility_Operations/second-VUG-CARMA-Platoon-20220822125038.csv","tdcs",0)
-# load_data("second in pcap","data/Mobility_Operations/second_carma_platform_in_decoded_packets_Moblity-Operations.csv","pcap",0)
+#=====# AUG TO LIVE #=====#
 
-# second to v2x mobility operations - there are no info messages for second 
-# load_data("second in pcap","data/Mobility_Operations/second-carma_platform_out_decoded_packets_Moblity-Operations.csv","pcap",0)
-# load_data("second tdcs","data/Mobility_Operations/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
-# load_data("v2x tdcs","data/Mobility_Operations/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
-# load_data("v2x out pcap","data/Mobility_Operations/v2xhub_out_decoded_packets_Moblity-Operations.csv","pcap",0)
+# BSM # !!! NO J2735 BSMS WERE SENT OUT FROM BSM PLUGIN
 
-#  second to v2x mobility request
-# load_data("second out pcap","data/Mobility_Request/second-carma_platform_out_decoded_packets_Mobility-Request.csv","pcap",0)
-# load_data("second tdcs","data/Mobility_Request/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
-# load_data("v2x tdcs","data/Mobility_Request/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
-# load_data("v2x out pcap","data/Mobility_Request/v2xhub_out_decoded_packets_Mobility-Request.csv","pcap",0)
+# load_data("aug platform out pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_out/augusta-carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("aug J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143237.csv","tdcs",0)
+# load_data("aug to v2x SDO transmit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143332.csv","tdcs",0)
+# load_data("v2x SDO to v2x J2735 out","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_out/v2xhub_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("v2x to live J2735 transmit","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_in/live-carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
-#  second to v2x mobility request
-load_data("second out pcap","data/Mobility_Request/second_carma_platform_out_decoded_packets_Mobility-Request.csv","pcap",0)
-load_data("second tdcs","data/Mobility_Request/second-VUG-CARMA-Platoon-20220822125038.csv","tdcs",0)
-load_data("v2x tdcs","data/Mobility_Request/v2xhub-VUG-CARMA-Platoon-20220822124140.csv","tdcs",0)
-load_data("v2x out pcap","data/Mobility_Request/v2xhub_out_decoded_packets_Mobility-Request.csv","pcap",0)
+# MOBILITY REQUEST # 
 
-#  v2x to second mobility response
-# load_data("v2x in pcap","data/Mobility_Response/v2xhub_in_decoded_packets_Mobility-Response.csv","pcap",0)
-# load_data("v2x tdcs","data/Mobility_Response/v2xhub-VUG-CARMA-Platoon-20220910101914.csv","tdcs",0)
-# load_data("second tdcs","data/Mobility_Response/second-VUG-CARMA-Platoon-20220910102020.csv","tdcs",0)
-# load_data("second in pcap","data/Mobility_Response/second-carma_platform_in_decoded_packets_Mobility-Response.csv","pcap",0)
+# load_data("aug platform out pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_out/augusta-carma_platform_out_decoded_packets_Mobility-Request.csv","pcap",0)
+# load_data("aug J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143232.csv","tdcs",0)
+# load_data("aug to v2x SDO transmit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143354.csv","tdcs",0)
+# load_data("v2x SDO to v2x J2735 out","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_out/v2xhub_out_decoded_packets_Mobility-Request.csv","pcap",0)
+# load_data("v2x to live J2735 transmit","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_in/live-carma_platform_in_decoded_packets_Mobility-Request.csv","pcap",0)
 
+# NO MOB RESPONSE SENT BY AUG # 
 
-# print("\ntesting exit early")
-# sys.exit()
+# MOBILITY PATH # 
 
+# load_data("aug platform out pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_out/augusta-carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("aug J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Mobility-Path-20220915143240.csv","tdcs",0)
+# load_data("aug to v2x SDO transmit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Mobility-Path-20220915143339.csv","tdcs",0)
+# load_data("v2x SDO to v2x J2735 out","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_out/v2xhub_out_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("v2x to live J2735 transmit","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_in/live-carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
+
+# MOBILITY OPERATIONS # 
+
+# load_data("aug platform out pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_out/augusta-carma_platform_out_decoded_packets_Mobility-Request.csv","pcap",0)
+# load_data("aug J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143232.csv","tdcs",0)
+# load_data("aug to v2x SDO transmit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Platoon-20220915143354.csv","tdcs",0)
+# load_data("v2x SDO to v2x J2735 out","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_out/v2xhub_out_decoded_packets_Mobility-Request.csv","pcap",0)
+# load_data("v2x to live J2735 transmit","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_in/live-carma_platform_in_decoded_packets_Mobility-Request.csv","pcap",0)
+
+#=====# AUG TO MITRE #=====#
+
+# BSM # 
+
+# load_data("aug platform out pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_out/augusta-carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("aug J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143237.csv","tdcs",0)
+# load_data("aug to mitre SDO transmit","/home/stol/demo_1a_data/run_3/demo_1_collect_3_mitre/tdcs_export/VUG-Track-BSM-20220915143104.csv","tdcs",0)
+# load_data("aug SDO to mitre J2735 platform in","/home/stol/demo_1a_data/run_3/demo_1_collect_3_mitre/decoded_pcap_in/mitre-carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+
+# MOBLILITY RESPONSE # 
+
+# load_data("aug platform out pcap","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_out/augusta-carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("aug J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143237.csv","tdcs",0)
+# load_data("aug to mitre SDO transmit","/home/stol/demo_1a_data/run_3/demo_1_collect_3_mitre/tdcs_export/VUG-Track-BSM-20220915143104.csv","tdcs",0)
+# load_data("aug SDO to mitre J2735 platform in","/home/stol/demo_1a_data/run_3/demo_1_collect_3_mitre/decoded_pcap_in/mitre-carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+
+# MOBILITY PATH # 
+
+# MOBILITY OPERATIONS # 
+
+############################## MAIN ##############################
 
 # we need to get all datasets to align to calculate performance
 # this is accomplished by taking the first compliant packet (passes all EQ and NEQ) in the source data and looking for it in all other datasets
@@ -1780,13 +1882,19 @@ while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_sk
             print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
             sys.exit()
 
-
+print("\nCleaned Packet Totals:")
+for dataset in all_data:
+    print("\t" + dataset["dataset_name"] + ": " + str(len(dataset["filtered_data_list"])))
 
 check_for_dropped_packets()
 
 ############################## INITIALIZE CSV WRITER ##############################
 
-outfile = "performance_analysis.csv"
+if args.outfile == None:
+    outfile = "performance_analysis.csv"
+else:
+    outfile = str(clean_name(args.outfile))
+
 results_outfile_obj = open(outfile,'w',newline='')
 results_outfile_writer = csv.writer(results_outfile_obj)
 

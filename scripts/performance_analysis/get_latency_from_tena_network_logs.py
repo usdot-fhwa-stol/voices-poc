@@ -3,7 +3,7 @@ import re
 
 
 
-infile = "tena_network_logs.txt"
+infile = "canary_tena_console_logs_all-Nodes.txt"
 infile_obj = open(infile,'r')
 
 is_inside_desired_dataset = False
