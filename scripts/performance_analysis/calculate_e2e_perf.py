@@ -68,6 +68,9 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             search_packet_neq_value = search_packet[current_neq["key"]]
             neq_param_value = current_neq["value"]
 
+            if "e+" in search_packet_neq_value:
+                search_packet_neq_value = float(search_packet_neq_value)
+
             logging.debug("  NEQ CHECK: " + str(search_packet_neq_value) + " != " + str(neq_param_value))
 
             # if we have already found the start of the data set (and therefore the offset),
@@ -75,7 +78,6 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             if not found_packet_matching_search and "start_only" in current_neq and current_neq["start_only"]:
                 logging.debug("    Skipping NEQ since it is start only: " + current_neq["key"])
                 continue
-
 
             # if the source_packet_value is a number and we want to round, round both values to the same number of decimals
             if "round" in current_neq and current_neq["round"]:
@@ -143,6 +145,9 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             search_packet_eq_value = search_packet[current_eq["key"]]
             eq_param_value = current_eq["value"]
 
+            if "e+" in search_packet_eq_value:
+                search_packet_eq_value = float(search_packet_neq_value)
+
             logging.debug("  EQ CHECK: " + str(search_packet_eq_value) + " == " + str(eq_param_value))
 
             # if we have already found the start of the data set (and therefore the offset),
@@ -204,8 +209,6 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             logging.debug("Keeping Packet: " + str(search_packet[data_to_search["dataset_index_column_name"]]))
             cleaned_data_to_search_list.append(search_packet)
             continue
-
-
 
         # the first time all fields match, this is the start of the data we want
         # get the offset between the source start index and the search start index
@@ -335,6 +338,7 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 source_packet_value = extracted_dtd
             else:
                 all_fields_match = False
+                logging.error("  DTD could not be extracted from mob ops string, skipping packet")
                 break
 
 
@@ -347,6 +351,7 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 search_packet_value = extracted_dtd
             else:
                 all_fields_match = False
+                logging.error("  DTD could not be extracted from mob ops string, skipping packet")
                 break
 
         if "divide_by" in source_packet_params[J2735_message_type_name]["match_keys"][match_i]:
@@ -615,7 +620,7 @@ def calculate_performance_metrics():
                 logging.debug("[!!!] Minute mismatch")
                 bsm_broadcast_latency = bsm_broadcast_latency + 60000
 
-            current_row_data["platform_bsm_generation_to_obu_latency"] = bsm_broadcast_latency/1000
+            current_row_data["platform_bsm_generation_to_obu_latency"] = bsm_broadcast_latency
     
         # loop through all datasets except the first (source)
         for dataset_i in range(1,len(all_data)):
@@ -650,10 +655,10 @@ def calculate_performance_metrics():
 
                     current_row_data[ all_data[dataset_i]["dataset_name"] + "_timestamp"] = pcap_timestamp
         
-                    dataset_total_latency = pcap_timestamp - float(source_packet_timestamp)
+                    dataset_total_latency = (pcap_timestamp - float(source_packet_timestamp)) * 1000
                     logging.debug("dataset_total_latency: " + str(dataset_total_latency))
 
-                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency
+                    current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency 
 
                 # calculate the incremental latency (latency from previous step to this step)
                 # can not calculate incremental latency of the source data (no previous step to subtract from)
@@ -666,8 +671,8 @@ def calculate_performance_metrics():
                             current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"] == "EOF" ):
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NO PREV PACKET"
                     else:
-                        dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"]
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
+                        dataset_incremental_latency = (dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"])
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency 
                         logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
 
 
@@ -685,12 +690,12 @@ def calculate_performance_metrics():
                     if current_dataset_packet["rowID"] == "DROPPED PACKET":
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = "DROPPED PACKET"
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = "DROPPED PACKET"
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "DROPPED PACKET"
+                        # current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "DROPPED PACKET"
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "DROPPED PACKET"
                     elif current_dataset_packet["rowID"] == "EOF":
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID"  ] = "EOF"
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = "EOF"
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "EOF"
+                        # current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = "EOF"
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = "EOF"
                     else:
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_rowID" ] = current_dataset_packet["rowID"]
@@ -703,11 +708,11 @@ def calculate_performance_metrics():
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_receipt"] = tdcs_time_of_receipt
                        
                         # this is really a sanity check. it should be the same as the incremental latency
-                        tdcs_commit_to_receipt = tdcs_time_of_receipt - tdcs_time_of_commit
-                        logging.debug("tdcs_commit_to_receipt: " + str(tdcs_commit_to_receipt))
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = tdcs_commit_to_receipt
+                        # tdcs_commit_to_receipt = tdcs_time_of_receipt - tdcs_time_of_commit
+                        # logging.debug("tdcs_commit_to_receipt: " + str(tdcs_commit_to_receipt))
+                        # current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_commit_to_receipt"] = tdcs_commit_to_receipt
 
-                        dataset_total_latency = tdcs_time_of_receipt - float(source_packet_timestamp)
+                        dataset_total_latency = (tdcs_time_of_receipt - float(source_packet_timestamp)) * 1000
                         logging.debug("dataset_total_latency: " + str(dataset_total_latency))
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency
 
@@ -733,9 +738,9 @@ def calculate_performance_metrics():
                         logging.debug("tdcs_time_of_commit: " + str(tdcs_time_of_commit))
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_tdcs_time_of_commit"] = tdcs_time_of_commit
 
-                        dataset_total_latency = tdcs_time_of_commit - float(source_packet_timestamp)
+                        dataset_total_latency = (tdcs_time_of_commit - float(source_packet_timestamp))* 1000
                         logging.debug("dataset_total_latency: " + str(dataset_total_latency))
-                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency
+                        current_row_data[ all_data[dataset_i]["dataset_name"] + "_total_latency"] = dataset_total_latency 
         
                 else:
                     logging.debug("[???] HOW DID WE GET HERE????")
@@ -753,6 +758,8 @@ def calculate_performance_metrics():
                             current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"] == "EOF"):
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = "NO PREV PACKET"
                     else:
+                        
+                        logging.debug("dataset_incremental_latency = " + str(dataset_total_latency) + " - " + str(current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"]))
                         dataset_incremental_latency = dataset_total_latency - current_row_data[ all_data[dataset_i-1]["dataset_name"] + "_total_latency"]
                         current_row_data[ all_data[dataset_i]["dataset_name"] + "_incremental_latency"] = dataset_incremental_latency
                         logging.debug("dataset_incremental_latency: " + str(dataset_incremental_latency))
@@ -822,6 +829,20 @@ def load_data_user_input():
 
         if not load_another_dataset_yn.startswith('y'):
             still_loading_data = False
+
+
+def load_data_from_csv(datasets_infile):
+
+    datasets_infile_obj = open(datasets_infile,'r')
+    datasets_infile_reader = csv.DictReader(datasets_infile_obj,delimiter=',')
+
+    datasets_list = list(datasets_infile_reader)
+    total_packets = len(datasets_list)
+
+    for dataset_line in datasets_list:
+        if str(dataset_line["load_data"]) == "true":
+            load_data(dataset_line["dataset_name"],dataset_line["dataset_file_location"],dataset_line["dataset_type"],0)
+
 
 #################### SELECT SOURCE VEHICLE ####################
 
@@ -961,7 +982,7 @@ argparser.add_argument(
     default=None,
     help='Data type to be analyzed OPTIONS: [MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
 argparser.add_argument(
-    '-s', '--source-vehicle',
+    '-s', '--source_vehicle',
     metavar='<source_vehicle_index>',
     dest='source_vehicle_index',
     type=int,
@@ -974,6 +995,13 @@ argparser.add_argument(
     type=str,
     default=None,
     help='name of the outfile (no special characters or spaces)')
+argparser.add_argument(
+    '-i', '--infile',
+    metavar='<infile>',
+    dest='infile',
+    type=str,
+    default=None,
+    help='a csv input file that contains the datasets to load (columns: "dataset_name","dataset_file_location","dataset_type" ')
 # argparser.add_argument(
 #     '-p', '--port',
 #     metavar='P',
@@ -1716,10 +1744,15 @@ data_params = {
 
 ############################## LOAD DATA ##############################
 
-# load_data_user_input()
-
-
 print("\nTotal Packets:")
+
+if args.infile == None:
+    load_data_user_input()
+else:
+    load_data_from_csv(args.infile)
+
+
+
 
 #=====# SPAT TO AUG #=====#
 # load_data("v2x out pcap","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_out/v2xhub_out_decoded_packets_SPAT.csv","pcap",0)
@@ -1733,11 +1766,11 @@ print("\nTotal Packets:")
 
 # BSM #
 
-# load_data("live platform out","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_out/live-carma_platform_out_decoded_packets_BSM.csv","pcap",0)
-# load_data("live out to v2x in","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_in/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
-# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143332.csv","tdcs",0)
-# load_data("v2x to aug SDO transmit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-Track-BSM-20220915143237.csv","tdcs",0)
-# load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_BSM.csv","pcap",0)
+# load_data("live platform out","/home/stol/demo_1b_data/run_4/lead_vehicle_20220921151350-demo-1b-run4/decoded_pcaps_out/lead_carma_platform_out_decoded_packets_BSM.csv","pcap",0)
+# load_data("live out to v2x in","/home/stol/demo_1b_data/run_4/v2xhub_20220921151325_demo_1b_run_4/decoded_pcaps_in/v2xhub_in_decoded_packets_BSM.csv","pcap",0)
+# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1b_data/run_4/v2xhub_20220921151325_demo_1b_run_4/exported_tdcs/VUG-Track-BSM-20220922114231.csv","tdcs",0)
+# load_data("v2x to aug SDO transmit","/home/stol/demo_1b_data/run_4/second_vehicle_20220921151312_demo1b_run_4/exported_tdcs/VUG-Track-BSM-20220923093811.csv","tdcs",0)
+# load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1b_data/run_4/second_vehicle_20220921151312_demo1b_run_4/decoded_pcaps_in/aug-carma_platform_in_decoded_packets_BSM.csv","pcap",0)
 
 # NO MOB REQUEST SENT BY LIVE # 
 
@@ -1752,9 +1785,9 @@ print("\nTotal Packets:")
 
 # MOBILITY PATH # 
 
-# load_data("live platform out","/home/stol/demo_1a_data/run_3/lead_vehicle_20220913114923-demo-1a-run3/decoded_pcap_out/live-carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
-# load_data("live out to v2x in","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/decoded_pcap_in/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
-# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1a_data/run_3/v2xhub_20220913115002_demo_1a_run_3/tdcs_export/VUG-CARMA-Mobility-Path-20220915143339.csv","tdcs",0)
+# load_data("live platform out","/home/stol/demo_1b_data/run_4/lead_vehicle_20220921151350-demo-1b-run4/decoded_pcaps_out/lead_carma_platform_out_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("live out to v2x in","/home/stol/demo_1b_data/run_4/v2xhub_20220921151325_demo_1b_run_4/decoded_pcaps_in/v2xhub_in_decoded_packets_Mobility-Path.csv","pcap",0)
+# load_data("v2x J2735 in to SDO commit","/home/stol/demo_1b_data/run_4/v2xhub_20220921151325_demo_1b_run_4/exported_tdcs/VUG-CARMA-Mobility-Path-20220922114242.csv","tdcs",0)
 # load_data("v2x to aug SDO transmit","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/tdcs_export/VUG-CARMA-Mobility-Path-20220915143240.csv","tdcs",0)
 # load_data("aug SDO to aug J2735 platform in","/home/stol/demo_1a_data/run_3/second_vehicle_20220913115010_demo_1a_run_3/decoded_pcap_in/augusta-carma_platform_in_decoded_packets_Mobility-Path.csv","pcap",0)
 
@@ -1830,6 +1863,10 @@ print("\nTotal Packets:")
 # if the source packet is not found in one of the datasets (dropped packet or something), we need to try the next packet in the source dataset
 # to keep data aligned across all sets, we simply remove that packet from all data sources that have it
 
+if len(all_data) == 0:
+    print("\nNo datasets loaded, exiting")
+    sys.exit()
+
 source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
 source_data_obj = all_data[source_data_obj_index]
 source_data_list_original = source_data_obj["original_data_list"]
@@ -1895,7 +1932,7 @@ if args.outfile == None:
 else:
     outfile = str(clean_name(args.outfile))
 
-results_outfile_obj = open(outfile,'w',newline='')
+results_outfile_obj = open("results/" + outfile + ".csv",'w',newline='')
 results_outfile_writer = csv.writer(results_outfile_obj)
 
 calculate_performance_metrics()
