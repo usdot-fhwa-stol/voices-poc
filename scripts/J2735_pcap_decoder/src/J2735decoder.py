@@ -84,7 +84,7 @@ map_outfile_obj         = open(outfile.replace(".csv","_MAP.csv"),'w',newline=''
 mob_req_outfile_obj     = open(outfile.replace(".csv","_Mobility-Request.csv"),'w',newline='')
 mob_resp_outfile_obj    = open(outfile.replace(".csv","_Mobility-Response.csv"),'w',newline='')
 mob_path_outfile_obj    = open(outfile.replace(".csv","_Mobility-Path.csv"),'w',newline='')
-mob_ops_outfile_obj     = open(outfile.replace(".csv","_Moblity-Operations.csv"),'w',newline='')
+mob_ops_outfile_obj     = open(outfile.replace(".csv","_Mobility-Operations.csv"),'w',newline='')
 platooning_outfile_obj  = open(outfile.replace(".csv","_Platooning.csv"),'w',newline='')
 tcr_outfile_obj         = open(outfile.replace(".csv","_Traffic-Control-Request.csv"),'w',newline='')
 tcm_outfile_obj         = open(outfile.replace(".csv","_Traffic-Control-Message.csv"),'w',newline='')
@@ -117,8 +117,8 @@ mob_resp_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimesta
 mob_path_outfile_writer.writerow(["packetIndex","packetTimestamp","hostStaticId","hostBSMId","planId","location","trajectory"])
 mob_ops_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","operationParams"])
 platooning_outfile_writer.writerow(["platooningPacketType","packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","other_params"])
-tcr_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid","reqseq","scale","bounds"])
-tcm_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid","reqseq","msgtot","msgnum","id","updated","label","tcID","vclasses","schedule","detail","geometry"])
+tcr_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","scale","bounds"])
+tcm_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","msgtot","msgnum","tcmID_hex","tcmID_dec_list","updated","label","tcID_hex","tcID_dec_list","vclasses","schedule","detail","geometry"])
 
 
 infile_reader = csv.reader(infile_obj,delimiter=',')
@@ -263,8 +263,10 @@ for packet in packet_list:
         bounds = msg()['value'][1]['body'][1]['bounds']
 
         newReqId = str(convID(reqid, 8)).replace(",", " ")
+        reqid = reqid.hex()
+        
 
-        tcr_outfile_writer.writerow([str(packet[0]),str(packet[1]),newReqId,str(reqseq),str(scale),str(bounds),str(packet[trimmed_packet_column])])
+        tcr_outfile_writer.writerow([str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(scale),str(bounds),str(packet[trimmed_packet_column])])
     
     elif (packet[message_type_id_column] == "00f5") :
         # print("Parsing TCM")
@@ -285,8 +287,13 @@ for packet in packet_list:
         newReqId = str(convID(reqid, 8)).replace(",", " ")
         newTcmId = str(convID(tcmId, 16)).replace(",", " ")
         newtcId = str(convID(tcId, 16)).replace(",", " ")
+        
+        reqid = reqid.hex()
+        tcmId = tcmId.hex()
+        tcId = tcId.hex()
+        
 
-        tcm_outfile_writer.writerow([str(packet[0]),str(packet[1]),newReqId,str(reqseq),str(msgtot),str(msgnum),newTcmId,str(updated),str(label),newtcId,str(vclasses),str(schedule),str(detail),str(geometry),str(packet[trimmed_packet_column])])
+        tcm_outfile_writer.writerow([str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(msgtot),str(msgnum),tcmId,newTcmId,str(updated),str(label),tcId,newtcId,str(vclasses),str(schedule),str(detail),str(geometry),str(packet[trimmed_packet_column])])
     else:
         print("\nERROR: NO MATCHING MESSAGE TYPES FOR PAYLOAD: ")
         print("[" + str(packet[0])+'] ' + str(packet[2]) )
