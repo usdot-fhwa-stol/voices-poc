@@ -84,28 +84,41 @@ map_outfile_obj         = open(outfile.replace(".csv","_MAP.csv"),'w',newline=''
 mob_req_outfile_obj     = open(outfile.replace(".csv","_Mobility-Request.csv"),'w',newline='')
 mob_resp_outfile_obj    = open(outfile.replace(".csv","_Mobility-Response.csv"),'w',newline='')
 mob_path_outfile_obj    = open(outfile.replace(".csv","_Mobility-Path.csv"),'w',newline='')
-mob_ops_outfile_obj     = open(outfile.replace(".csv","_Moblity-Operations.csv"),'w',newline='')
+mob_ops_outfile_obj     = open(outfile.replace(".csv","_Mobility-Operations.csv"),'w',newline='')
+platooning_outfile_obj  = open(outfile.replace(".csv","_Platooning.csv"),'w',newline='')
 tcr_outfile_obj         = open(outfile.replace(".csv","_Traffic-Control-Request.csv"),'w',newline='')
 tcm_outfile_obj         = open(outfile.replace(".csv","_Traffic-Control-Message.csv"),'w',newline='')
+
+bsm_outfile_writer         = csv.writer(bsm_outfile_obj)
+spat_outfile_writer        = csv.writer(spat_outfile_obj)
+map_outfile_writer         = csv.writer(map_outfile_obj)
+mob_req_outfile_writer     = csv.writer(mob_req_outfile_obj)
+mob_resp_outfile_writer    = csv.writer(mob_resp_outfile_obj)
+mob_path_outfile_writer    = csv.writer(mob_path_outfile_obj)
+mob_ops_outfile_writer     = csv.writer(mob_ops_outfile_obj)
+platooning_outfile_writer  = csv.writer(platooning_outfile_obj)
+tcr_outfile_writer         = csv.writer(tcr_outfile_obj)
+tcm_outfile_writer         = csv.writer(tcm_outfile_obj)
 
 numSpatPhases = 31 #use one more than desired phases
 
 
-bsm_outfile_obj.write("packetIndex,packetTimestamp,bsm id,secMark,latency,latitude,longitude,speed(m/s),heading,elevation(m),accel_long(m/s^2),hex\n")
+bsm_outfile_writer.writerow(["packetIndex","packetTimestamp","bsm id","secMark","latency","latitude","longitude","speed(m/s)","heading","elevation(m)","accel_long(m/s^2)","hex"])
 
-spatColumnHeaderString="packetIndex,packetTimestamp,spatTimestamp,intersectionID,intersectionName"
+spatColumnHeaderList=["packetIndex","packetTimestamp","spatTimestamp","intersectionID","intersectionName"]
 for headerPhase in range(1,numSpatPhases):
-    spatColumnHeaderString = spatColumnHeaderString + ",phase" + str(headerPhase) + "_eventState"
-spatColumnHeaderString = spatColumnHeaderString + ",hex\n"
-spat_outfile_obj.write(spatColumnHeaderString)
+    spatColumnHeaderList.append("phase" + str(headerPhase) + "_eventState")
+spatColumnHeaderList.append("hex")
+spat_outfile_writer.writerow(spatColumnHeaderList)
 
-map_outfile_obj.write("packetIndex,packetTimestamp,intersectionID,hex\n")  
-mob_req_outfile_obj.write("packetIndex,packetTimestamp,hostStaticId,hostBSMId,planId,strategy,planType,urgency,strategyParams,trajectoryStart,trajectory,expiration\n")
-mob_resp_outfile_obj.write("packetIndex,packetTimestamp,hostStaticId,hostBSMId,planId,urgency,isAccepted\n")
-mob_path_outfile_obj.write("packetIndex,packetTimestamp,hostStaticId,hostBSMId,planId,location,trajectory\n")
-mob_ops_outfile_obj.write("packetIndex,packetTimestamp,hostStaticId,hostBSMId,planId,strategy,operationParams:\n")
-tcr_outfile_obj.write("packetIndex,packetTimestamp,reqid,reqseq,scale,bounds:\n")
-tcm_outfile_obj.write("packetIndex,packetTimestamp,reqid,reqseq,msgtot,msgnum,id,updated,label,tcID,vclasses...,schedule...,detail...,geometry...\n")
+map_outfile_writer.writerow(["packetIndex","packetTimestamp","intersectionID","hex"])  
+mob_req_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","planType","urgency","strategyParams","trajectoryStart","trajectory","expiration"])
+mob_resp_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","urgency","isAccepted"])
+mob_path_outfile_writer.writerow(["packetIndex","packetTimestamp","hostStaticId","hostBSMId","planId","location","trajectory"])
+mob_ops_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","operationParams"])
+platooning_outfile_writer.writerow(["platooningPacketType","packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","other_params"])
+tcr_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","scale","bounds"])
+tcm_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","msgtot","msgnum","tcmID_hex","tcmID_dec_list","updated","label","tcID_hex","tcID_dec_list","vclasses","schedule","detail","geometry"])
 
 
 infile_reader = csv.reader(infile_obj,delimiter=',')
@@ -142,13 +155,13 @@ for packet in packet_list:
             currentState = str(msg()['value'][1]['intersections'][0]['states'][phase]['state-time-speed'][0]['eventState'])
             spatPhaseArray[currentPhase] = currentState
         
-        spatString = str(packet[0]) + "," + str(spatTimestamp) + "," + str(intersectionID) + "," + intersectionName 
+        spatRowList = [str(packet[0]),str(packet[1]),str(spatTimestamp),str(intersectionID),intersectionName ]
         
         for printPhase in range(1,numSpatPhases):
-            spatString = spatString + "," + spatPhaseArray[printPhase]
-        spatString = spatString + ',' + str(packet[trimmed_packet_column]) + "\n"
+            spatRowList.append(spatPhaseArray[printPhase])
+        spatRowList.append(str(packet[trimmed_packet_column]))
         
-        spat_outfile_obj.write(spatString)
+        spat_outfile_writer.writerow(spatRowList)
 
     elif (packet[message_type_id_column] == "0012") :
         # print("Parsing MAP")
@@ -158,7 +171,7 @@ for packet in packet_list:
         lat = msg()['value'][1]['intersections'][0]['refPoint']['lat']
         longstr = msg()['value'][1]['intersections'][0]['refPoint']['long']
         laneWidth = msg()['value'][1]['intersections'][0]['laneWidth']
-        map_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+str(intersectionID)+','+str(lat/10000000.0)+','+str(longstr/10000000.0)+','+str(laneWidth)+','+str(packet[trimmed_packet_column])+'\n')
+        map_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(intersectionID),str(lat/10000000.0),str(longstr/10000000.0),str(laneWidth),str(packet[trimmed_packet_column])])
 
     elif (packet[message_type_id_column] == "0014") : # if bsm , look for lat, long, speed along with time
         # print("Parsing BSM")
@@ -184,7 +197,7 @@ for packet in packet_list:
         
         latency_array.append(latency)
         
-        bsm_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+str(bsmId.hex())+','+str(secMark)+','+str(latency)+','+str(lat/10000000.0)+','+str(longstr/10000000.0)+','+str(speed_converted)+','+str(heading)+','+str(accel_long_converted)+','+ str(elevation)+','+str(packet[trimmed_packet_column])+'\n')
+        bsm_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(bsmId.hex()),str(secMark),str(latency),str(lat/10000000.0),str(longstr/10000000.0),str(speed_converted),str(heading),str(accel_long_converted), str(elevation),str(packet[trimmed_packet_column])])
 
     elif (packet[message_type_id_column] == "00f0") :
         # print("Parsing Mobility Request")
@@ -192,15 +205,17 @@ for packet in packet_list:
         hostStaticId = msg()['value'][1]['header']['hostStaticId']
         hostBSMId = msg()['value'][1]['header']['hostBSMId']
         planId = msg()['value'][1]['header']['planId']
+        headerTimestamp = msg()['value'][1]['header']['timestamp']
         strategy = msg()['value'][1]['body']['strategy']
         planType = msg()['value'][1]['body']['planType']
         urgency = msg()['value'][1]['body']['urgency']
-        strategyParams = msg()['value'][1]['body']['strategyParams']
-        trajectoryStart = msg()['value'][1]['body']['trajectoryStart']
+        strategyParams = str(msg()['value'][1]['body']['strategyParams'])
+        trajectoryStart = str(msg()['value'][1]['body']['trajectoryStart'])
         trajectory = msg()['value'][1]['body']['trajectory']
         expiration = msg()['value'][1]['body']['expiration']
 
-        mob_req_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+str(hostStaticId)+','+str(hostBSMId)+','+str(planId)+','+str(strategy)+','+str(planType)+','+str(urgency)+''+str(strategyParams)+''+str(trajectoryStart)+''+str(trajectory)+''+str(expiration)+''+'\n')
+        mob_req_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
+        platooning_outfile_writer.writerow(["Mobility_Request" , str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
 
     elif (packet[message_type_id_column] == "00f1") :
         # print("Parsing Mobility Response")
@@ -208,10 +223,12 @@ for packet in packet_list:
         hostStaticId = msg()['value'][1]['header']['hostStaticId']
         hostBSMId = msg()['value'][1]['header']['hostBSMId']
         planId = msg()['value'][1]['header']['planId']
+        headerTimestamp = msg()['value'][1]['header']['timestamp']
         urgency = msg()['value'][1]['body']['urgency']
         isAccepted = msg()['value'][1]['body']['isAccepted']
 
-        mob_resp_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+str(hostStaticId)+','+str(hostBSMId)+','+str(planId)+','+str(urgency)+','+str(isAccepted)+'\n')
+        mob_resp_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(urgency),str(isAccepted)])
+        platooning_outfile_writer.writerow(["Mobility_Response",str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(urgency),str(isAccepted)])
 
     elif (packet[message_type_id_column] == "00f2") :
         # print("Parsing Mobility Path")
@@ -222,7 +239,7 @@ for packet in packet_list:
         location = msg()['value'][1]['body']['location']
         trajectory = msg()['value'][1]['body']['trajectory']
 
-        mob_path_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+str(hostStaticId)+','+str(hostBSMId)+','+str(planId)+','+str(location)+','+str(trajectory)+'\n')
+        mob_path_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(location),str(trajectory)])
 
     elif (packet[message_type_id_column] == "00f3") :
         # print("Parsing Mobility Operations")
@@ -230,10 +247,12 @@ for packet in packet_list:
         hostStaticId = msg()['value'][1]['header']['hostStaticId']
         hostBSMId = msg()['value'][1]['header']['hostBSMId']
         planId = msg()['value'][1]['header']['planId']
+        headerTimestamp = msg()['value'][1]['header']['timestamp']
         strategy = msg()['value'][1]['body']['strategy']
         operationParams = msg()['value'][1]['body']['operationParams']
         
-        mob_ops_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+str(hostStaticId)+','+str(hostBSMId)+','+str(planId)+','+str(strategy)+','+str(operationParams)+'\n')
+        mob_ops_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp) ,str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(operationParams)])
+        platooning_outfile_writer.writerow(["Mobility_Operations",str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(operationParams)])
 
     elif (packet[message_type_id_column] == "00f4") :
         # print("Parsing Mobility TCR")
@@ -244,8 +263,10 @@ for packet in packet_list:
         bounds = msg()['value'][1]['body'][1]['bounds']
 
         newReqId = str(convID(reqid, 8)).replace(",", " ")
+        reqid = reqid.hex()
+        
 
-        tcr_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+newReqId+','+str(reqseq)+','+str(scale)+','+str(bounds)+','+str(packet[trimmed_packet_column])+'\n')
+        tcr_outfile_writer.writerow([str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(scale),str(bounds),str(packet[trimmed_packet_column])])
     
     elif (packet[message_type_id_column] == "00f5") :
         # print("Parsing TCM")
@@ -266,8 +287,13 @@ for packet in packet_list:
         newReqId = str(convID(reqid, 8)).replace(",", " ")
         newTcmId = str(convID(tcmId, 16)).replace(",", " ")
         newtcId = str(convID(tcId, 16)).replace(",", " ")
+        
+        reqid = reqid.hex()
+        tcmId = tcmId.hex()
+        tcId = tcId.hex()
+        
 
-        tcm_outfile_obj.write(str(packet[0])+','+str(packet[1])+','+newReqId+','+str(reqseq)+','+str(msgtot)+','+str(msgnum)+','+newTcmId+','+str(updated)+','+str(label)+','+newtcId+','+str(vclasses)+','+str(schedule)+','+str(detail)+','+str(geometry)+','+str(packet[trimmed_packet_column])+'\n')
+        tcm_outfile_writer.writerow([str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(msgtot),str(msgnum),tcmId,newTcmId,str(updated),str(label),tcId,newtcId,str(vclasses),str(schedule),str(detail),str(geometry),str(packet[trimmed_packet_column])])
     else:
         print("\nERROR: NO MATCHING MESSAGE TYPES FOR PAYLOAD: ")
         print("[" + str(packet[0])+'] ' + str(packet[2]) )
