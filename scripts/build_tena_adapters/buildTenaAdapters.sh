@@ -74,13 +74,16 @@ echo "    [10] 	vug-udp-protocolio"
 echo
 read -p "--> " tenaAppIndex
 
+carlaTenaAdapterGitUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/carla-tena-adapter.git"
+
 if [[ $tenaAppIndex == 1 ]]; then
 	tenaApp=carla-tena-adapter
-	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/carla-tena-adapter.git"
+	gitCloneUrl=$carlaTenaAdapterGitUrl
 	dockerContainer=tena:carla
 	remoteAppDir=/home/$tenaApp 			#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 	
 elif [[ $tenaAppIndex == 2 ]]; then
 	tenaApp=v2xhub-tena-bsm-plugin
@@ -89,6 +92,7 @@ elif [[ $tenaAppIndex == 2 ]]; then
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 
 elif [[ $tenaAppIndex == 3 ]]; then
 	tenaApp=v2xhub-tena-spat-plugin
@@ -97,6 +101,7 @@ elif [[ $tenaAppIndex == 3 ]]; then
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 	
 elif [[ $tenaAppIndex == 4 ]]; then
 	tenaApp=v2xhub-tena-mobility-plugin
@@ -105,6 +110,7 @@ elif [[ $tenaAppIndex == 4 ]]; then
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 	
 elif [[ $tenaAppIndex == 5 ]]; then
 	tenaApp=v2xhub-tena-traffic-control-plugin
@@ -113,6 +119,7 @@ elif [[ $tenaAppIndex == 5 ]]; then
 	remoteAppDir=/home/V2X-Hub/src/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=true
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 
 elif [[ $tenaAppIndex == 6 ]]; then
 	tenaApp=scenario-publisher
@@ -121,6 +128,7 @@ elif [[ $tenaAppIndex == 6 ]]; then
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 
 elif [[ $tenaAppIndex == 7 ]]; then
 	tenaApp=tena-entity-generator
@@ -129,6 +137,7 @@ elif [[ $tenaAppIndex == 7 ]]; then
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
+	useMasterDefaultBranch=false
 	
 elif [[ $tenaAppIndex == 8 ]]; then
 	tenaApp=carma-platform-tena-adapter
@@ -137,6 +146,7 @@ elif [[ $tenaAppIndex == 8 ]]; then
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=true
+	useMasterDefaultBranch=false
 
 elif [[ $tenaAppIndex == 9 ]]; then
 	tenaApp=vug-threads
@@ -145,6 +155,7 @@ elif [[ $tenaAppIndex == 9 ]]; then
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
+	useMasterDefaultBranch=true
 	
 elif [[ $tenaAppIndex == 10 ]]; then
 	tenaApp=vug-udp-protocolio
@@ -153,6 +164,7 @@ elif [[ $tenaAppIndex == 10 ]]; then
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
+	useMasterDefaultBranch=true
 
 else
 	echo "Invalid selection, try again..."
@@ -166,14 +178,20 @@ echo
 if [[ ! -d $localAppDir ]]; then
 	read -p "Application directory not found. Would you like to download from BitBucket? [y/n] " downloadApp
 	
-	read -p "What branch would you like to use? [leave blank for develop] " branchToDownload
+	if $useMasterDefaultBranch; then
+		defaultBranch=master
+	else
+		defaultBranch=develop
+	fi
+
+	read -p "What branch would you like to use? [leave blank for $defaultBranch] " branchToDownload
 	
 	if [[ $downloadApp =~ ^[yY]$ ]]; then
 	
 		if [[ $branchToDownload == "" ]]; then
-			git clone $gitCloneUrl -b develop $localAppDir
+			git clone $gitCloneUrl -b $defaultBranch $localAppDir || exit
 		else
-			git clone $gitCloneUrl -b $branchToDownload $localAppDir
+			git clone $gitCloneUrl -b $branchToDownload $localAppDir || exit
 		fi
 	else
 		echo "Please clone the latest application directory from BitBucket..."
@@ -327,7 +345,7 @@ if [[ "$skipDocker" == true ]]
 
 				if [[ $downloadApp =~ ^[yY]$ ]]; then
 					if [[ $branchToDownload == "" ]]; then
-						git clone $v2xhubGitUrl -b develop 
+						git clone $v2xhubGitUrl -b develop
 					else
 						git clone $v2xhubGitUrl -b $branchToDownload 
 					fi
@@ -341,10 +359,26 @@ if [[ "$skipDocker" == true ]]
 			
 			cd ./V2X-Hub
 		fi
+
+		#if we are vug-threads or protocolio
+		if [ $dockerContainer == "tena:carla" ]; then
+			if [ ! -d $localTenadevDir/carla-tena-adapter ]; then
+				echo "This application uses the tena:carla build container from the carla-tena-adapter. Cloning carla-tena-adapter repository to use dockerfile"
+			
+				git clone $carlaTenaAdapterGitUrl -b develop $localTenadevDir/carla-tena-adapter
+
+			fi
+
+			dockerfileToUse=$localTenadevDir/carla-tena-adapter/docker/Dockerfile
+
+		else
+			
+			dockerfileToUse=$localAppDir/docker/Dockerfile
+		fi
 				
 		echo
 		echo "#### Starting Docker Build ####"
-		sudo -E docker build --force-rm --rm -f $localAppDir/docker/Dockerfile -t $dockerContainer .
+		sudo -E docker build --force-rm --rm -f $dockerfileToUse -t $dockerContainer .
 		
 		
 		
@@ -399,7 +433,10 @@ if [[ "$skipCmake" == true ]]
 		if [[ ! -d $localTenaDir/lib/cmake/mw ]]; then
 			echo
 			echo mw library not installed in local TENA install $localTenaDir/lib/cmake/mw
-			echo Please add the mw library and try again...; exit
+			echo Pulling mw library
+			sudo git clone https://www.trmc.osd.mil/bitbucket/scm/roger_wuerfel/mw.git -b master cmake_temp || exit
+			sudo mv cmake_temp/cmake/ $localTenaDir/lib/ || exit
+			sudo rm -rf cmake_temp || exit
 		fi
 
 		echo
