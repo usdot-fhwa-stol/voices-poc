@@ -9,7 +9,10 @@ The buildTenaAdapters.sh automates the build process for TENA adapters which req
 
  - The following packages are installed:
 	 - build-essentials
- - TENA is installed on the local machine
+ - The following TENA packages are installed on the local machine in $HOME/TENA:
+	- TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-va0b09d44.bin
+	- TENA-boost-v1.77.0.1@Product@u2004-gcc9-64-vall.bin
+	- VUG-VOICES-Combined-Distribution-v0.12.0@Product@u2004-gcc9-64-v1976e608.bin
  - All prerequisite bin packages including the TENA Middleware are downloaded and placed in a single directory.
 	 - Prerequisite packages for each adapter can be found on its BitBucket page at www.trmc.osd.mil/bitbucket
 
