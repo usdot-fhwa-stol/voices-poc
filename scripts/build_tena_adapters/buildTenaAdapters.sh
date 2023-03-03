@@ -8,7 +8,6 @@
 # 
 
 
-
 username=$(whoami)
 
 #-------------------| LOCAL VARIABLES |-------------------#
