@@ -263,12 +263,21 @@ $HOME/TENA/VOICES-Combined-v0.12.0-DataCollection-v1.1.10/start.sh
 # Start CARLA
 $HOME/CARLA_0.9.10/CarlaUE4.sh 
 
+# Change map
+python3 config.py -m Town04
+
 # Start CARLA-TENA Adapter
 $HOME/voices-poc/scripts/run_scripts/pilot1/runCarlaAdapter.sh 
 
 # Start Scenario-Publisher
 
-
 # Start manually-driven car
 python3 manual_control_keyboard_virtual.py
+
+# Follow a car in a running simulation
+python3 manual_control_keyboard_virtual.py --follow_vehicle CARMA-MANUAL-2
+
+
+
+
 
