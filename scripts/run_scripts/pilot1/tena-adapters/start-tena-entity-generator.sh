@@ -17,6 +17,7 @@
 #  * the License.
 #  *
 
+
 . ../node_info.config
 
 if [[ $? -ne 0 ]] ; then
@@ -26,15 +27,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$carlaAdapterVersion
-
-carlaHost=$localAddress
+localCarlaAdapterPath=$localInstallPath/$entityGeneratorVersion
 
 adapterVerbosity='4'
 
 mkdir -p $localAdapterLogPath
 
-adapterLogFile=$localAdapterLogPath/carla_adapter_terminal_out.log
+adapterLogFile=$localAdapterLogPath/entity_generator_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -47,4 +46,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
+$localCarlaAdapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
+
