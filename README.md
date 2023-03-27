@@ -252,4 +252,23 @@ CARLA Adapter
 
 
 
+# Run Instructions
+
+# Start Execution Manager
+/opt/TENA/Console-v2.0.1/start.sh
+
+# Start DataCollection
+$HOME/TENA/VOICES-Combined-v0.12.0-DataCollection-v1.1.10/start.sh
+
+# Start CARLA
+$HOME/CARLA_0.9.10/CarlaUE4.sh 
+
+# Start CARLA-TENA Adapter
+$HOME/voices-poc/scripts/run_scripts/pilot1/runCarlaAdapter.sh 
+
+# Start Scenario-Publisher
+
+
+# Start manually-driven car
+python3 manual_control_keyboard_virtual.py
 
