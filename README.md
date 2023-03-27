@@ -1,10 +1,85 @@
 # VOICES Proof of Concept
 
-## Componennts
+
+# voices-poc
+## All Components
+CARLA
+J2735 Message Adapter
+Traffic Light Entity Generator
+CARMA
+CARLA TENA Adapter
+Scenario Publisher
+CARMA Platform TENA Adapter
+Simple Vehicle Model
+## EM Pilot 1
+Execution Manager
+Sceneraio publisher
+Data collections - tdcs tena data collection system (optinoal)
+## UCLA - Constructive simulation
+CARLA
+CARLA TENA Adapter
+Vechile Model
+TJ2735 Adapter
+## Nissan
+CARLA
+CARLA TENA Adapter
+Simple Vehicle Model
+## Econolite
+//CARLA Adapter ?
+CARLA
+Traffic Light Entity Generator
+J2735 Message Adapter
+Virtual Traffic Controller
+## MCity
+CARLA
+CARLA TENA Adapter
 
 
-Execution manager
-tdcs tena data collection system
+
+
+
+
+
+
+# Run Instructions
+
+# Start Execution Manager
+/opt/TENA/Console-v2.0.1/start.sh
+
+# Start DataCollection
+$HOME/TENA/VOICES-Combined-v0.12.0-DataCollection-v1.1.10/start.sh
+
+# Start CARLA
+$HOME/CARLA_0.9.10/CarlaUE4.sh
+
+# Change map
+python3 config.py -m Town04
+
+# Start CARLA-TENA Adapter
+$HOME/voices-poc/scripts/run_scripts/pilot1/runCarlaAdapter.sh
+
+# Start Scenario-Publisher
+
+# Start manually-driven car
+python3 manual_control_keyboard_virtual.py
+
+# Follow a car in a running simulation
+python3 manual_control_keyboard_virtual.py --follow_vehicle CARMA-MANUAL-2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -21,7 +96,7 @@ The following files contain the details of the elements which will be used in a 
     ├── build_tena_adapters
     │   ├── buildTenaAdapters.sh
     │   └── readme.md
-    ├── carla_python_scripts
+    ├── carla_python_scripts - Handy customized CARLA scripts. Also refer to the CARLA-provided scripts in $CARLA_HOME/...../
     │   ├── config.py
     │   ├── destroy_signals.py
     │   ├── destroy_vehicles.py
@@ -46,15 +121,7 @@ The following files contain the details of the elements which will be used in a 
     │   ├── readme.md
     │   ├── set_time_mode.py
     │   ├── spawn_npc.py
-    │   ├── ubuntu_desktop_shortcuts
-    │   │   ├── first_person.png
-    │   │   ├── Spawn_NPC_Vehicles.desktop
-    │   │   ├── Start_CARLA_First_Person_Live_Vehicle.desktop
-    │   │   ├── Start_CARLA_Manual_Control_Wheel.desktop
-    │   │   ├── Start_CARLA_Simulator.desktop
-    │   │   ├── vehicles.png
-    │   │   ├── voices.png
-    │   │   └── wheel.png
+    │   ├── ubuntu_desktop_shortcuts -- Installable desktop shortcuts.
     │   └── wheel_config.ini
     ├── collect_logs
     │   ├── collect_voices_logs.sh
@@ -216,100 +283,3 @@ The following files contain the details of the elements which will be used in a 
         ├── README.md
         ├── v2xhub_sql_import.py
         └── v2xhub_sql_update.py
-
-# VOICES Proof of Concept
-
-## Componennts
-
-Execution manager
-tdcs tena data collection system (optinoal)
-
-## UCLA - Constructive simulation
-
-CARLA
-CARLA Adapter
-Vehicle Model
-TJ2735 Adapter
-
-## Nissan
-
-Simple vehicle model
-
-
-
-## Econolite
-
-CARLA Adapter
-TLEG
-TJ2735 Adapter
-Virtual signal controller
-CARLA
-
-## MCity
-
-CARLA
-CARLA Adapter
-
-
-
-# Run Instructions
-
-# Start Execution Manager
-/opt/TENA/Console-v2.0.1/start.sh
-
-# Start DataCollection
-$HOME/TENA/VOICES-Combined-v0.12.0-DataCollection-v1.1.10/start.sh
-
-# Start CARLA
-$HOME/CARLA_0.9.10/CarlaUE4.sh 
-
-# Change map
-python3 config.py -m Town04
-
-# Start CARLA-TENA Adapter
-$HOME/voices-poc/scripts/run_scripts/pilot1/runCarlaAdapter.sh 
-
-# Start Scenario-Publisher
-
-# Start manually-driven car
-python3 manual_control_keyboard_virtual.py
-
-# Follow a car in a running simulation
-python3 manual_control_keyboard_virtual.py --follow_vehicle CARMA-MANUAL-2
-
-
-
-
-
-# voices-poc
-## All Components
-CARLA
-J2735 Message Adapter
-Traffic Light Entity Generator
-CARMA
-CARLA TENA Adapter
-Scenario Publisher
-CARMA Platform TENA Adapter
-Simple Vehicle Model
-## EM Pilot 1
-Execution Manager
-Sceneraio publisher
-Data collections
-## UCLA
-CARLA
-Carla-Adapter
-Vechile Model
-J2735 Adapter
-## Nissan
-town4
-CARLA
-Carla-Adapter
-Simple Vehicle Model
-## Econolite
-CARLA
-Traffic Light Entity Generator
-J2735 Message Adapter
-Virtual Traffic Controller
-## MCity
-CARLA
-Carla-Adapter
