@@ -14,7 +14,7 @@ username=$(whoami)
 localTenaDir=/home/$username/TENA 				#root directory of TENA installation
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
 localTenadevDir=/home/$username/tenadev			#location of local tenadev
-localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
+localInstallDir=/home/carma/TENA/install  # $localTenadevDir/INSTALL		#location to install/build TENA adapters
 #---------------------------------------------------------#
 
 #-------------------| TENA VARIABLES |-------------------#
