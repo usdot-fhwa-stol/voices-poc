@@ -78,45 +78,40 @@ try:
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
-    pass
 
-#this looks for the carla python API .egg file in ~/carla
-try:
-    
-    carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
-    print("Looking for CARLA egg: " + carla_egg_name)
-    carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
-    print("Found carla egg(s): " + str(carla_egg_locations))
+    #this looks for the carla python API .egg file in ~/carla
+    try:
+        
+        carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
+        print("Looking for CARLA egg: " + carla_egg_name)
+        carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
+        print("Found carla egg(s): " + str(carla_egg_locations))
 
-    if len(carla_egg_locations) == 1:
-        carla_egg_to_use = carla_egg_locations[0]
-    else:
-        print("\nFound multiple carla egg files: ")
-        for i,egg_found in enumerate(carla_egg_locations):
-            print("[" + str(i+1) + "]    " + egg_found)
-
-        egg_selected = input("\nSelect a carla egg file to use: ")
-
-        try:
-            egg_selected = int(egg_selected)
-        except:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-        if (egg_selected <= len(carla_egg_locations)):
-            carla_egg_to_use = carla_egg_locations[egg_selected-1]
+        if len(carla_egg_locations) == 1:
+            carla_egg_to_use = carla_egg_locations[0]
         else:
-            print("\nInvalid selection, please try again")
-            sys.exit()
+            print("\nFound multiple carla egg files: ")
+            for i,egg_found in enumerate(carla_egg_locations):
+                print("[" + str(i+1) + "]    " + egg_found)
 
-    sys.path.append(carla_egg_to_use)
+            egg_selected = input("\nSelect a carla egg file to use: ")
 
-    #sys.path.append(glob.glob(expanduser("~") + '/carla/CARLA_0.9.10_TFHRC_Ubuntu_20220301/LinuxNoEditor/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-    #    sys.version_info.major,
-    #    sys.version_info.minor,
-    #    'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+            try:
+                egg_selected = int(egg_selected)
+            except:
+                print("\nInvalid selection, please try again")
+                sys.exit()
+
+            if (egg_selected <= len(carla_egg_locations)):
+                carla_egg_to_use = carla_egg_locations[egg_selected-1]
+            else:
+                print("\nInvalid selection, please try again")
+                sys.exit()
+
+        sys.path.append(carla_egg_to_use)
+        
+    except IndexError:
+        pass
 
 
 # ==============================================================================
@@ -228,13 +223,13 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart()
+        self.restart(args)
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
         self.constant_velocity_enabled = False
 
-    def restart(self):
+    def restart(self,args):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -266,12 +261,16 @@ class World(object):
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.player is None:
-            if not self.map.get_spawn_points():
-                print('There are no spawn points available in your map/town.')
-                print('Please add some Vehicle Spawn Point to your UE4 scene.')
-                sys.exit(1)
-            spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            if args.x and args.y and args.z:
+                spawn_point = carla.Transform(carla.Location(x=args.x,y=args.y,z=args.z),carla.Rotation(yaw=90))
+            else:
+                if not self.map.get_spawn_points():
+                    print('There are no spawn points available in your map/town.')
+                    print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                    sys.exit(1)
+                spawn_points = self.map.get_spawn_points()
+                spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
@@ -1163,6 +1162,18 @@ def main():
         default=2.2,
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
+    argparser.add_argument(
+        '--x', type=float, 
+        default=-255, 
+        help='x coordinate of the spawn point')
+    argparser.add_argument(
+        '--y', type=float, 
+        default=-230, 
+        help='y coordinate of the spawn point')
+    argparser.add_argument(
+        '--z', type=float, 
+        default=0.25, 
+        help='z coordinate of the spawn point')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
