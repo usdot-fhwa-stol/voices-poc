@@ -14,7 +14,7 @@ username=$(whoami)
 localTenaDir=/home/$username/TENA 				#root directory of TENA installation
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
 localTenadevDir=/home/$username/tenadev			#location of local tenadev
-localInstallDir=/home/carma/TENA/install  # $localTenadevDir/INSTALL		#location to install/build TENA adapters
+localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
 numBuildJobs=4    # number of build jobs to speed up compilation
 #---------------------------------------------------------#
 
@@ -493,7 +493,7 @@ if [[ "$skipMake" == true ]]
 		echo
 		echo "MAKE COMMAND: "
 		echo
-		if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j$numBuildJobs VERBOSE=1" ); then
+		if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make VERBOSE=1" ); then
 			echo
 			echo "[!!!] MAKE FAILED"
 			exit
@@ -516,7 +516,7 @@ if [[ "$skipMake" == true ]]
 					exit
 				fi
 
-
+				
 				echo
 				echo "#### Make Package Complete ####"
 			else
