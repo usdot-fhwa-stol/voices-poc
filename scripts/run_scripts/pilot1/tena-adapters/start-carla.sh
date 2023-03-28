@@ -8,7 +8,7 @@ function cleanup {
 	exit
 }
 
-. ../node_info.config
+. ../../../../config/node_info.config
 
 if [[ $carmaID == "CARMA-TFHRC" ]]
 then

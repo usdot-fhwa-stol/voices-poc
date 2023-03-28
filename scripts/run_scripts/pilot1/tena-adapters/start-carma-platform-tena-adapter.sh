@@ -18,7 +18,7 @@
 #  *
 
 
-. ../node_info.config
+. ../../../../config/node_info.config
 
 if [[ $? -ne 0 ]] ; then
     echo
@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$carmaPlatformAdapterVersion
+localadapterPath=$localInstallPath/$carmaPlatformAdapterVersion
 
 adapterVerbosity='4'
 
@@ -52,5 +52,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $carmaID -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/carma-platform-tena-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $carmaID -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

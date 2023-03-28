@@ -349,7 +349,7 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, client, world, clock):
+    def parse_events(self, client, world, clock, args):
         if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
         for event in pygame.event.get():
@@ -361,10 +361,10 @@ class KeyboardControl(object):
                 elif event.key == K_BACKSPACE:
                     if self._autopilot_enabled:
                         world.player.set_autopilot(False)
-                        world.restart()
+                        world.restart(args)
                         world.player.set_autopilot(True)
                     else:
-                        world.restart()
+                        world.restart(args)
                 elif event.key == K_F1:
                     world.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
@@ -1097,7 +1097,7 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
+            if controller.parse_events(client, world, clock,args):
                 return
             world.tick(clock)
             world.render(display)
@@ -1164,7 +1164,7 @@ def main():
         help='Gamma correction of the camera (default: 2.2)')
     argparser.add_argument(
         '--x', type=float, 
-        default=-255, 
+        default=255, 
         help='x coordinate of the spawn point')
     argparser.add_argument(
         '--y', type=float, 

@@ -17,7 +17,7 @@
 #  * the License.
 #  *
 
-. ../node_info.config
+. ../../../../config/node_info.config
 
 if [[ $? -ne 0 ]] ; then
     echo
@@ -26,7 +26,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$carlaAdapterVersion
+localadapterPath=$localInstallPath/$carlaAdapterVersion
 
 carlaHost=$localAddress
 
@@ -47,4 +47,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
+$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile

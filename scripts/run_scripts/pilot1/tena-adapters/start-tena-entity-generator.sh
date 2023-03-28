@@ -18,7 +18,7 @@
 #  *
 
 
-. ../node_info.config
+. ../../../../config/node_info.config
 
 if [[ $? -ne 0 ]] ; then
     echo
@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$entityGeneratorVersion
+localadapterPath=$localInstallPath/$entityGeneratorVersion
 
 adapterVerbosity='4'
 
@@ -46,5 +46,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

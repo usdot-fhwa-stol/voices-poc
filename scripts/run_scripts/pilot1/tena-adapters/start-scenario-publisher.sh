@@ -18,7 +18,7 @@
 #  *
 
 
-. ../node_info.config
+. ../../../../config/node_info.config
 
 if [[ $? -ne 0 ]] ; then
     echo
@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$scenarioPublisherVersion
+localadapterPath=$localInstallPath/$scenarioPublisherVersion
 
 adapterVerbosity='4'
 
@@ -46,4 +46,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity -scenarioFile $scenarioFile | tee -a $adapterLogFile
+$localadapterPath/bin/scenario-publisher -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity -scenarioFile $scenarioFile | tee -a $adapterLogFile

@@ -1,6 +1,10 @@
 import glob
 import os
 import sys
+import time
+import argparse
+import pygame
+import json
 
 import fnmatch
 from os.path import expanduser
@@ -11,7 +15,11 @@ def find_file(pattern, path):
         for name in files:
             if fnmatch.fnmatch(name, pattern):
                 result.append(os.path.join(root, name))
-    return result    
+    return result
+
+def read_json(json_path):
+    file = open(json_path)
+    return json.load(file)
 
 #this looks for the carla python API .egg file in the directory above the executed directory
 try:
@@ -59,11 +67,7 @@ except IndexError:
     except IndexError:
         pass
 
-import argparse
-import pygame
 import carla
-import time
-
 
 def spawn_vehicle(world, blueprint_name, x, y, z, yaw):
     blueprint = world.get_blueprint_library().find(blueprint_name)
@@ -86,7 +90,7 @@ def move_vehicle_with_point(world, vehicle, point, velocity):
         world.tick()
         location = vehicle.get_location()
         velocity = vehicle.get_velocity()
-        current_speed = 3.6 * (velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2) ** 0.5
+        current_speed = 2.23694 * (velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2) ** 0.5
         tmp = [float(i) for i in point]
         # tmp = [0,0,0]
         tmp_loc = [location.x, location.y, location.z]
@@ -110,8 +114,7 @@ def move_vehicle_with_point(world, vehicle, point, velocity):
         print(f"Distance to end point: {((tmp[0]-tmp_loc[0])**2 + (tmp[1]-tmp_loc[1])**2 + (tmp[2]-tmp_loc[2])**2) ** 0.5:.2f} meter")
         print(f"Simulation time: {world.get_snapshot().timestamp.elapsed_seconds:.2f} seconds")
         print("Vehicle location: x={}, y={}, z={}".format(location.x, location.y, location.z))
-        print("Vehicle speed: {:.2f} km/h".format(current_speed))
-        # time.sleep(0.1)
+        print("Vehicle speed: {:.2f} mph".format(current_speed))
     vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
     time.sleep(1)
     vehicle.destroy()
@@ -146,60 +149,88 @@ if __name__ == '__main__':
     parser.add_argument('--velocity', type=float, default=32.0, help='velocity of the vehicle in km/h')
     parser.add_argument('--stop', type=str, default="point", help='enter stop condition by duration or point')
     parser.add_argument('--duration', type=float, default=15, help='vehilce running duration')
+    parser.add_argument('--config', type=str, default=15, help='config file to import')
     parser.add_argument('--point', nargs='+', default=[255, -130, 0], help='enter an end point')
     args = parser.parse_args()
+    
+    if args.config:
 
-    # Connect to the simulator and retrieve the world
-    client = carla.Client('localhost', 2000)
-    client.set_timeout(2.0)
-    world = client.get_world()
+        # Read json config
+        config = read_json(args.config)
+        # Connect to the simulator and retrieve the world
+        client = carla.Client(config["CARLAIp"], config["CARLAPort"])
+        client.set_timeout(2.0)
+        world = client.get_world()
+        for vehicle_cfg in config["vehicles"]:
+            x_pt = vehicle_cfg["startPt"][0]
+            y_pt = vehicle_cfg["startPt"][1]
+            z_pt = vehicle_cfg["startPt"][2]
+            yaw = vehicle_cfg["yaw"]
+            # Spawn the vehicle at the specified location with the initial speed
+            vehicle = spawn_vehicle(world, vehicle_cfg["vehicleModel"], x_pt, y_pt, z_pt, yaw)
 
-    # Spawn the vehicle at the specified location with the initial speed
-    vehicle = spawn_vehicle(world, 'vehicle.nissan.micra', args.x, args.y, args.z, args.yaw)
-    print("Press SPACE key to start the vehicle")
-    running = False
-
-    # Set CARLA simulator as wall clock
-    settings = world.get_settings()
-    settings.synchronous_mode = True
-    settings.fixed_delta_seconds = None # Set a variable time-step
-    world.apply_settings(settings)
-
-    # Set up the Pygame window and clock
-    pygame.init()
-
-    screen = pygame.display.set_mode((700, 100))
-    # Set the font and text for the message
-    font = pygame.font.SysFont("monospace", 30)
-    text = font.render("Press SPACE to start vehicle movement", True, (255, 255, 255))
-
-    # Draw the message on the screen
-    screen.blit(text, (10, 10))
-    pygame.display.flip()
-
-    clock = pygame.time.Clock()
-
-    # Game loop
-    while True:
-        world.tick()
-        # Handle events
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                running = True
-
-        # Clear the screen
-        screen.fill((255, 255, 255))
-        # If the vehicle is running,  move it and draw the speed on the screen
-        if running:
-            if args.stop == "time":
-                move_vehicle_with_duration(world, vehicle, args.duration, args.velocity / 3.6)
-            elif args.stop == "point":
-                print("STOP POINT: " + str(args.point))
-                move_vehicle_with_point(world, vehicle, args.point, args.velocity / 3.6)
-
-            settings.synchronous_mode = False
+            # Set CARLA simulator as wall clock
+            settings = world.get_settings()
+            settings.synchronous_mode = True
+            settings.fixed_delta_seconds = None # Set a variable time-step
             world.apply_settings(settings)
-            break
+
+            move_vehicle_with_point(world, vehicle, vehicle_cfg['endPt'], vehicle_cfg['targetSpeedMPH'] / 2.23694)
+
+        settings.synchronous_mode = False
+        world.apply_settings(settings)
+
+    else:
+
+        # Spawn the vehicle at the specified location with the initial speed
+        vehicle = spawn_vehicle(world, 'vehicle.nissan.micra', args.x, args.y, args.z, args.yaw)
+        print("Press SPACE key to start the vehicle")
+        running = False
+
+        # Set CARLA simulator as wall clock
+        settings = world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = None # Set a variable time-step
+        world.apply_settings(settings)
+
+        # Set up the Pygame window and clock
+        pygame.init()
+
+        screen = pygame.display.set_mode((700, 100))
+        # Set the font and text for the message
+        font = pygame.font.SysFont("monospace", 30)
+        text = font.render("Press SPACE to start vehicle movement", True, (255, 255, 255))
+
+        # Draw the message on the screen
+        screen.blit(text, (10, 10))
+        pygame.display.flip()
+
+        clock = pygame.time.Clock()
+
+        # Game loop
+        while True:
+            world.tick()
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    running = True
+
+            # Clear the screen
+            screen.fill((255, 255, 255))
+            # If the vehicle is running,  move it and draw the speed on the screen
+            if running:
+                if args.stop == "time":
+                    move_vehicle_with_duration(world, vehicle, args.duration, args.velocity / 3.6)
+                elif args.stop == "point":
+                    print("STOP POINT: " + str(args.point))
+                    move_vehicle_with_point(world, vehicle, args.point, args.velocity / 3.6)
+
+                settings.synchronous_mode = False
+                world.apply_settings(settings)
+                break
+    
+        settings.synchronous_mode = False
+        world.apply_settings(settings)
