@@ -10,25 +10,13 @@ function cleanup {
 
 . ../../../../config/node_info.config
 
-if [[ $carmaID == "CARMA-TFHRC" ]]
+if [[ $carmaID == "TFHRC-CAR-1" ]]
 then
-       SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
-elif [[ $carmaID == "CARMA-SPR" ]]
+       SPAWN_PT="255, -230, 1, 0, 0, 0" # latitude=0.002066, longitude=0.002291, altitude=1.000000
+elif [[ $carmaID == "TFHRC-CAR-2" ]]
 then
-       SPAWN_PT="-189.9, -508.5, 38, 0, 0, 38"
-elif [[ $carmaID == "CARMA-MITRE" ]]
-then
-       SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
-elif [[ $carmaID == "CARMA-AUG" ]]
-then
-       SPAWN_PT="-182.6, -511.5, 38, 0, 0, 18"
+       SPAWN_PT="215, -169.4, 1, 0, 0, 0" # latitude=0.001522, longitude=0.001931, altitude=1.000000
 fi
-
-#VEH_4="131.3, -427.6, 40, 0, 0, 192" #38.955004, -77.147543 Virtual
-#VEH_5="-195.3, -503.3, 38, 0, 0, 55" #38.955693, -77.151303 Constructed #Mitre
-#VEH_3="-189.9, -508.5, 38, 0, 0, 38" #38.955737, -77.151238 Constructed #Springfield/voices-2
-#VEH_2="-182.6, -511.5, 38, 0, 0, 18" #38.955761, -77.151152 Constructed #Augusta/voices-1
-#VEH_1="-174.9, -513.0, 38, 0, 0, 10" #Live
 
 mkdir -p $localCarmaSimLogPath
 
