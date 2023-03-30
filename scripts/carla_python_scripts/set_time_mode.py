@@ -123,10 +123,6 @@ def main():
         type=int,
         help='port to communicate with TM (default: 8000)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
-        help='Synchronous mode execution')
-    argparser.add_argument(
         '--hybrid',
         action='store_true',
         help='Enanble')
@@ -149,7 +145,7 @@ def main():
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = False
+    synchronous_master = True
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
@@ -196,7 +192,7 @@ def main():
 
     finally:
 
-        if args.sync and synchronous_master:
+        if synchronous_master:
             print('\nENDING SYNCHRONOUS MODE')
             settings = world.get_settings()
             settings.synchronous_mode = False

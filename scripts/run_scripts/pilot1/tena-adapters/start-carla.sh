@@ -14,11 +14,16 @@ mkdir -p $localCarmaSimLogPath
 
 CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
 
+set_time_mode_cmd="python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py"
+
 
 $localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
-sleep 5
 
-#python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
+carla_pid=$!
+echo "PID: "$carla_pid
+sleep 7s
+
+python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
 
 cleanup
 
