@@ -82,12 +82,15 @@ except IndexError:
     #this looks for the carla python API .egg file in ~/carla
     try:
         
-        carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
+        carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.*-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
         print("Looking for CARLA egg: " + carla_egg_name)
-        carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
+        carla_egg_locations = find_file(carla_egg_name,expanduser("~"))
         print("Found carla egg(s): " + str(carla_egg_locations))
 
-        if len(carla_egg_locations) == 1:
+        if len(carla_egg_locations) == 0:
+            print("No carla egg files found, exiting")
+            sys.exit()
+        elif len(carla_egg_locations) == 1:
             carla_egg_to_use = carla_egg_locations[0]
         else:
             print("\nFound multiple carla egg files: ")

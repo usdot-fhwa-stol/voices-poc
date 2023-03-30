@@ -28,7 +28,7 @@ fi
 
 localadapterPath=$localInstallPath/$carlaAdapterVersion
 
-carlaHost=$localAddress
+carlaHost=$carlaAddress
 
 adapterVerbosity='4'
 
