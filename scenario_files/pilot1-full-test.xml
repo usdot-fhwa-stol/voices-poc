@@ -15,7 +15,7 @@
       <userData><CARLA manual="true"></CARLA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.002066" longitudeInDegrees="0.002291" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
-        <Heading>0</Heading>
+        <Heading>180</Heading>
       </initialTSPI>
     </vehicle>
 
@@ -23,7 +23,7 @@
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.001522" longitudeInDegrees="0.001931" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
-        <Heading>0</Heading>
+        <Heading>90</Heading>
       </initialTSPI>
     </vehicle>
 
