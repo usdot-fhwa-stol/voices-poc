@@ -16,6 +16,9 @@ then
 elif [[ $carmaID == "TFHRC-CAR-2" ]]
 then
        SPAWN_PT="215, -169.4, 1, 0, 0, 0" # latitude=0.001522, longitude=0.001931, altitude=1.000000
+else
+       echo "[!!!] - VEHICLE ID NOT FOUND IN SPAWN POINTS: $carmaID"
+       exit
 fi
 
 mkdir -p $localCarmaSimLogPath
