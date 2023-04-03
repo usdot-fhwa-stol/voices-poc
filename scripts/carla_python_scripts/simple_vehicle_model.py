@@ -116,8 +116,8 @@ def move_vehicle_with_point(world, vehicle, point, velocity):
         print("Vehicle location: x={}, y={}, z={}".format(location.x, location.y, location.z))
         print("Vehicle speed: {:.2f} mph".format(current_speed))
     vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
-    time.sleep(1)
-    vehicle.destroy()
+    time.sleep(3)
+    #vehicle.destroy()
 
 def move_vehicle_with_duration(world, vehicle, duration, velocity):
     vehicle.enable_constant_velocity(carla.Vector3D(x=velocity, y=0.0, z=0.0))
@@ -135,8 +135,8 @@ def move_vehicle_with_duration(world, vehicle, duration, velocity):
         print("Vehicle speed: {:.2f} km/h".format(current_speed))
         time.sleep(0.1)
     vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
-    time.sleep(1)
-    vehicle.destroy()
+    time.sleep(3)
+    #vehicle.destroy()
 
 
 if __name__ == '__main__':
@@ -151,6 +151,7 @@ if __name__ == '__main__':
     parser.add_argument('--duration', type=float, default=15, help='vehilce running duration')
     parser.add_argument('--config', type=str, default=15, help='config file to import')
     parser.add_argument('--point', nargs='+', default=[255, -130, 0], help='enter an end point')
+    parser.add_argument('--svm_vehicle_name',default="NISSAN-SVM",help='Vehicle to be used for the simple vehicle model (default: "NISSAN-SVM"')
     args = parser.parse_args()
     
     if args.config:
@@ -167,7 +168,16 @@ if __name__ == '__main__':
             z_pt = vehicle_cfg["startPt"][2]
             yaw = vehicle_cfg["yaw"]
             # Spawn the vehicle at the specified location with the initial speed
-            vehicle = spawn_vehicle(world, vehicle_cfg["vehicleModel"], x_pt, y_pt, z_pt, yaw)
+            #vehicle = spawn_vehicle(world, vehicle_cfg["vehicleModel"], x_pt, y_pt, z_pt, yaw)
+            carlaVehicles = world.get_actors().filter('vehicle.*')
+            for current_vehicle in carlaVehicles:
+                currentAttributes = current_vehicle.attributes
+                if currentAttributes["role_name"] == args.svm_vehicle_name:
+                        vehicle = current_vehicle
+            
+            if not vehicle:
+                print("SVM VEHICLE NOT FOUND")
+                sys.exit()
 
             # Set CARLA simulator as wall clock
             settings = world.get_settings()
@@ -175,6 +185,7 @@ if __name__ == '__main__':
             settings.fixed_delta_seconds = None # Set a variable time-step
             world.apply_settings(settings)
 
+            vehicle.set_location(carla.Location(x_pt,y_pt,z_pt))
             move_vehicle_with_point(world, vehicle, vehicle_cfg['endPt'], vehicle_cfg['targetSpeedMPH'] / 2.23694)
 
         settings.synchronous_mode = False

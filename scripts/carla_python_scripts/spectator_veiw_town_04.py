@@ -12,6 +12,7 @@ import glob
 import os
 import sys
 import time
+
 import fnmatch
 from os.path import expanduser
 
@@ -30,45 +31,40 @@ try:
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
-    pass
 
-#this looks for the carla python API .egg file in ~/carla
-try:
-    
-    carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
-    print("Looking for CARLA egg: " + carla_egg_name)
-    carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
-    print("Found carla egg(s): " + str(carla_egg_locations))
+    #this looks for the carla python API .egg file in ~/carla
+    try:
+        
+        carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.*-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
+        print("Looking for CARLA egg: " + carla_egg_name)
+        carla_egg_locations = find_file(carla_egg_name,expanduser("~"))
+        print("Found carla egg(s): " + str(carla_egg_locations))
 
-    if len(carla_egg_locations) == 1:
-        carla_egg_to_use = carla_egg_locations[0]
-    else:
-        print("\nFound multiple carla egg files: ")
-        for i,egg_found in enumerate(carla_egg_locations):
-            print("[" + str(i+1) + "]    " + egg_found)
-
-        egg_selected = input("\nSelect a carla egg file to use: ")
-
-        try:
-            egg_selected = int(egg_selected)
-        except:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-        if (egg_selected <= len(carla_egg_locations)):
-            carla_egg_to_use = carla_egg_locations[egg_selected-1]
+        if len(carla_egg_locations) == 1:
+            carla_egg_to_use = carla_egg_locations[0]
         else:
-            print("\nInvalid selection, please try again")
-            sys.exit()
+            print("\nFound multiple carla egg files: ")
+            for i,egg_found in enumerate(carla_egg_locations):
+                print("[" + str(i+1) + "]    " + egg_found)
 
-    sys.path.append(carla_egg_to_use)
+            egg_selected = input("\nSelect a carla egg file to use: ")
 
-    #sys.path.append(glob.glob(expanduser("~") + '/carla/CARLA_0.9.10_TFHRC_Ubuntu_20220301/LinuxNoEditor/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-    #    sys.version_info.major,
-    #    sys.version_info.minor,
-    #    'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+            try:
+                egg_selected = int(egg_selected)
+            except:
+                print("\nInvalid selection, please try again")
+                sys.exit()
+
+            if (egg_selected <= len(carla_egg_locations)):
+                carla_egg_to_use = carla_egg_locations[egg_selected-1]
+            else:
+                print("\nInvalid selection, please try again")
+                sys.exit()
+
+        sys.path.append(carla_egg_to_use)
+
+    except IndexError:
+        pass
 
 import carla
 
@@ -123,6 +119,10 @@ def main():
         type=int,
         help='port to communicate with TM (default: 8000)')
     argparser.add_argument(
+        '--sync',
+        action='store_true',
+        help='Synchronous mode execution')
+    argparser.add_argument(
         '--hybrid',
         action='store_true',
         help='Enanble')
@@ -145,63 +145,30 @@ def main():
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = True
+    synchronous_master = False
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
-
-        ### Simulation time that goes by between simulation steps ###
-        settings = world.get_settings()
-        print("fixed_delta_seconds before: " + str(settings.fixed_delta_seconds))
-        print("synchronous_mode before: " + str(settings.synchronous_mode))
-        settings.synchronous_mode = True # True
-        settings.fixed_delta_seconds = None #0.025 #0.035 #0.025 #None # 0
-        world.apply_settings(settings)
-        ### Simulation time that goes by between simulation steps ###
-
-        settings = world.get_settings()
-        print("fixed_delta_seconds after: " + str(settings.fixed_delta_seconds))
-        print("synchronous_mode after: " + str(settings.synchronous_mode))
         
-        # t_diff = 0.0417
+        # Retrieve the spectator object
+        spectator = world.get_spectator()
 
-        while True:
-            #goal_step = 0.05 #0.025 
+        # Get the location and rotation of the spectator through its transform
+        # spec_transform = spectator.get_transform()
 
-            # settings = world.get_settings()
-            # settings.fixed_delta_seconds = t_diff
-            # world.apply_settings(settings)
+        # print(str(spec_transform))
 
-            # t_prev = world.get_snapshot().timestamp.elapsed_seconds
 
-            world.tick()
 
-            # t_curr = world.get_snapshot().timestamp.elapsed_seconds
-            # t_diff = t_curr - t_prev
+        spec_location = carla.Location(301.608948, -223.364090,79.027130)
+        spec_rotation = carla.Rotation(-53.484924, 140.482407,0.00006)
 
-            # print("t_diff: " + str(t_diff))
-            
-            
-            #additional_sleep = max(0.0, goal_step - t_diff)
-
-            #print("need to sleep: " + str(additional_sleep))
-            #time.sleep(additional_sleep)
-            #time.sleep(1)
-        
+        # Set the spectator with an empty transform
+        spectator.set_transform(carla.Transform(spec_location,spec_rotation))
 
     finally:
-
-        if synchronous_master:
-            print('\nENDING SYNCHRONOUS MODE')
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
-
         print('\nENDING')
-
-
         time.sleep(0.5)
 
 if __name__ == '__main__':
