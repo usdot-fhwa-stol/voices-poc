@@ -5,6 +5,7 @@ function cleanup {
 	echo "Stopping CARMA Simulation"
 	docker kill carla_carma_integration
 	pkill -9 CarlaUE4
+       kill -9 $set_time_mode_pid
 	exit
 }
 
@@ -32,9 +33,17 @@ date >> $SIM_LOG
 
 
 $localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
+
+carla_pid=$!
+echo "CARLA PID: "$carla_pid
 sleep 5
 
-#python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
+python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
+
+nohup python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py &
+
+set_time_mode_pid=$!
+echo "Set time mode PID: "$set_time_mode_pid
 
 
 docker run \
@@ -52,6 +61,3 @@ docker exec \
        roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$carlaMapName\" vehicle_color_ind:=\"0\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
 
 cleanup
-
-
-
