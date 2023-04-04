@@ -22,7 +22,7 @@
     <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
-        <GeodeticPosition latitudeInDegrees="0.001522" longitudeInDegrees="0.001931" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
+        <GeodeticPosition latitudeInDegrees="0.001522" longitudeInDegrees="0.001931" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>90</Heading>
       </initialTSPI>
     </vehicle>
@@ -31,7 +31,7 @@
       <userData><CARLA manual="true"></CARLA></userData>
       <initialTSPI>
         
-        <GeodeticPosition latitudeInDegrees="0.00030" longitudeInDegrees="0.00014" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
+        <GeodeticPosition latitudeInDegrees="0.00030" longitudeInDegrees="0.00014" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>0</Heading>
       </initialTSPI>
     </vehicle>
@@ -39,7 +39,7 @@
     <vehicle name="TFHRC-MANUAL-2" bsmid="f03ad619" type="vehicle.toyota.prius" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
       <userData><CARLA manual="true"></CARLA></userData>
       <initialTSPI>
-        <GeodeticPosition latitudeInDegrees="0.00010" longitudeInDegrees="0.00008" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
+        <GeodeticPosition latitudeInDegrees="0.00010" longitudeInDegrees="0.00008" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>0</Heading>
       </initialTSPI>
     </vehicle>
@@ -47,7 +47,7 @@
   </vehicles>
 
   <intersectionSignalControllers>
-    <intersectionSignalController name="Town04 Main" adapterType="spat-adapter" adapterName="SPAT-1" lvcIndicator="Live">
+    <intersectionSignalController name="Town04_Main" adapterType="spat-adapter" adapterName="SPAT-1" lvcIndicator="Live">
       <userData>
         <CARLA>
           <controllers>
@@ -58,7 +58,7 @@
     </intersectionSignalController>
   </intersectionSignalControllers>
   <phaseSignalMappings>
-        <configuration name="Town04 Main Configuration" intersectionName="Town04 Main">
+        <configuration name="Town04_Main Configuration" intersectionName="Town04_Main">
       <controller name="ctrl549-502A" id="549">
         <control signalId="1629" type="">
           <userData><phase>2</phase></userData>

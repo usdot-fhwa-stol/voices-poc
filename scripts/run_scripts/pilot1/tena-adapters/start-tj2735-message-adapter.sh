@@ -31,12 +31,6 @@ localadapterPath=$localInstallPath/$j2735AdapterVersion
 
 adapterVerbosity='4'
 
-adapterSendAddress=$localAddress
-adapterSendPort='5398'
-
-adapterReceiveAddress=$localAddress
-adapterReceivePort='56700'
-
 mkdir -p $localAdapterLogPath
 
 adapterLogFile=$localAdapterLogPath/j2735_adapter_terminal_out.log
@@ -52,4 +46,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-j2735-message-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carmaEndpoint $adapterSendAddress:$adapterSendPort -adapterEndpoint $adapterReceiveAddress:$adapterReceivePort -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/tena-j2735-message-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -adapterSendEndpoint $j2735AdapterSendAddress:$j2735AdapterSendPort -adapterReceiveEndpoint $j2735AdapterReceiveAddress:$j2735AdapterReceivePort -verbosity $adapterVerbosity | tee -a $adapterLogFile
