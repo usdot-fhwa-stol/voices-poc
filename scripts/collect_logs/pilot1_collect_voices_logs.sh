@@ -16,18 +16,8 @@ echo
 read -p "--> " positionIndex
 
 vehicle_type='virtual_vehicle'
-if [[ $positionIndex == 1 ]]; then
-    vehicle_name='ucla'
-elif [[ $positionIndex == 2 ]]; then
-    vehicle_name='nissan'
-elif [[ $positionIndex == 3 ]]; then
-    vehicle_name='econolite'
-elif [[ $positionIndex == 4 ]]; then
-    vehicle_name='mcity'
-elif [[ $positionIndex == 5 ]]; then
-    vehicle_name='tfhrc_manual'
-elif [[ $positionIndex == 6 ]]; then
-    vehicle_name='tfhrc_carma'
+vehicle_name=$carmaID
+if [[ $positionIndex == 6 ]]; then
     vehicle_type='local_carma_platform_vehicle'
 else
     echo "Invalid selection, try again..."
@@ -41,17 +31,10 @@ if [[ $vehicle_type == 'live_vehicle' ]]; then
     tcpdump_out="sudo tcpdump -i $obu_interface_name dst 192.168.88.40 and port 1516 -w carma_platform_out.pcap"
     tcpdump_in="sudo tcpdump -i $obu_interface_name src 192.168.88.40 and port 5398 -w carma_platform_in.pcap"
 
-elif [[ $vehicle_type == 'virtual_vehicle' ]]; then
+else
 
-    # Virtual vehicle
-    tcpdump_out=""
-    tcpdump_in=""
-
-elif [[ $vehicle_type == 'local_carma_platform_vehicle' ]]; then
-
-    # Local CARMA Platform Vehicle
-    tcpdump_out="sudo tcpdump -i lo port 56700 -w carma_platform_out.pcap"
-    tcpdump_in="sudo tcpdump -i lo port 5398 -w carma_platform_in.pcap"
+    tcpdump_out="sudo tcpdump -i lo port $_port -w ip_out.pcap"
+    tcpdump_in="sudo tcpdump -i lo port $_port -w carma_platform_in.pcap"
 
 fi
 
@@ -123,13 +106,10 @@ copyCarmaLogs()
     exit
 }
 
-#not collecting tcpdumps for virtual vehicle
-if [[ ! $vehicle_type == "virtual_vehicle" ]]; then
-    echo
-    echo "Starting tcpdumps - when finished press [CTRL + C]"
-    echo
-    echo $tcpdump_out
-    echo $tcpdump_in
-    echo 
-    $tcpdump_out & $tcpdump_in && fg
-fi
+echo
+echo "Starting tcpdumps - when finished press [CTRL + C]"
+echo
+echo $tcpdump_out
+echo $tcpdump_in
+echo 
+$tcpdump_out & $tcpdump_in && fg
