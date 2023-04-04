@@ -19,7 +19,7 @@ vehicle_type='virtual_vehicle'
 vehicle_name=$carmaID
 if [[ $positionIndex == 6 ]]; then
     vehicle_type='local_carma_platform_vehicle'
-else
+elif [[ $positionIndex -gt 6 ]]; then
     echo "Invalid selection, try again..."
     exit
 fi
@@ -33,8 +33,8 @@ if [[ $vehicle_type == 'live_vehicle' ]]; then
 
 else
 
-    tcpdump_out="sudo tcpdump -i lo port $_port -w ip_out.pcap"
-    tcpdump_in="sudo tcpdump -i lo port $_port -w carma_platform_in.pcap"
+    tcpdump_out="sudo tcpdump -i lo port $j2735AdapterReceivePort -w ip_packet_out.pcap"
+    tcpdump_in="sudo tcpdump -i lo port $j2735AdapterSendPort -w ip_packet_in.pcap"
 
 fi
 
