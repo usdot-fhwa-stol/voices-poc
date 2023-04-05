@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import glob
 import os
 import sys
@@ -35,7 +36,8 @@ except IndexError:
             for i,egg_found in enumerate(carla_egg_locations):
                 print("[" + str(i+1) + "]    " + egg_found)
 
-            egg_selected = input("\nSelect a carla egg file to use: ")
+            #egg_selected = input("\nSelect a carla egg file to use: ")
+            egg_selected=3
 
             try:
                 egg_selected = int(egg_selected)
@@ -66,17 +68,22 @@ try:
     client.set_timeout(5.0)
     world = client.get_world()
     
-    stop_bar_north = carla.Location(x=255, y=-180, z=1)
-    stop_bar_south = carla.Location(x=255, y=-299.5, z=1)
+    line_list={
+            "a2a_b4a": ((255,-180.5,1), (255, -301.5, 1)),
+            }
     
     debug = world.debug
-    
-    debug.draw_line(stop_bar_north,stop_bar_south,0.3,carla.Color(r=255,g=0,b=0),5)
 
-    stop_bar_north_geo = world.get_map().transform_to_geolocation(stop_bar_north)
-    stop_bar_south_geo = world.get_map().transform_to_geolocation(stop_bar_south)
-    print("stop_bar_north: " + str(stop_bar_north_geo))
-    print("stop_bar_south: " + str(stop_bar_south_geo))
+    for line_name, coordinates in line_list.items():
+        strt_point = carla.Location(x=255, y=-180.5, z=1)
+        stop_point = carla.Location(x=255, y=-301.5, z=1)
+        debug.draw_line(strt_point,stop_point,0.3,carla.Color(r=255,g=0,b=0),5)
+
+        strt_point_geo = world.get_map().transform_to_geolocation(strt_point)
+        stop_piont_geo = world.get_map().transform_to_geolocation(stop_point)
+        print("Line " + line_name)
+        print("strt_point: " + str(strt_point_geo))
+        print("stop_point: " + str(stop_point_geo))
 
 finally:
     print('Cleaning up actors...')
