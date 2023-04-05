@@ -65,7 +65,7 @@ import carla
 actor_list=[]
 try:
     client = carla.Client('localhost', 2000)
-    client.set_timeout(5.0)
+    client.set_timeout(7.0)
     world = client.get_world()
     
     line_list={
@@ -74,13 +74,16 @@ try:
     
     debug = world.debug
 
-    for line_name, coordinates in line_list.items():
-        strt_point = carla.Location(x=255, y=-180.5, z=1)
-        stop_point = carla.Location(x=255, y=-301.5, z=1)
+    for line_name, c in line_list.items():
+
+        strt_point = carla.Location(x=c[0][0], y=c[0][1], z=c[0][2])
+        stop_point = carla.Location(x=c[1][0], y=c[1][1], z=c[1][2])
+        
         debug.draw_line(strt_point,stop_point,0.3,carla.Color(r=255,g=0,b=0),5)
 
         strt_point_geo = world.get_map().transform_to_geolocation(strt_point)
-        stop_piont_geo = world.get_map().transform_to_geolocation(stop_point)
+        stop_point_geo = world.get_map().transform_to_geolocation(stop_point)
+        
         print("Line " + line_name)
         print("strt_point: " + str(strt_point_geo))
         print("stop_point: " + str(stop_point_geo))
