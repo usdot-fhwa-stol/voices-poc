@@ -1,4 +1,4 @@
-from find_carla_egg import find_carla_egg
+#!/usr/bin/env python3
 
 carla_egg_file = find_carla_egg()
 
