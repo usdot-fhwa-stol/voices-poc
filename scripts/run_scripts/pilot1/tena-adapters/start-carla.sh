@@ -15,9 +15,6 @@ else
 	echo
 	echo "CARLA Simulator not found at $localCarlaPath/CarlaUE4.sh"
 	exit
-else
-       echo "[!!!] - VEHICLE ID NOT FOUND IN SPAWN POINTS: $carmaID"
-       exit
 fi
 
 mkdir -p $localCarmaSimLogPath

@@ -20,7 +20,7 @@
     </vehicle>
 
     <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
-      <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="ego_vehicle"></CARMA></userData>
+      <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.001522" longitudeInDegrees="0.001931" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>90</Heading>

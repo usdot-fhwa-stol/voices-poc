@@ -12,25 +12,11 @@ import glob
 import os
 import sys
 import time
-from os.path import expanduser
+from find_carla_egg import find_carla_egg
 
-try:
-    
-    sys.path.append(glob.glob( '../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+carla_egg_file = find_carla_egg()
 
-try:
-    
-    sys.path.append(glob.glob(expanduser("~") + '/carla/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+sys.path.append(carla_egg_file)
     
     
 import carla
