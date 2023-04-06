@@ -15,8 +15,12 @@ sys.path.append(carla_egg_file)
 import carla
 
 def read_json(json_path):
-    file = open(json_path)
-    return json.load(file)
+    try:
+        file = open(json_path)
+        return json.load(file)
+    except:
+        print("Config file could not be opened: " + json_path)
+        sys.exit()
 
 def spawn_vehicle(world, blueprint_name, x, y, z, yaw):
     blueprint = world.get_blueprint_library().find(blueprint_name)
@@ -91,21 +95,20 @@ def move_vehicle_with_duration(world, vehicle, duration, velocity):
 if __name__ == '__main__':
     # Set up argument parsing
     parser = argparse.ArgumentParser()
-    parser.add_argument('--x', type=float, default=-9.635131, help='x coordinate of the spawn point')
-    parser.add_argument('--y', type=float, default=-146.145798, help='y coordinate of the spawn point')
-    parser.add_argument('--z', type=float, default=0.281942, help='z coordinate of the spawn point')
-    parser.add_argument('--yaw', type=float, default=89.775162, help='yaw orientation of the vehicle')
-    parser.add_argument('--velocity', type=float, default=32.0, help='velocity of the vehicle in km/h')
+    parser.add_argument('--x', type=float, default=0, help='x coordinate of the spawn point')
+    parser.add_argument('--y', type=float, default=0, help='y coordinate of the spawn point')
+    parser.add_argument('--z', type=float, default=0, help='z coordinate of the spawn point')
+    parser.add_argument('--yaw', type=float, default=0, help='yaw orientation of the vehicle')
+    parser.add_argument('--velocity', type=float, default=25, help='velocity of the vehicle in km/h')
     parser.add_argument('--stop', type=str, default="point", help='enter stop condition by duration or point')
     parser.add_argument('--duration', type=float, default=15, help='vehilce running duration')
-    parser.add_argument('--config', type=str, default=15, help='config file to import')
+    parser.add_argument('--config', type=str, help='config file to import')
     parser.add_argument('--point', nargs='+', default=[255, -130, 0], help='enter an end point')
     parser.add_argument('--svm_vehicle_name',default="NISSAN-SVM",help='Vehicle to be used for the simple vehicle model (default: "NISSAN-SVM"')
     args = parser.parse_args()
     
     if args.config:
 
-        # Read json config
         config = read_json(args.config)
         # Connect to the simulator and retrieve the world
         client = carla.Client(config["CARLAIp"], config["CARLAPort"])
@@ -124,7 +127,7 @@ if __name__ == '__main__':
                 if currentAttributes["role_name"] == args.svm_vehicle_name:
                         vehicle = current_vehicle
             
-            if not vehicle:
+            if not current_vehicle:
                 print("SVM VEHICLE NOT FOUND")
                 sys.exit()
 
@@ -140,7 +143,11 @@ if __name__ == '__main__':
         settings.synchronous_mode = False
         world.apply_settings(settings)
 
-    else:
+    elif args.x and args.y and args.z:
+        
+        client = carla.Client(config["CARLAIp"], config["CARLAPort"])
+        client.set_timeout(2.0)
+        world = client.get_world()
 
         # Spawn the vehicle at the specified location with the initial speed
         vehicle = spawn_vehicle(world, 'vehicle.nissan.micra', args.x, args.y, args.z, args.yaw)
@@ -194,3 +201,5 @@ if __name__ == '__main__':
     
         settings.synchronous_mode = False
         world.apply_settings(settings)
+    else:
+        print("\nNo config file or x,y,z set. Please set a config file or x,y,z")
