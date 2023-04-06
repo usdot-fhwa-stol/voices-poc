@@ -14,6 +14,10 @@ sys.path.append(carla_egg_file)
 
 import carla
 
+def read_json(json_path):
+    file = open(json_path)
+    return json.load(file)
+
 def spawn_vehicle(world, blueprint_name, x, y, z, yaw):
     blueprint = world.get_blueprint_library().find(blueprint_name)
     spawn_point = carla.Transform(
