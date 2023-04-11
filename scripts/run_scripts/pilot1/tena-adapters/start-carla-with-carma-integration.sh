@@ -23,6 +23,7 @@ mkdir -p $localCarmaSimLogPath
 
 CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
 SIM_LOG=$localCarmaSimLogPath/voices_carla_carma_integration.log
+SET_TIME_MODE_LOG=$localCarmaSimLogPath/set_time_mode.log
 
 echo "" >> $CARLA_LOG
 echo "<< ***** New Session **** >>" >> $CARLA_LOG
@@ -32,7 +33,7 @@ echo "<< ***** New Session **** >>" >> $SIM_LOG
 date >> $SIM_LOG
 
 
-$localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
+$localCarlaPath/CarlaUE4.sh > $CARLA_LOG 2>&1 &
 
 carla_pid=$!
 echo "CARLA PID: "$carla_pid
@@ -40,10 +41,17 @@ sleep 5
 
 python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
 
-nohup python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py &
+python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
-set_time_mode_pid=$!
-echo "Set time mode PID: "$set_time_mode_pid
+# set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
+# nohup python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py 2>&1 > $SET_TIME_MODE_LOG & 
+
+# set_time_mode_pid=$!
+# echo "Set time mode PID: "$set_time_mode_pid
+
+echo
+echo "----- SUCCESSFULLY SET TIME MODE, CONTINUOUSLY TICKING WORLD -----"
+echo      
 
 
 docker run \

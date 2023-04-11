@@ -88,71 +88,44 @@ def main():
         help='Enanble car lights')
     args = argparser.parse_args()
 
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-
     vehicles_list = []
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = True
-    random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
 
-        ### Simulation time that goes by between simulation steps ###
-        settings = world.get_settings()
-        print("\n----- SETTING TIME MODE -----")
-        print("fixed_delta_seconds before: " + str(settings.fixed_delta_seconds))
-        print("synchronous_mode before: " + str(settings.synchronous_mode))
-        settings.synchronous_mode = True # True
-        settings.fixed_delta_seconds = None #0.025 #0.035 #0.025 #None # 0
-        world.apply_settings(settings)
-        ### Simulation time that goes by between simulation steps ###
+    
+        pygame.init()
+        # Set the font and text for the message
+        font = pygame.font.SysFont("monospace", 30)
+        screen = pygame.display.set_mode((300, 50))
 
-        settings = world.get_settings()
-        print("fixed_delta_seconds after: " + str(settings.fixed_delta_seconds))
-        print("synchronous_mode after: " + str(settings.synchronous_mode))
-
-        print('\n----- SUCCESSFULLY SET TIME MODE, CONTINUOUSLY TICKING WORLD -----\n')
-        
-        # t_diff = 0.0417
+        clock = pygame.time.Clock()
 
         while True:
-            #goal_step = 0.05 #0.025 
-
-            # settings = world.get_settings()
-            # settings.fixed_delta_seconds = t_diff
-            # world.apply_settings(settings)
-
-            # t_prev = world.get_snapshot().timestamp.elapsed_seconds
-
-            world.tick()
-
-            # t_curr = world.get_snapshot().timestamp.elapsed_seconds
-            # t_diff = t_curr - t_prev
-
-            # print("t_diff: " + str(t_diff))
             
-            
-            #additional_sleep = max(0.0, goal_step - t_diff)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:                    
+                    pygame.quit()
+                    sys.exit()
 
-            #print("need to sleep: " + str(additional_sleep))
-            #time.sleep(additional_sleep)
-            #time.sleep(1)
+            time_elapsed = round(world.get_snapshot().timestamp.elapsed_seconds,2)
+            text1 = font.render(    "TIME: " + str(time_elapsed), True, (255, 255, 255))
+
+            # Draw the message on the screen
+            screen.fill(pygame.Color("black"))
+            screen.blit(text1, (10, 10))
+            pygame.display.flip()
+
+            time.sleep(0.1)
 
             
         
 
     finally:
-
-        if synchronous_master:
-            print('\nENDING SYNCHRONOUS MODE')
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
 
 
         time.sleep(0.5)

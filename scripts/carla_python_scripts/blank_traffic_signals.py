@@ -26,6 +26,10 @@ import argparse
 import logging
 from numpy import random
 
+def get_dist_3d(start_point,end_point):
+    return ((end_point[0]-start_point[0])**2 + (end_point[1]-start_point[1])**2 + (end_point[2]-start_point[2])**2) ** 0.5
+    
+
 def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
@@ -88,71 +92,40 @@ def main():
         help='Enanble car lights')
     args = argparser.parse_args()
 
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-
     vehicles_list = []
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = True
-    random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
 
-        ### Simulation time that goes by between simulation steps ###
-        settings = world.get_settings()
-        print("\n----- SETTING TIME MODE -----")
-        print("fixed_delta_seconds before: " + str(settings.fixed_delta_seconds))
-        print("synchronous_mode before: " + str(settings.synchronous_mode))
-        settings.synchronous_mode = True # True
-        settings.fixed_delta_seconds = None #0.025 #0.035 #0.025 #None # 0
-        world.apply_settings(settings)
-        ### Simulation time that goes by between simulation steps ###
+        traffic_lights_to_blank_locs = [
+            [249.8,-163.4,0],
+            [251.7,-180.3,0],
+            [262.2,-165.6,0],
+            [262.5,-175.9,0],
 
-        settings = world.get_settings()
-        print("fixed_delta_seconds after: " + str(settings.fixed_delta_seconds))
-        print("synchronous_mode after: " + str(settings.synchronous_mode))
+        ]
 
-        print('\n----- SUCCESSFULLY SET TIME MODE, CONTINUOUSLY TICKING WORLD -----\n')
-        
-        # t_diff = 0.0417
-
-        while True:
-            #goal_step = 0.05 #0.025 
-
-            # settings = world.get_settings()
-            # settings.fixed_delta_seconds = t_diff
-            # world.apply_settings(settings)
-
-            # t_prev = world.get_snapshot().timestamp.elapsed_seconds
-
-            world.tick()
-
-            # t_curr = world.get_snapshot().timestamp.elapsed_seconds
-            # t_diff = t_curr - t_prev
-
-            # print("t_diff: " + str(t_diff))
+        carla_actors = world.get_actors().filter("traffic.traffic_light*")
+        for actor in carla_actors:
+            actor_loc = actor.get_location()
+            actor_loc_array = [actor_loc.x, actor_loc.y, actor_loc.z]
             
-            
-            #additional_sleep = max(0.0, goal_step - t_diff)
-
-            #print("need to sleep: " + str(additional_sleep))
-            #time.sleep(additional_sleep)
-            #time.sleep(1)
-
+            for tl_loc in traffic_lights_to_blank_locs:
+                dist_from_target_loc = get_dist_3d(actor_loc_array,tl_loc)
+                if dist_from_target_loc < 5:
+                    
+                    actor.set_green_time(99999999999)
+                    actor.set_yellow_time(99999999999)
+                    actor.set_red_time(99999999999)
+                    actor.set_state(carla.TrafficLightState.Off)
             
         
 
     finally:
-
-        if synchronous_master:
-            print('\nENDING SYNCHRONOUS MODE')
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
 
 
         time.sleep(0.5)

@@ -14,6 +14,19 @@ sys.path.append(carla_egg_file)
 
 import carla
 
+def get_actor_by_location(world,location_array,filter):
+    carla_actors = world.get_actors().filter( filter + "*")
+    for actor in carla_actors:
+        actor_loc = actor.get_location()
+        actor_loc_array = [actor_loc.x, actor_loc.y, actor_loc.z]
+        dist_from_target_loc = get_dist_3d(actor_loc_array,location_array)
+        if dist_from_target_loc < 5:
+            return actor
+        
+
+def get_dist_3d(start_point,end_point):
+    return ((end_point[0]-start_point[0])**2 + (end_point[1]-start_point[1])**2 + (end_point[2]-start_point[2])**2) ** 0.5
+
 def read_json(json_path):
     try:
         file = open(json_path)
@@ -22,12 +35,14 @@ def read_json(json_path):
         print("Config file could not be opened: " + json_path)
         sys.exit()
 
-def spawn_vehicle(world, blueprint_name, x, y, z, yaw):
+def spawn_vehicle(world, blueprint_name,role_name, x, y, z, yaw):
     blueprint = world.get_blueprint_library().find(blueprint_name)
     spawn_point = carla.Transform(
         carla.Location(x=x, y=y, z=z),
         carla.Rotation(yaw=yaw)
     )
+
+    blueprint.set_attribute("role_name",role_name)
     vehicle = world.try_spawn_actor(blueprint, spawn_point)
     if vehicle is None:
         print("Error: Vehicle could not be spawned!")
@@ -35,42 +50,33 @@ def spawn_vehicle(world, blueprint_name, x, y, z, yaw):
     vehicle.set_autopilot(False)
     return vehicle
 
-def move_vehicle_with_point(world, vehicle, point, velocity):
+def move_vehicle_with_point(world, vehicle, end_point, velocity):
+    
     vehicle.enable_constant_velocity(carla.Vector3D(x=velocity, y=0.0, z=0.0))
-    # print(type(vehicle.get_location()))
-    #index = next(i for i, x in enumerate(point) if x != 0)
-    while True:
-        world.tick()
-        location = vehicle.get_location()
-        velocity = vehicle.get_velocity()
-        current_speed = 2.23694 * (velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2) ** 0.5
-        tmp = [float(i) for i in point]
-        # tmp = [0,0,0]
-        tmp_loc = [location.x, location.y, location.z]
-        # for i in range(len(tmp_loc)):
-        #     if i == index:
-        #         tmp[i] = point[i]
-        #         continue
-        #     else:
-        #         tmp[i] = tmp_loc[i]
+    
+    location = vehicle.get_location()
+    velocity = vehicle.get_velocity()
+    current_speed = 2.23694 * (velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2) ** 0.5
+    # convert end point to float array
+    end_point = [float(i) for i in end_point]
+    current_loc = [location.x, location.y, location.z]
 
-        # tmp = [float(i) for i in tmp]
-        print("tmp: " + str(tmp))
-        print("tmp_loc: " + str(tmp_loc))
+    dist_from_end = get_dist_3d(current_loc,end_point)
 
-        dist_from_end = ((tmp[0]-tmp_loc[0])**2 + (tmp[1]-tmp_loc[1])**2 + (tmp[2]-tmp_loc[2])**2) ** 0.5
-        print("Distance to end point: " + str(dist_from_end))
-        if ((tmp[0]-tmp_loc[0])**2 + (tmp[1]-tmp_loc[1])**2 + (tmp[2]-tmp_loc[2])**2) ** 0.5 <= 2:
-            print("REACHED END")
-            break
-        print("-" * 10)
-        print(f"Distance to end point: {((tmp[0]-tmp_loc[0])**2 + (tmp[1]-tmp_loc[1])**2 + (tmp[2]-tmp_loc[2])**2) ** 0.5:.2f} meter")
-        print(f"Simulation time: {world.get_snapshot().timestamp.elapsed_seconds:.2f} seconds")
-        print("Vehicle location: x={}, y={}, z={}".format(location.x, location.y, location.z))
-        print("Vehicle speed: {:.2f} mph".format(current_speed))
-    vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
-    time.sleep(3)
-    #vehicle.destroy()
+    print("-" * 10)
+
+    print(f"Distance to end point: {dist_from_end:.2f} meter")
+    print(f"Simulation time: {world.get_snapshot().timestamp.elapsed_seconds:.2f} seconds")
+    print("Vehicle location: x={}, y={}, z={}".format(location.x, location.y, location.z))
+    print("Vehicle speed: {:.2f} mph".format(current_speed))
+
+    # if reached within 2m of end point quit
+    if dist_from_end <= 2:
+        print("REACHED END")
+        return True
+    else:
+        return False
+    
 
 def move_vehicle_with_duration(world, vehicle, duration, velocity):
     vehicle.enable_constant_velocity(carla.Vector3D(x=velocity, y=0.0, z=0.0))
@@ -89,7 +95,6 @@ def move_vehicle_with_duration(world, vehicle, duration, velocity):
         time.sleep(0.1)
     vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
     time.sleep(3)
-    #vehicle.destroy()
 
 
 if __name__ == '__main__':
@@ -105,8 +110,10 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, help='config file to import')
     parser.add_argument('--point', nargs='+', default=[255, -130, 0], help='enter an end point')
     parser.add_argument('--svm_vehicle_name',default="NISSAN-SVM",help='Vehicle to be used for the simple vehicle model (default: "NISSAN-SVM"')
+    parser.add_argument('--spawn_vehicle', action='store_true', help='adding this flag will spawn the vehicle as opposed to letting the carla adapter spawning the vehicle')
     args = parser.parse_args()
     
+    # if config file is passed, use that for running vehicle
     if args.config:
 
         config = read_json(args.config)
@@ -114,45 +121,6 @@ if __name__ == '__main__':
         client = carla.Client(config["CARLAIp"], config["CARLAPort"])
         client.set_timeout(2.0)
         world = client.get_world()
-        for vehicle_cfg in config["vehicles"]:
-            x_pt = vehicle_cfg["startPt"][0]
-            y_pt = vehicle_cfg["startPt"][1]
-            z_pt = vehicle_cfg["startPt"][2]
-            yaw = vehicle_cfg["yaw"]
-            # Spawn the vehicle at the specified location with the initial speed
-            #vehicle = spawn_vehicle(world, vehicle_cfg["vehicleModel"], x_pt, y_pt, z_pt, yaw)
-            carlaVehicles = world.get_actors().filter('vehicle.*')
-            for current_vehicle in carlaVehicles:
-                currentAttributes = current_vehicle.attributes
-                if currentAttributes["role_name"] == args.svm_vehicle_name:
-                        vehicle = current_vehicle
-            
-            if not current_vehicle:
-                print("SVM VEHICLE NOT FOUND")
-                sys.exit()
-
-            # Set CARLA simulator as wall clock
-            settings = world.get_settings()
-            settings.synchronous_mode = True
-            settings.fixed_delta_seconds = None # Set a variable time-step
-            world.apply_settings(settings)
-
-            vehicle.set_location(carla.Location(x_pt,y_pt,z_pt))
-            move_vehicle_with_point(world, vehicle, vehicle_cfg['endPt'], vehicle_cfg['targetSpeedMPH'] / 2.23694)
-
-        settings.synchronous_mode = False
-        world.apply_settings(settings)
-
-    elif args.x and args.y and args.z:
-        
-        client = carla.Client(config["CARLAIp"], config["CARLAPort"])
-        client.set_timeout(2.0)
-        world = client.get_world()
-
-        # Spawn the vehicle at the specified location with the initial speed
-        vehicle = spawn_vehicle(world, 'vehicle.nissan.micra', args.x, args.y, args.z, args.yaw)
-        print("Press SPACE key to start the vehicle")
-        running = False
 
         # Set CARLA simulator as wall clock
         settings = world.get_settings()
@@ -162,10 +130,177 @@ if __name__ == '__main__':
 
         # Set up the Pygame window and clock
         pygame.init()
-
-        screen = pygame.display.set_mode((700, 100))
         # Set the font and text for the message
         font = pygame.font.SysFont("monospace", 30)
+        screen = pygame.display.set_mode((700, 500))
+
+        clock = pygame.time.Clock()
+        
+        started = False
+
+        for cfg_i,vehicle_cfg in enumerate(config["vehicles"]):
+            x_pt = vehicle_cfg["startPt"][0]
+            y_pt = vehicle_cfg["startPt"][1]
+            z_pt = vehicle_cfg["startPt"][2]
+            yaw = vehicle_cfg["yaw"]
+
+            vehicle = None
+
+            carlaVehicles = world.get_actors().filter('vehicle.*')
+            for current_vehicle in carlaVehicles:
+                currentAttributes = current_vehicle.attributes
+                if currentAttributes["role_name"] == args.svm_vehicle_name:
+                        vehicle = current_vehicle
+            
+            # if we choose to spawn the vehicle and this is the first run, spawn the vehicle
+            # we want to use the same vehicle for all runs and not spawn new ones
+            if args.spawn_vehicle and cfg_i == 0:
+                # Spawn the vehicle at the specified location with the initial speed
+                if vehicle != None:
+                    vehicle.destroy()
+                
+                vehicle = spawn_vehicle(world, vehicle_cfg["vehicleModel"], config["role_name"], x_pt, y_pt, z_pt, yaw)
+            
+            carlaVehicles = world.get_actors().filter('vehicle.*')
+            for current_vehicle in carlaVehicles:
+                currentAttributes = current_vehicle.attributes
+                if currentAttributes["role_name"] == args.svm_vehicle_name:
+                        vehicle = current_vehicle
+            
+            if not current_vehicle:
+                print("SVM VEHICLE NOT FOUND")
+                sys.exit()
+            
+
+            vehicle.set_transform(carla.Transform(carla.Location(x_pt,y_pt,z_pt),carla.Rotation(0,yaw,0)))
+            
+            running = False
+            reached_end = False
+            fresh_desired_phase = False
+            desired_phase_start = 0
+
+            print("\nSTARTING SCENARIO " + str(cfg_i + 1))
+            
+            try:
+                while reached_end == False:
+                    world.tick()
+                    
+                    scenario_dist_to_stopbar = int(round(get_dist_3d(vehicle_cfg['startPt'],vehicle_cfg['stopBar']),0))
+
+                    tl_actor = get_actor_by_location(world,config["tl_location"],"traffic.traffic_light")
+                    tl_state = tl_actor.state
+                    
+                    text_list = []
+
+                    text_list.append(font.render(     "READY FOR SCENARIO " + str(cfg_i + 1), True, (255, 255, 255)))
+                    text_list.append(font.render(     "     X = " + str(scenario_dist_to_stopbar) + " v = " + str(vehicle_cfg["targetSpeedMPH"]), True, (255, 255, 255)))
+                    text_list.append(font.render(     "Desired Traffic Light State = " + str(vehicle_cfg["targetTrafficLightState"]), True, (255, 255, 255)))
+                    text_list.append(font.render(     "Current Traffic Light State = " + str(tl_state), True, (255, 255, 255)))
+                    if running:
+                        text_list.append(font.render(     "----- RUNNING -----", True, (255, 255, 255)))
+                    elif not started:
+                        text_list.append(font.render(     "Press SPACE to start vehicle movement", True, (255, 255, 255)))
+                    else:
+                        text_list.append(font.render(     "----- WAITING FOR SIGNAL -----", True, (255, 255, 255)))
+
+                    text_list.append(font.render(     "started = " + str(started), True, (255, 255, 255)))
+                    text_list.append(font.render(     "fresh_desired_phase = " + str(fresh_desired_phase), True, (255, 255, 255)))
+                    text_list.append(font.render(     "desired_phase_start = " + str(desired_phase_start), True, (255, 255, 255)))
+                    text_list.append(font.render(     "running = " + str(running), True, (255, 255, 255)))
+
+                    # Draw the message on the screen
+                    screen.fill(pygame.Color("black"))
+                    
+                    text_y_start = 10
+                    text_y_diff = 30
+
+                    for i_t,text in enumerate(text_list):
+                        screen.blit(text, (10, text_y_start + text_y_diff *i_t))
+
+                    pygame.display.flip()
+
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            # if we spawned the vehicle, destroy the vehicle after
+                            if args.spawn_vehicle:
+                                vehicle.destroy()
+                            
+                            pygame.quit()
+                            sys.exit()
+                        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                            started = True
+
+                    if started == True:
+                        
+                        if started == True and running == True:
+                            print("RUNNING SCENARIO")
+                            reached_end = move_vehicle_with_point(world, vehicle, vehicle_cfg['endPt'], vehicle_cfg['targetSpeedMPH'] / 2.23694)
+                        # need to make sure to start counting the start of the desired phase and no when script starts (in case of starting during desired phase)
+                        
+    
+                        elif str(tl_state) != vehicle_cfg["targetTrafficLightState"] and not fresh_desired_phase:
+                            print("STARTED FRESH DESIRED PHASE")
+                            fresh_desired_phase = True
+                            desired_phase_start = 0
+
+                        # once we are ensured we have a "fresh" desired phase, record time so we can determine how long the desired phase lasts 
+                        # we need to do this because to protect against the default carla phase sequence which will flicker the traffic lights every so often
+                        elif str(tl_state) == vehicle_cfg["targetTrafficLightState"] and fresh_desired_phase and desired_phase_start == 0:
+                                print("IS DESIRED PHASE AND FRESH AND NO START")
+                                
+                                desired_phase_start = world.get_snapshot().timestamp.elapsed_seconds
+                        
+                        elif desired_phase_start != 0:
+                            print("CHECKING DESIRED PHASE DURATION")
+                            
+                            current_time = world.get_snapshot().timestamp.elapsed_seconds
+
+                            if current_time - desired_phase_start > 0.01:
+                                print("DESIRED PHASE DURATION MET!")
+                                running = True
+
+
+                            
+                    
+                    
+                
+                vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
+                time.sleep(3)
+            except  KeyboardInterrupt:
+                print('\nCancelled by user. Bye!')
+                break
+                
+
+
+        # if we spawned the vehicle, destroy the vehicle after
+        if args.spawn_vehicle:
+            vehicle.destroy()
+
+        settings.synchronous_mode = False
+        world.apply_settings(settings)
+
+    # if x,y,z is passed, use those values for single run
+    elif args.x and args.y and args.z:
+        
+        # THIS FUNCTIONALITY NEEDS WORK - CURRENTLY NOT NEEDED
+
+        client = carla.Client(config["CARLAIp"], config["CARLAPort"])
+        client.set_timeout(2.0)
+        world = client.get_world()
+
+        # Spawn the vehicle at the specified location with the initial speed
+        vehicle = spawn_vehicle(world, 'vehicle.nissan.micra', config["vehicleModel"], args.x, args.y, args.z, args.yaw)
+        print("Press SPACE key to start the vehicle")
+        running = False
+
+        # Set CARLA simulator as wall clock
+        settings = world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = None # Set a variable time-step
+        world.apply_settings(settings)
+
+        # Set up the Pygame window and clockstart vehicle movement", True, (255, 255, 255))
+
         text = font.render("Press SPACE to start vehicle movement", True, (255, 255, 255))
 
         # Draw the message on the screen

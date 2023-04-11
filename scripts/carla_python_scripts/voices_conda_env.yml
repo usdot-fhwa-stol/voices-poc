@@ -1,0 +1,10 @@
+name: voices
+channels:
+  - defaults
+dependencies:
+  - pip==21.1.2
+  - python==3.7.10
+  - pip:
+    - numpy
+    - pandas
+    - pygame

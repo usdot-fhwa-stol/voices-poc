@@ -21,14 +21,15 @@ mkdir -p $localCarmaSimLogPath
 
 CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
 
-set_time_mode_cmd="python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py"
+# set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
 
-
-$localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
+$localCarlaPath/CarlaUE4.sh > $CARLA_LOG 2>&1 &
 
 carla_pid=$!
-echo "PID: "$carla_pid
+echo "CARLA PID: "$carla_pid
 sleep 7s
+
+python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
 python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
 

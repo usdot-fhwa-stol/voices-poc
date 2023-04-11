@@ -95,47 +95,36 @@ def main():
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-    vehicles_list = []
-    walkers_list = []
-    all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = False
-    random.seed(args.seed if args.seed is not None else int(time.time()))
 
-    try:
-        world = client.get_world()
-        print("Available Maps: " + ', '.join(client.get_available_maps()))
-        
-        #world = client.load_world('/Game/Carla/Maps/Carla_v14_10_1_2021')
-        #world = client.get_world()
-        
-        #client = carla.Client()
-        #client.set_timeout(10.0)
-        
-        print(world.get_actors().filter('traffic.traffic_light*'))
+    
+    while True:
+        try:
+            world = client.get_world()
+            trafficlights = world.get_actors().filter('traffic.traffic_light*')
 
-        trafficlights = world.get_actors().filter('traffic.traffic_light*')
-        #print("TrafficLights:" + ', '.join(trafficlights))
-        print(dir(trafficlights[0]))
-        for light in trafficlights:
-            print(light.get_group_traffic_lights())
+            traffic_light_id_list = [93,99,110,97]
+            status_string = ""
+            for light in trafficlights:
+                
+                if light.id in traffic_light_id_list:
+                    status_string = f"{status_string}| ID: {light.id} = \t{light.state}\t|"
+                
+            print(status_string)
+            time.sleep(0.25)
             
-            
+        except Exception as err_msg:
+            print(str(err_msg))
+            sys.exit()
         
-
-    finally:
-
-        if args.sync and synchronous_master:
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
-
-        print('\nENDING')
+# phase actor signid
+# 2 -> 195 (93) -> 1629
+# 6 -> 182 (99) -> 1627
+# 4 -> 178 (110) -> 1628
+# 8 -> 184 (97) -> 1626
 
 
-        time.sleep(0.5)
 
 if __name__ == '__main__':
 

@@ -112,16 +112,18 @@ def main():
 
         # print(str(spec_transform))
 
+        # more zoomed in 
+        # spec_location = carla.Location(x=295.509583, y=-195.843079, z=24.709198)
+        # spec_rotation = carla.Rotation(pitch=-27.003902, yaw=172.640289, roll=0.0000)
 
-
-        spec_location = carla.Location(301.608948, -223.364090,79.027130)
-        spec_rotation = carla.Rotation(-53.484924, 140.482407,0.00006)
+        spec_location = carla.Location(x=298.728577, y=-216.214294, z=46.651649)
+        spec_rotation = carla.Rotation(pitch=-43.542046, yaw=144.351303, roll=0.000085)
 
         # Set the spectator with an empty transform
         spectator.set_transform(carla.Transform(spec_location,spec_rotation))
 
     finally:
-        print('\nENDING')
+        print('\n----- SUCCESSFULLY SET SPECTATOR VIEW -----\n')
         time.sleep(0.5)
 
 if __name__ == '__main__':
@@ -130,5 +132,3 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
-    finally:
-        print('\ndone.')
