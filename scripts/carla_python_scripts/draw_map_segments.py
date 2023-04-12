@@ -13,11 +13,23 @@ carla_egg_file = find_carla_egg()
 sys.path.append(carla_egg_file)
 
 import carla
+from enum import Enum
+
+class CarlaColor:
+    GRAY = carla.Color(r=102,g=153,b=204)
 
 
 
-
-
+class Segment:
+    def __init__(self, segment_name, startx, starty, startz, endx, endy, endz, color):
+        self.segment_name = segment_name
+        self.startx = startx
+        self.starty = starty
+        self.startz = startz
+        self.endx = endx
+        self.endy = endy
+        self.endz = endz
+        self.color = color
 
 
 
@@ -48,23 +60,6 @@ finally:
 
 
 
-def print_pointset():
-    for i in range(0,10):
-        for line_name, c in line_list.items():
-
-            strt_point = carla.Location(x=c[0][0], y=c[0][1], z=c[0][2])
-            stop_point = carla.Location(x=c[1][0], y=c[1][1], z=c[1][2])
-
-            debug.draw_line(strt_point,stop_point,0.3,carla.Color(r=255,g=0,b=0),5)
-
-            strt_point_geo = world.get_map().transform_to_geolocation(strt_point)
-            stop_point_geo = world.get_map().transform_to_geolocation(stop_point)
-
-            print("Line " + line_name)
-            print("strt_point: " + str(strt_point_geo))
-            print("stop_point: " + str(stop_point_geo))
-
-        time.sleep(5)
 
 
 def ingest_map_data_from_map_file(intersection_map_json_filename):
@@ -87,7 +82,7 @@ intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
 intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]["approachType"]
 intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]["drivingLanes"]
 
-
+segment_list=[]
 approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
 for approach in approachList:
     approachID = approach["approachID"]
@@ -98,9 +93,32 @@ for approach in approachList:
             nodeLat = laneNode["nodeLat"]
             nodeLong = laneNode["nodeLong"]
             nodeElev = laneNode["nodeElev"]
+            segment_list.append(Segment(
+                "approachID-approachID-laneID-laneID",
+                A2a[0], A2a[1],
+                B4a[0], B4a[1],
+                gray
+            ))
+
 
     return intersection_map_points
 
+def draw_segment_list(segmentList):
+    for segment in segmentList:
+        draw_line_segment(segment)
+
+def draw_line_segment(segment):
+    strt_point = carla.Location(x=segment.startx, y=segment.starty, z=segment.startz)
+    stop_point = carla.Location(x=segment.endx, y=segment.endy, z=segment.endz)
+
+    debug.draw_line(strt_point, stop_point, 0.3, segment.color, 0)
+
+    strt_point_geo = world.get_map().transform_to_geolocation(strt_point)
+    stop_point_geo = world.get_map().transform_to_geolocation(stop_point)
+
+    print("Drawing segment: " + segment.segment_name)
+    print("strt_point: " + str(strt_point_geo))
+    print("stop_point: " + str(stop_point_geo))
 
 def generate_points():
     lane_width=3.5
@@ -129,23 +147,17 @@ def generate_points():
     E1a = A3a + np.array([ 36.4, 0, 0 ])
     E1b = E1a + np.array([ 0, -lane_width, 0 ])
 
-    return {
-        "A2a_B4a": (A2a, B4a),
-        "A2b_B4b": (A2b, B4b),
-
-        "A2a_A4a": (A2a, A4a),
-        "A2b_A4b": (A2b, A4b),
-
-        "A1a_A3a": (A1a, A3a),
-        "A1b_A3b": (A1b, A3b),
-
-        "A4a_C2a": (A4a, C2a),
-        "A4b_C2b": (A4b, C2b),
-
-        "A1a_D3a": (A1a, D3a),
-        "A1b_D3b": (A1b, D3b),
-
-        "A3a_E1a": (A3a, E1a),
-        "A3b_E1b": (A3b, E1b),
-
-    }
+    return [
+        Segment("A2a_B4a", A2a[0], A2a[1], A2a[2], B4a[0], B4a[1], B4a[2], CarlaColor.GRAY),
+        Segment("A2b_B4b", A2b[0], A2b[1], A2b[2], B4b[0], B4b[1], B4b[2], CarlaColor.GRAY),
+        Segment("A2a_A4a", A2a[0], A2a[1], A2a[2], A4a[0], A4a[1], A4a[2], CarlaColor.GRAY),
+        Segment("A2b_A4b", A2b[0], A2b[1], A2b[2], A4b[0], A4b[1], A4b[2], CarlaColor.GRAY),
+        Segment("A1a_A3a", A1a[0], A1a[1], A1a[2], A3a[0], A3a[1], A3a[2], CarlaColor.GRAY),
+        Segment("A1b_A3b", A1b[0], A1b[1], A1b[2], A3b[0], A3b[1], A3b[2], CarlaColor.GRAY),
+        Segment("A4a_C2a", A4a[0], A4a[1], A4a[2], C2a[0], C2a[1], C2a[2], CarlaColor.GRAY),
+        Segment("A4b_C2b", A4b[0], A4b[1], A4b[2], C2b[0], C2b[1], C2b[2], CarlaColor.GRAY),
+        Segment("A1a_D3a", A1a[0], A1a[1], A1a[2], D3a[0], D3a[1], D3a[2], CarlaColor.GRAY),
+        Segment("A1b_D3b", A1b[0], A1b[1], A1b[2], D3b[0], D3b[1], D3b[2], CarlaColor.GRAY),
+        Segment("A3a_E1a", A3a[0], A3a[1], A3a[2], E1a[0], E1a[1], E1a[2], CarlaColor.GRAY),
+        Segment("A3b_E1b", A3b[0], A3b[1], A3b[2], E1b[0], E1b[1], E1b[2], CarlaColor.GRAY)
+    ]
