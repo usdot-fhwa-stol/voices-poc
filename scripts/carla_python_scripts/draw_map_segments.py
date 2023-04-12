@@ -42,14 +42,25 @@ class Segment:
 def ingest_map_data_from_map_file(intersection_map_json_filename):
     return json.load(open(intersection_map_json_filename, "r"))
 
+def get_reference_point_in_carla_coordinates(intersection_map_json):
+    referenceLat = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"])
+    referenceLon = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"])
+    referenceElevation = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"])
+    referencePointLatLon = carla.GeoLocation(referenceLat, referenceLon, referenceElevation)
+    referencePointXYZ = carla.Location(0,0,0)
+    # referencePointXYZ = world.get_map().transform_to_xyz(referencePointLatLon)
+    # https://github.com/carla-simulator/carla/issues/2737
+    # <geoReference>+proj=tmerc +lat_0=49 +lon_0=8 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs </geoReference>
+    return referencePointXYZ
+
 def ingest_points_from_map_data(intersection_map_json):
     intersectionID = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["intersectionID"]
-    referenceLat = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"]
-    referenceLon = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"]
-    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"]
+    referenceLat = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"])
+    referenceLon = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"])
+    referenceElevation = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"])
 
     print("Intersection ID: %s"%(intersectionID))
-    print("Reference Point: %s deg %s deg %s m"%(referenceLat, referenceLon, referenceElevation))
+    print("Reference Point: %f deg %f deg %f m"%(referenceLat, referenceLon, referenceElevation))
 
     approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
     segmentList = list(map(lambda approach:
@@ -74,13 +85,13 @@ def ingest_points_from_map_data(intersection_map_json):
 
     return segmentList
 
-def draw_segment_list(segmentList):
+def draw_segment_list(segmentList, translation):
     for segment in segmentList:
-        draw_line_segment(segment)
+        draw_line_segment(segment, translation)
 
-def draw_line_segment(segment):
-    strt_point = carla.Location(x=segment.startx, y=segment.starty, z=segment.startz)
-    stop_point = carla.Location(x=segment.endx, y=segment.endy, z=segment.endz)
+def draw_line_segment(segment, translation):
+    strt_point = carla.Location(x=segment.startx, y=segment.starty, z=segment.startz) + translation
+    stop_point = carla.Location(x=segment.endx, y=segment.endy, z=segment.endz) + translation
 
     print("Drawing segment: " + segment.segment_name)
     print("strt_point (x,y,z): " + str(strt_point))
@@ -161,17 +172,19 @@ try:
         intersection_map_filename = "MAP.json"
         intersection_map_json = ingest_map_data_from_map_file(intersection_map_filename)
         intersection_map_segment_list = ingest_points_from_map_data(intersection_map_json)
-        draw_segment_list(intersection_map_segment_list)
+        translation = get_reference_point_in_carla_coordinates(intersection_map_json)
+        draw_segment_list(intersection_map_segment_list, translation)
 
     elif selection == 2:
         intersection_map_filename = input("What is the filename? ")
         intersection_map_json = ingest_map_data_from_map_file(intersection_map_filename)
         intersection_map_segment_list = ingest_points_from_map_data(intersection_map_json)
-        draw_segment_list(intersection_map_segment_list)
+        translation = get_reference_point_in_carla_coordinates(intersection_map_json)
+        draw_segment_list(intersection_map_segment_list, translation)
 
     elif selection == 3:
         segment_list = generate_points()
-        draw_segment_list(segment_list)
+        draw_segment_list(segment_list, carla.Location(0.0, 0.0, 0.0))
 
     else:
         print("Invalid selection. Exiting.")
