@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import json
 from enum import Enum
+import itertools
 
 # Import CARLA API and locate the active runtime
 from find_carla_egg import find_carla_egg
@@ -21,7 +22,7 @@ class CarlaColor(Enum):
     GREEN = carla.Color(r=0,g=106,b=78)
     YELLOW = carla.Color(r=255,g=225,b=53)
     RED = carla.Color(r=227,g=0,b=34)
-    ORGANGE = carla.Color(r=255,g=103,b=0)
+    ORANGE = carla.Color(r=255,g=103,b=0)
 
 class Segment:
     def __init__(self, segment_name, startx, starty, startz, endx, endy, endz, color):
@@ -39,37 +40,39 @@ class Segment:
 ################################################################################
 
 def ingest_map_data_from_map_file(intersection_map_json_filename):
-    return json.load(intersection_map_json_filename)
+    return json.load(open(intersection_map_json_filename, "r"))
 
 def ingest_points_from_map_data(intersection_map_json):
     intersectionID = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["intersectionID"]
     referenceLat = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"]
     referenceLon = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"]
-    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"][
-        "referenceElevation"]
+    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"]
 
     print("Intersection ID: %s"%(intersectionID))
-    print("Reference Point: %f deg %f deg %f m"%(referenceLat, referenceLon, referenceElevation))
+    print("Reference Point: %s deg %s deg %s m"%(referenceLat, referenceLon, referenceElevation))
 
     approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
+    segmentList = list(map(lambda approach:
+                    list(map(lambda lane:
+                        list(map(lambda segmentPair: Segment(
+                            "approachID-%s-laneID-%s" % (approach["approachID"], lane["laneID"]),
+                            float(segmentPair[0]["nodeLat"]), float(segmentPair[0]["nodeLong"]), float(segmentPair[0]["nodeElev"]),
+                            float(segmentPair[1]["nodeLat"]), float(segmentPair[1]["nodeLong"]), float(segmentPair[1]["nodeElev"]),
+                            CarlaColor.GREEN if approach["approachType"] == "Ingress" else CarlaColor.ORANGE),
 
-    return list(approachList.map(lambda approach:
-                                 approach["drivingLanes"].map(lambda lane:
-                                                              list(zip(lane["laneNodes"][:-1],
-                                                                       lane["laneNodes"][1:])).  # segmentPairs
-                                                              map(lambda segmentPair: Segment(
-                                                                  "approachID-%s-laneID-%s" % (
-                                                                  approach["approachID"], lane["laneID"]),
-                                                                  segmentPair[0]["nodeLat"], segmentPair[0]["nodeLong"],
-                                                                  segmentPair[0]["nodeElev"],
-                                                                  segmentPair[1]["nodeLat"], segmentPair[1]["nodeLong"],
-                                                                  segmentPair[1]["nodeElev"],
-                                                                  CarlaColor.GREEN if approach["approachType"] == "Ingress" else CarlaColor.ORANGE
-                                                                )
-                                                              )
-                                                              )
-                                 )
+                            list(zip(lane["laneNodes"][:-1], lane["laneNodes"][1:]))  # segmentPairs
+                            )),
+                        approach["drivingLanes"]))
+                    if (approach["approachType"] == "Ingress" or approach["approachType"] == "Egress")
+                    else [],
+                    approachList)
                 )
+
+    # No robust option to unwrap a nested list-of-lists in Python; these two calls are intentional.
+    segmentList = list(itertools.chain.from_iterable(segmentList))
+    segmentList = list(itertools.chain.from_iterable(segmentList))
+
+    return segmentList
 
 def draw_segment_list(segmentList):
     for segment in segmentList:
@@ -79,14 +82,18 @@ def draw_line_segment(segment):
     strt_point = carla.Location(x=segment.startx, y=segment.starty, z=segment.startz)
     stop_point = carla.Location(x=segment.endx, y=segment.endy, z=segment.endz)
 
+    print("Drawing segment: " + segment.segment_name)
+    print("strt_point (x,y,z): " + str(strt_point))
+    print("stop_point (x,y,z): " + str(stop_point))
+
     debug.draw_line(strt_point, stop_point, 0.3, segment.color, 0)
 
     strt_point_geo = world.get_map().transform_to_geolocation(strt_point)
     stop_point_geo = world.get_map().transform_to_geolocation(stop_point)
 
     print("Drawing segment: " + segment.segment_name)
-    print("strt_point: " + str(strt_point_geo))
-    print("stop_point: " + str(stop_point_geo))
+    print("strt_point (lat/lon): " + str(strt_point_geo))
+    print("stop_point (lat/lon): " + str(stop_point_geo))
 
 def generate_points():
     lane_width=3.5
