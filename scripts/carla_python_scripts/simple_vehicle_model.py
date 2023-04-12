@@ -5,6 +5,7 @@ import time
 import argparse
 import pygame
 import json
+import numpy as np
 
 from find_carla_egg import find_carla_egg
 
@@ -14,17 +15,21 @@ sys.path.append(carla_egg_file)
 
 import carla
 
+def get_dist_3d_vectors(start_vector,vehicle_vector):
+    return np.dot(start_vector,vehicle_vector)/(np.linalg.norm(start_vector))
+
+
 def get_actor_by_location(world,location_array,filter):
     carla_actors = world.get_actors().filter( filter + "*")
     for actor in carla_actors:
         actor_loc = actor.get_location()
         actor_loc_array = [actor_loc.x, actor_loc.y, actor_loc.z]
-        dist_from_target_loc = get_dist_3d(actor_loc_array,location_array)
+        dist_from_target_loc = abs(get_dist_3d_pythag(actor_loc_array,location_array))
         if dist_from_target_loc < 5:
             return actor
         
 
-def get_dist_3d(start_point,end_point):
+def get_dist_3d_pythag(start_point,end_point):
     return ((end_point[0]-start_point[0])**2 + (end_point[1]-start_point[1])**2 + (end_point[2]-start_point[2])**2) ** 0.5
 
 def read_json(json_path):
@@ -61,7 +66,7 @@ def move_vehicle_with_point(world, vehicle, end_point, velocity):
     end_point = [float(i) for i in end_point]
     current_loc = [location.x, location.y, location.z]
 
-    dist_from_end = get_dist_3d(current_loc,end_point)
+    dist_from_end = get_dist_3d_pythag(current_loc,end_point)
 
     print("-" * 10)
 
@@ -132,7 +137,10 @@ if __name__ == '__main__':
         pygame.init()
         # Set the font and text for the message
         font = pygame.font.SysFont("monospace", 30)
-        screen = pygame.display.set_mode((700, 500))
+        screen_width = 950
+        screen_height = 350
+
+        screen = pygame.display.set_mode((screen_width, screen_height))
 
         clock = pygame.time.Clock()
         
@@ -146,6 +154,7 @@ if __name__ == '__main__':
 
             vehicle = None
 
+            # find the vehicle based on the desired rolename
             carlaVehicles = world.get_actors().filter('vehicle.*')
             for current_vehicle in carlaVehicles:
                 currentAttributes = current_vehicle.attributes
@@ -155,67 +164,110 @@ if __name__ == '__main__':
             # if we choose to spawn the vehicle and this is the first run, spawn the vehicle
             # we want to use the same vehicle for all runs and not spawn new ones
             if args.spawn_vehicle and cfg_i == 0:
-                # Spawn the vehicle at the specified location with the initial speed
+                
+                # if we found a vehicle with the same name, destroy it so we can recreate it in the right spot 
                 if vehicle != None:
                     vehicle.destroy()
                 
+                # Spawn the vehicle at the specified location with the initial speed
                 vehicle = spawn_vehicle(world, vehicle_cfg["vehicleModel"], config["role_name"], x_pt, y_pt, z_pt, yaw)
             
-            carlaVehicles = world.get_actors().filter('vehicle.*')
-            for current_vehicle in carlaVehicles:
-                currentAttributes = current_vehicle.attributes
-                if currentAttributes["role_name"] == args.svm_vehicle_name:
-                        vehicle = current_vehicle
             
+            
+            # if we still cant find the vehicle, exit
             if not current_vehicle:
                 print("SVM VEHICLE NOT FOUND")
                 sys.exit()
             
-
+            # set initial location for vehicle for this scenario 
             vehicle.set_transform(carla.Transform(carla.Location(x_pt,y_pt,z_pt),carla.Rotation(0,yaw,0)))
             
             running = False
             reached_end = False
             fresh_desired_phase = False
             desired_phase_start = 0
+            dist_from_int_exit_at_red = "########"
+
 
             print("\nSTARTING SCENARIO " + str(cfg_i + 1))
             
+            start_point = np.array(vehicle_cfg['startPt'])
+            opp_stop_bar_point = np.array(vehicle_cfg['oppositeStopBar'])
+
+            start_vector = opp_stop_bar_point - start_point
+
             try:
                 while reached_end == False:
                     world.tick()
                     
-                    scenario_dist_to_stopbar = int(round(get_dist_3d(vehicle_cfg['startPt'],vehicle_cfg['stopBar']),0))
-
-                    tl_actor = get_actor_by_location(world,config["tl_location"],"traffic.traffic_light")
-                    tl_state = tl_actor.state
-                    
                     text_list = []
 
-                    text_list.append(font.render(     "READY FOR SCENARIO " + str(cfg_i + 1), True, (255, 255, 255)))
-                    text_list.append(font.render(     "     X = " + str(scenario_dist_to_stopbar) + " v = " + str(vehicle_cfg["targetSpeedMPH"]), True, (255, 255, 255)))
+                    text_list.append(font.render(     "-"*20, True, (255, 255, 255)))
+                    text_list.append(font.render(     "|" + ("SCENARIO " + str(cfg_i + 1)).center(20) + "|", True, (255, 255, 255)))
+                    text_list.append(font.render(     "-"*20, True, (255, 255, 255)))
+                    
+                    # get scenario params
+                    scenario_dist_to_stopbar = int(round(get_dist_3d_pythag(vehicle_cfg['startPt'],vehicle_cfg['stopBar']),0))
+
+                    text_list.append(font.render(     "Distance to Entry Lane Stop Bar = " + str(scenario_dist_to_stopbar) + "m ", True, (255, 255, 255)))
+                    text_list.append(font.render(     "Speed = " + str(vehicle_cfg["targetSpeedMPH"]) + " mph", True, (255, 255, 255)))
+                    
+                    # get traffic light state
+                    tl_actor = get_actor_by_location(world,config["tl_location"],"traffic.traffic_light")
+                    
+                    if not tl_actor:
+                        print("Traffic Light actor not found...")
+                        sys.exit()
+                    
+                    tl_state = tl_actor.state
+
                     text_list.append(font.render(     "Desired Traffic Light State = " + str(vehicle_cfg["targetTrafficLightState"]), True, (255, 255, 255)))
-                    text_list.append(font.render(     "Current Traffic Light State = " + str(tl_state), True, (255, 255, 255)))
+                    text_list.append(font.render(     "Current Traffic Light State = " + str(tl_state).ljust(6), True, (255, 255, 255)))
+                    
+                    # get distance to opposite stop bar
+
+                    # find the vehicle based on the desired rolename
+                    carlaVehicles = world.get_actors().filter('vehicle.*')
+                    for current_vehicle in carlaVehicles:
+                        currentAttributes = current_vehicle.attributes
+                        if currentAttributes["role_name"] == args.svm_vehicle_name:
+                                vehicle = current_vehicle
+
+                    cur_vehicle_loc = vehicle.get_location()
+                    cur_vehicle_loc_array = np.array([cur_vehicle_loc.x, cur_vehicle_loc.y, cur_vehicle_loc.z])
+
+                    cur_vehicle_vector = opp_stop_bar_point - cur_vehicle_loc_array
+
+                    dist_from_int_exit = round(get_dist_3d_vectors(start_vector,cur_vehicle_vector),3)
+                    
+                    
+                    text_list.append(font.render(     ("Current Distance to Exit Intersection = ").rjust(42) + str(dist_from_int_exit).ljust(8) + " m", True, (255, 255, 255)))
+                    text_list.append(font.render(     ("Distance to Exit Intersection at Red = ").rjust(42) + str(dist_from_int_exit_at_red).ljust(8) + " m", True, (255, 255, 255)))
+
+                    text_list.append(font.render(     "-"*20, True, (255, 255, 255)))
+
                     if running:
                         text_list.append(font.render(     "----- RUNNING -----", True, (255, 255, 255)))
                     elif not started:
-                        text_list.append(font.render(     "Press SPACE to start vehicle movement", True, (255, 255, 255)))
+                        text_list.append(font.render(     "Press SPACE to Start", True, (255, 255, 255)))
                     else:
                         text_list.append(font.render(     "----- WAITING FOR SIGNAL -----", True, (255, 255, 255)))
 
-                    text_list.append(font.render(     "started = " + str(started), True, (255, 255, 255)))
-                    text_list.append(font.render(     "fresh_desired_phase = " + str(fresh_desired_phase), True, (255, 255, 255)))
-                    text_list.append(font.render(     "desired_phase_start = " + str(desired_phase_start), True, (255, 255, 255)))
-                    text_list.append(font.render(     "running = " + str(running), True, (255, 255, 255)))
+                    # text_list.append(font.render(     "started = " + str(started), True, (255, 255, 255)))
+                    # text_list.append(font.render(     "fresh_desired_phase = " + str(fresh_desired_phase), True, (255, 255, 255)))
+                    # text_list.append(font.render(     "desired_phase_start = " + str(desired_phase_start), True, (255, 255, 255)))
+                    # text_list.append(font.render(     "running = " + str(running), True, (255, 255, 255)))
 
                     # Draw the message on the screen
                     screen.fill(pygame.Color("black"))
                     
-                    text_y_start = 10
+                    text_y_start = 20
                     text_y_diff = 30
 
                     for i_t,text in enumerate(text_list):
-                        screen.blit(text, (10, text_y_start + text_y_diff *i_t))
+                        text_center = text.get_rect(center=(screen_width/2,text_y_start + text_y_diff *i_t))
+                        screen.blit(text, text_center)
+                        # screen.blit(text, (10, text_y_start + text_y_diff *i_t))
 
                     pygame.display.flip()
 
@@ -235,9 +287,12 @@ if __name__ == '__main__':
                         if started == True and running == True:
                             print("RUNNING SCENARIO")
                             reached_end = move_vehicle_with_point(world, vehicle, vehicle_cfg['endPt'], vehicle_cfg['targetSpeedMPH'] / 2.23694)
+
+                            if str(tl_state) == "Red" and dist_from_int_exit_at_red == "########":
+                                dist_from_int_exit_at_red = dist_from_int_exit
+                                
+
                         # need to make sure to start counting the start of the desired phase and no when script starts (in case of starting during desired phase)
-                        
-    
                         elif str(tl_state) != vehicle_cfg["targetTrafficLightState"] and not fresh_desired_phase:
                             print("STARTED FRESH DESIRED PHASE")
                             fresh_desired_phase = True
@@ -261,9 +316,6 @@ if __name__ == '__main__':
 
 
                             
-                    
-                    
-                
                 vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
                 time.sleep(3)
             except  KeyboardInterrupt:
@@ -282,6 +334,7 @@ if __name__ == '__main__':
     # if x,y,z is passed, use those values for single run
     elif args.x and args.y and args.z:
         
+        config = read_json(args.config)
         # THIS FUNCTIONALITY NEEDS WORK - CURRENTLY NOT NEEDED
 
         client = carla.Client(config["CARLAIp"], config["CARLAPort"])
@@ -298,6 +351,14 @@ if __name__ == '__main__':
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = None # Set a variable time-step
         world.apply_settings(settings)
+
+        # Set up the Pygame window and clock
+        pygame.init()
+        # Set the font and text for the message
+        font = pygame.font.SysFont("monospace", 30)
+        screen = pygame.display.set_mode((700, 500))
+
+        clock = pygame.time.Clock()
 
         # Set up the Pygame window and clockstart vehicle movement", True, (255, 255, 255))
 
