@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-import glob
-import os
+
+# System imports
 import sys
 import numpy as np
 import json
-import time
-
-from find_carla_egg import find_carla_egg
-
-carla_egg_file = find_carla_egg()
-
-sys.path.append(carla_egg_file)
-
-import carla
 from enum import Enum
 
-class CarlaColor:
+# Import CARLA API and locate the active runtime
+from find_carla_egg import find_carla_egg
+carla_egg_file = find_carla_egg()
+sys.path.append(carla_egg_file)
+import carla
+
+################################################################################
+## Types
+################################################################################
+
+class CarlaColor(Enum):
     GRAY = carla.Color(r=102,g=153,b=204)
     GREEN = carla.Color(r=0,g=106,b=78)
     YELLOW = carla.Color(r=255,g=225,b=53)
@@ -33,38 +34,9 @@ class Segment:
         self.endz = endz
         self.color = color
 
-
-
-
-
-
-
-actor_list=[]
-try:
-    # Initialize
-    client = carla.Client('localhost', 2000)
-    client.set_timeout(300.0)
-    world = client.get_world()
-    debug = world.debug
-    switch
-        line_list = generate_points()
-        draw_segment_list()
-    case
-        intersection_map_json = ingest_map_data_from_map_file()
-        intersection_map_segment_list = ingest_points_from_map_data(intersection_map_json)
-        draw_segment_list(intersection_map_segment_list)
-
-
-finally:
-    print('Cleaning up actors...')
-    for actor in actor_list:
-        actor.destroy()
-    print('Done, Actors cleaned-up successfully!')
-
-
-
-
-
+################################################################################
+## Functions
+################################################################################
 
 def ingest_map_data_from_map_file(intersection_map_json_filename):
     return json.load(intersection_map_json_filename)
@@ -157,3 +129,49 @@ def generate_points():
         Segment("A3a_E1a", A3a[0], A3a[1], A3a[2], E1a[0], E1a[1], E1a[2], CarlaColor.GRAY),
         Segment("A3b_E1b", A3b[0], A3b[1], A3b[2], E1b[0], E1b[1], E1b[2], CarlaColor.GRAY)
     ]
+
+################################################################################
+## Main Code
+################################################################################
+
+actor_list=[]
+try:
+    # Initialize
+    client = carla.Client("localhost", 2000)
+    client.set_timeout(300.0)
+    world = client.get_world()
+    debug = world.debug
+
+    print("Which operation would you like to execute?")
+    print("")
+    print("1. Draw lines based on the default map file (./MAP.json)")
+    print("2. Draw lines based on a map file")
+    print("3. Internally-generated point set")
+    print("")
+    selection = int(input("? "))
+
+    if selection == 1:
+        intersection_map_filename = "MAP.json"
+        intersection_map_json = ingest_map_data_from_map_file(intersection_map_filename)
+        intersection_map_segment_list = ingest_points_from_map_data(intersection_map_json)
+        draw_segment_list(intersection_map_segment_list)
+
+    elif selection == 2:
+        intersection_map_filename = input("What is the filename? ")
+        intersection_map_json = ingest_map_data_from_map_file(intersection_map_filename)
+        intersection_map_segment_list = ingest_points_from_map_data(intersection_map_json)
+        draw_segment_list(intersection_map_segment_list)
+
+    elif selection == 3:
+        segment_list = generate_points()
+        draw_segment_list(segment_list)
+
+    else:
+        print("Invalid selection. Exiting.")
+        exit(1)
+
+finally:
+    print("Cleaning up actors...")
+    for actor in actor_list:
+        actor.destroy()
+    print("Done, Actors cleaned-up successfully!")
