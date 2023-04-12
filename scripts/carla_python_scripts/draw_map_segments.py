@@ -73,27 +73,31 @@ def ingest_points_from_map_data(intersection_map_json):
     intersectionID = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["intersectionID"]
     referenceLat = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"]
     referenceLon = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"]
-    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"]
+    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"][
+        "referenceElevation"]
+
+    print("Intersection ID: %s"%(intersectionID))
+    print("Reference Point: %f deg %f deg %f m"%(referenceLat, referenceLon, referenceElevation))
 
     approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
+
     return list(approachList.map(lambda approach:
-        approach["drivingLanes"].map(lambda lane:
-        laneNodeList = lane["laneNodes"]
-        segmentPairs = list(zip(laneNodeList[:-1], laneNodeList[1:]))
-
-
-        for laneNode in lane["laneNodes"]:
-            nodeLat = laneNode["nodeLat"]
-            nodeLong = laneNode["nodeLong"]
-            nodeElev = laneNode["nodeElev"]
-            segment_list.append(Segment(
-                "approachID-approachID-laneID-laneID",
-                A2a[0], A2a[1],
-                B4a[0], B4a[1],
-                CarlaColor.GREEN if approach["approachType"] == "Ingress" else CarlaColor.ORANGE
-    ))
-
-    ))
+                                 approach["drivingLanes"].map(lambda lane:
+                                                              list(zip(lane["laneNodes"][:-1],
+                                                                       lane["laneNodes"][1:])).  # segmentPairs
+                                                              map(lambda segmentPair: Segment(
+                                                                  "approachID-%s-laneID-%s" % (
+                                                                  approach["approachID"], lane["laneID"]),
+                                                                  segmentPair[0]["nodeLat"], segmentPair[0]["nodeLong"],
+                                                                  segmentPair[0]["nodeElev"],
+                                                                  segmentPair[1]["nodeLat"], segmentPair[1]["nodeLong"],
+                                                                  segmentPair[1]["nodeElev"],
+                                                                  CarlaColor.GREEN if approach["approachType"] == "Ingress" else CarlaColor.ORANGE
+                                                                )
+                                                              )
+                                                              )
+                                 )
+                )
 
 def draw_segment_list(segmentList):
     for segment in segmentList:
