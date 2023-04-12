@@ -17,8 +17,10 @@ from enum import Enum
 
 class CarlaColor:
     GRAY = carla.Color(r=102,g=153,b=204)
-
-
+    GREEN = carla.Color(r=0,g=106,b=78)
+    YELLOW = carla.Color(r=255,g=225,b=53)
+    RED = carla.Color(r=227,g=0,b=34)
+    ORGANGE = carla.Color(r=255,g=103,b=0)
 
 class Segment:
     def __init__(self, segment_name, startx, starty, startz, endx, endy, endz, color):
@@ -46,9 +48,11 @@ try:
     debug = world.debug
     switch
         line_list = generate_points()
+        draw_segment_list()
     case
         intersection_map_json = ingest_map_data_from_map_file()
-        intersection_map_points = ingest_points_from_map_data(intersection_map_json)
+        intersection_map_segment_list = ingest_points_from_map_data(intersection_map_json)
+        draw_segment_list(intersection_map_segment_list)
 
 
 finally:
@@ -66,29 +70,18 @@ def ingest_map_data_from_map_file(intersection_map_json_filename):
     return json.load(intersection_map_json_filename)
 
 def ingest_points_from_map_data(intersection_map_json):
-    # intersection_map_points = \
-intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]
-intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"]
-intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"]
-intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"]
+    intersectionID = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["intersectionID"]
+    referenceLat = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"]
+    referenceLon = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"]
+    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"]
 
-intersection_map_json["mapData"]["intersectionGeometry"]["verifiedPoint"]
-intersection_map_json["mapData"]["intersectionGeometry"]["verifiedPoint"]["verifiedMapLat"]
-intersection_map_json["mapData"]["intersectionGeometry"]["verifiedPoint"]["verifiedMapLon"]
-intersection_map_json["mapData"]["intersectionGeometry"]["verifiedPoint"]["verifiedMapElevation"]
+    approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
+    return list(approachList.map(lambda approach:
+        approach["drivingLanes"].map(lambda lane:
+        laneNodeList = lane["laneNodes"]
+        segmentPairs = list(zip(laneNodeList[:-1], laneNodeList[1:]))
 
-intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]
-intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
-intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]["approachType"]
-intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]["drivingLanes"]
 
-segment_list=[]
-approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
-for approach in approachList:
-    approachID = approach["approachID"]
-    approachType = approach["approachType"]
-    for lane in approach["drivingLanes"]:
-        laneID = lane["laneID"]
         for laneNode in lane["laneNodes"]:
             nodeLat = laneNode["nodeLat"]
             nodeLong = laneNode["nodeLong"]
@@ -97,11 +90,10 @@ for approach in approachList:
                 "approachID-approachID-laneID-laneID",
                 A2a[0], A2a[1],
                 B4a[0], B4a[1],
-                gray
-            ))
+                CarlaColor.GREEN if approach["approachType"] == "Ingress" else CarlaColor.ORANGE
+    ))
 
-
-    return intersection_map_points
+    ))
 
 def draw_segment_list(segmentList):
     for segment in segmentList:
