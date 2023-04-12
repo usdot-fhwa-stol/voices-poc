@@ -4,7 +4,6 @@
 import sys
 import numpy as np
 import json
-from enum import Enum
 import itertools
 
 # Import CARLA API and locate the active runtime
@@ -17,7 +16,7 @@ import carla
 ## Types
 ################################################################################
 
-class CarlaColor(Enum):
+class CarlaColor:
     GRAY = carla.Color(r=102,g=153,b=204)
     GREEN = carla.Color(r=0,g=106,b=78)
     YELLOW = carla.Color(r=255,g=225,b=53)
@@ -44,12 +43,12 @@ def ingest_map_data_from_map_file(intersection_map_json_filename):
 
 def ingest_points_from_map_data(intersection_map_json):
     intersectionID = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["intersectionID"]
-    referenceLat = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"]
-    referenceLon = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"]
-    referenceElevation = intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"]
+    referenceLat = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLat"])
+    referenceLon = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"])
+    referenceElevation = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"])
 
     print("Intersection ID: %s"%(intersectionID))
-    print("Reference Point: %s deg %s deg %s m"%(referenceLat, referenceLon, referenceElevation))
+    print("Reference Point: %f deg %f deg %f m"%(referenceLat, referenceLon, referenceElevation))
 
     approachList = intersection_map_json["mapData"]["intersectionGeometry"]["laneList"]["approach"]
     segmentList = list(map(lambda approach:
@@ -78,13 +77,15 @@ def draw_segment_list(segmentList):
     for segment in segmentList:
         draw_line_segment(segment)
 
-def draw_line_segment(segment):
+def draw_line_segment(segment, referenceOffset):
     strt_point = carla.Location(x=segment.startx, y=segment.starty, z=segment.startz)
     stop_point = carla.Location(x=segment.endx, y=segment.endy, z=segment.endz)
 
     print("Drawing segment: " + segment.segment_name)
     print("strt_point (x,y,z): " + str(strt_point))
     print("stop_point (x,y,z): " + str(stop_point))
+
+    print("type of segment.color: %s"%(type(segment.color)))
 
     debug.draw_line(strt_point, stop_point, 0.3, segment.color, 0)
 
