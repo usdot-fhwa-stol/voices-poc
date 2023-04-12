@@ -101,33 +101,36 @@ def main():
     try:
         world = client.get_world()
 
-        traffic_lights_to_blank_locs = [
-            [249.8,-163.4,0],
-            [251.7,-180.3,0],
-            [262.2,-165.6,0],
-            [262.5,-175.9,0],
+        # traffic_lights_to_blank_locs = [
+        #     [249.8,-163.4,0],
+        #     [251.7,-180.3,0],
+        #     [262.2,-165.6,0],
+        #     [262.5,-175.9,0],
 
-        ]
+        # ]
 
         carla_actors = world.get_actors().filter("traffic.traffic_light*")
         for actor in carla_actors:
             actor_loc = actor.get_location()
             actor_loc_array = [actor_loc.x, actor_loc.y, actor_loc.z]
             
-            for tl_loc in traffic_lights_to_blank_locs:
-                dist_from_target_loc = get_dist_3d(actor_loc_array,tl_loc)
-                if dist_from_target_loc < 5:
+            # -- This for loop can be used to only blank specific signals in the array above
+            # -- locations are specified as actor IDs are reset when carla and OpenCDA join CARLA
+            # for tl_loc in traffic_lights_to_blank_locs:
+                
+                # dist_from_target_loc = get_dist_3d(actor_loc_array,tl_loc)
+                # if dist_from_target_loc < 5:
                     
-                    actor.set_green_time(99999999999)
-                    actor.set_yellow_time(99999999999)
-                    actor.set_red_time(99999999999)
-                    actor.set_state(carla.TrafficLightState.Off)
+            actor.set_green_time(99999999999)
+            actor.set_yellow_time(99999999999)
+            actor.set_red_time(99999999999)
+            actor.set_state(carla.TrafficLightState.Off)
             
         
 
     finally:
 
-
+        print('\n----- SUCCESSFULLY BLANKED SIGNALS -----\n')
         time.sleep(0.5)
 
 if __name__ == '__main__':
