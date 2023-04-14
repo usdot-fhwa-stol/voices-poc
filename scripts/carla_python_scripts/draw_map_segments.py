@@ -4,7 +4,6 @@
 import sys
 import numpy as np
 import json
-from enum import Enum
 import itertools
 
 # Import CARLA API and locate the active runtime
@@ -17,7 +16,7 @@ import carla
 ## Types
 ################################################################################
 
-class CarlaColor(Enum):
+class CarlaColor:
     GRAY = carla.Color(r=102,g=153,b=204)
     GREEN = carla.Color(r=0,g=106,b=78)
     YELLOW = carla.Color(r=255,g=225,b=53)
@@ -47,7 +46,7 @@ def get_reference_point_in_carla_coordinates(intersection_map_json):
     referenceLon = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceLon"])
     referenceElevation = float(intersection_map_json["mapData"]["intersectionGeometry"]["referencePoint"]["referenceElevation"])
     referencePointLatLon = carla.GeoLocation(referenceLat, referenceLon, referenceElevation)
-    referencePointXYZ = carla.Location(0,0,0)
+    referencePointXYZ = carla.Location(262, -183, 1)
     # referencePointXYZ = world.get_map().transform_to_xyz(referencePointLatLon)
     # https://github.com/carla-simulator/carla/issues/2737
     # <geoReference>+proj=tmerc +lat_0=49 +lon_0=8 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs </geoReference>
@@ -83,6 +82,9 @@ def ingest_points_from_map_data(intersection_map_json):
     segmentList = list(itertools.chain.from_iterable(segmentList))
     segmentList = list(itertools.chain.from_iterable(segmentList))
 
+    for segment in segmentList: 
+        print("Segment sx %f ex %f "%(segment.startx, segment.endx))
+
     return segmentList
 
 def draw_segment_list(segmentList, translation):
@@ -90,8 +92,13 @@ def draw_segment_list(segmentList, translation):
         draw_line_segment(segment, translation)
 
 def draw_line_segment(segment, translation):
-    strt_point = carla.Location(x=segment.startx, y=segment.starty, z=segment.startz) + translation
-    stop_point = carla.Location(x=segment.endx, y=segment.endy, z=segment.endz) + translation
+
+    translation=carla.Location(x=47910.277344, y=-118664.242188, z=0)
+    translation = translation + carla.Location(x=266.524994, y=-172.725006, z=1.000000)
+    scalingfactor = 10000
+
+    strt_point = (carla.Location(x=segment.startx, y=segment.starty, z=0) * scalingfactor) + translation
+    stop_point = (carla.Location(x=segment.endx, y=segment.endy, z=0) * scalingfactor) + translation
 
     print("Drawing segment: " + segment.segment_name)
     print("strt_point (x,y,z): " + str(strt_point))
@@ -103,8 +110,8 @@ def draw_line_segment(segment, translation):
     stop_point_geo = world.get_map().transform_to_geolocation(stop_point)
 
     print("Drawing segment: " + segment.segment_name)
-    print("strt_point (lat/lon): " + str(strt_point_geo))
-    print("stop_point (lat/lon): " + str(stop_point_geo))
+    # print("strt_point (lat/lon): " + str(strt_point_geo))
+    # print("stop_point (lat/lon): " + str(stop_point_geo))
 
 def generate_points():
     lane_width=3.5
