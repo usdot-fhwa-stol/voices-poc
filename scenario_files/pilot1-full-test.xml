@@ -12,7 +12,7 @@
   <vehicles>
 
     <vehicle name="NISSAN-SVM" bsmid="f03ad614" type="vehicle.nissan.micra" owner="CARLA-NISSAN" material="Aluminum" lvcIndicator="Live">
-      <userData><CARLA manual="true" generate_bsms="false" ></CARLA></userData>
+      <userData><CARLA manual="true" generate_bsms="true" ></CARLA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.002066" longitudeInDegrees="0.002291" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>180</Heading>
