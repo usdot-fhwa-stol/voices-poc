@@ -1,0 +1,51 @@
+{% set name = "pycrate" %}
+{% set version = "0.5.5" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 59f09331890a389a6b98412f19f4fb021c5a75a35ab07bf5ba0d1e299a0967af
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - pip
+    - python
+  run:
+    - python
+
+test:
+  imports:
+    - pycrate_asn1c
+    - pycrate_asn1dir
+    - pycrate_asn1rt
+    - pycrate_core
+    - pycrate_corenet
+    - pycrate_crypto
+    - pycrate_csn1
+    - pycrate_csn1dir
+    - pycrate_diameter
+    - pycrate_ether
+    - pycrate_media
+    - pycrate_mobile
+    - pycrate_osmo
+    - pycrate_sys
+
+about:
+  home: "https://github.com/P1sec/pycrate/"
+  license: LGPL v2.1+
+  license_family: LGPL
+  license_file: 
+  summary: "A software suite to handle various data and protocol formats"
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here

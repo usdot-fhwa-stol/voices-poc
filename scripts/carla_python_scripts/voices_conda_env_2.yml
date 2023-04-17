@@ -1,0 +1,11 @@
+name: voices-2
+channels:
+  - defaults
+dependencies:
+  - pip
+  - python==3.8.16
+  - pip:
+    - numpy
+    - pandas
+    - pygame
+    - pycrate
