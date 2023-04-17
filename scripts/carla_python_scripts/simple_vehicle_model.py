@@ -6,6 +6,7 @@ import argparse
 import pygame
 import json
 import numpy as np
+import pandas as pd
 
 from find_carla_egg import find_carla_egg
 
@@ -175,7 +176,7 @@ if __name__ == '__main__':
             
             
             # if we still cant find the vehicle, exit
-            if not current_vehicle:
+            if not vehicle:
                 print("SVM VEHICLE NOT FOUND")
                 sys.exit()
             
@@ -195,6 +196,10 @@ if __name__ == '__main__':
             opp_stop_bar_point = np.array(vehicle_cfg['oppositeStopBar'])
 
             start_vector = opp_stop_bar_point - start_point
+
+            scenario_results_header = pd.DataFrame([],columns=["Scenario_#","initial_distance_to_entry_lane_stop_bar","speed (mph)","Dist_at_red (m)"])
+
+            scenario_results_header.to_csv("test.csv")
 
             try:
                 while reached_end == False:
@@ -317,10 +322,27 @@ if __name__ == '__main__':
 
                             
                 vehicle.enable_constant_velocity(carla.Vector3D(x=0.0, y=0.0, z=0.0))
+
+                print("Writing results to csv")
+                scenario_results = {
+                    "Scenario_#": [str(cfg_i + 1)],
+                    "initial_distance_to_entry_lane_stop_bar": [str(scenario_dist_to_stopbar)],
+                    "speed (mph)": [str(vehicle_cfg["targetSpeedMPH"])],
+                    "Dist_at_red (m)": [str(dist_from_int_exit_at_red)]
+                }
+
+                df = pd.DataFrame(scenario_results)
+
+                df.to_csv("test.csv", mode="a", index=False, header=False)
+
+
                 time.sleep(3)
             except  KeyboardInterrupt:
                 print('\nCancelled by user. Bye!')
                 break
+
+            except Exception as err_msg:
+                print(err_msg)
                 
 
 

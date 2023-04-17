@@ -11,7 +11,7 @@
 
   <vehicles>
 
-    <vehicle name="TFHRC-MANUAL-1" bsmid="f03ad618" type="vehicle.mustang.mustang" owner="CARLA-TFHRC-1" material="Aluminum" lvcIndicator="Live">
+    <!-- <vehicle name="TFHRC-MANUAL-1" bsmid="f03ad618" type="vehicle.mustang.mustang" owner="CARLA-TFHRC-1" material="Aluminum" lvcIndicator="Live">
       <userData><CARLA manual="true"></CARLA></userData>
       <initialTSPI>
         
@@ -26,15 +26,15 @@
         <GeodeticPosition latitudeInDegrees="0.00010" longitudeInDegrees="0.00008" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
         <Heading>0</Heading>
       </initialTSPI>
-    </vehicle>
+    </vehicle> -->
 
-    <vehicle name="TFHRC-CAR-1" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-1" material="Aluminum" lvcIndicator="Live">
+    <!-- <vehicle name="TFHRC-CAR-1" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-1" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-1" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.002066" longitudeInDegrees="0.002291" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>0</Heading>
       </initialTSPI>
-    </vehicle>
+    </vehicle> -->
 
     <vehicle name="TFHRC-CAR-2" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-2" roleName="ego_vehicle"></CARMA></userData>
@@ -44,13 +44,13 @@
       </initialTSPI>
     </vehicle>
 
-    <vehicle name="ECON-MANUAL-1" bsmid="f03ad621" type="vehicle.seat.leon" owner="CARLA-ECON" material="Aluminum" lvcIndicator="Live">
+    <!-- <vehicle name="ECON-MANUAL-1" bsmid="f03ad621" type="vehicle.seat.leon" owner="CARLA-ECON" material="Aluminum" lvcIndicator="Live">
       <userData><CARLA manual="true"></CARLA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.00010" longitudeInDegrees="0.00008" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
         <Heading>0</Heading>
       </initialTSPI>
-    </vehicle>
+    </vehicle> -->
 
     <!-- <vehicle name="UCLA-MANUAL-1" bsmid="f03ad622" type="vehicle.chevrolet.impala" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
       <userData><CARLA manual="true"></CARLA></userData>
