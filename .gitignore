@@ -7,3 +7,6 @@ scripts/collect_logs/log_files
 
 #ignore carla script pycache
 scripts/carla_python_scripts/__pycache__/
+
+.idea/
+

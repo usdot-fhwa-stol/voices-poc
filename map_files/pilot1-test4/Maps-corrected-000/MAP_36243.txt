@@ -1,0 +1,697 @@
+{
+  "mapData": {
+    "minuteOfTheYear": 137680,
+    "layerType": "intersectionData",
+    "intersectionGeometry": {
+      "referencePoint": {
+        "descriptiveIntersctionName": "Carla lane and Sumo blvd.",
+        "intersectionID": "36243",
+        "msgCount": "3",
+        "masterLaneWidth": "366",
+        "referenceLat": 0.0,
+        "referenceLon": 0.0,
+        "referenceElevation": "0"
+      },
+      "referencePointChild": {},
+      "verifiedPoint": {
+        "verifiedMapLat": 0.0,
+        "verifiedMapLon": 0.0,
+        "verifiedMapElevation": "0",
+        "verifiedSurveyedLat": "0.0",
+        "verifiedSurveyedLon": "0.0",
+        "verifiedSurveyedElevation": "0"
+      },
+      "laneList": {
+        "approach": [
+          {
+            "approachType": "Ingress",
+            "approachID": "06",
+            "drivingLanes": [
+              {
+                "laneID": "06",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "1",
+                    "remoteID": "",
+                    "fromLane": "06",
+                    "toLane": "7",
+                    "signal_id": "6",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "2",
+                    "remoteID": "",
+                    "fromLane": "06",
+                    "toLane": "1",
+                    "signal_id": "6",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "3",
+                    "remoteID": "",
+                    "fromLane": "06",
+                    "toLane": "3",
+                    "signal_id": "6",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.790942096377758,
+                    "nodeLong": 11.866006272035419,
+                    "nodeElev": "16",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.790947442052865,
+                    "nodeLong": 11.866314726070378,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.790952787728022,
+                    "nodeLong": 11.866623180107133,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.790955460565531,
+                    "nodeLong": 11.866942362980247,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.790955460565531,
+                    "nodeLong": 11.867253499225642,
+                    "nodeElev": 14,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 5,
+                    "nodeLat": -4.7909581334030396,
+                    "nodeLong": 11.867575364307395,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 6,
+                    "nodeLat": -4.7909581334030396,
+                    "nodeLong": 11.867897229390048,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 7,
+                    "nodeLat": -4.7909581334030396,
+                    "nodeLong": 11.868211047844087,
+                    "nodeElev": 17,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 8,
+                    "nodeLat": -4.790960806240536,
+                    "nodeLong": 11.8685302307172,
+                    "nodeElev": 18,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Egress",
+            "approachID": "05",
+            "drivingLanes": [
+              {
+                "laneID": "05",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "",
+                    "remoteID": "",
+                    "toLane": "",
+                    "signal_id": "",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.791020945081794,
+                    "nodeLong": 11.866008283690325,
+                    "nodeElev": "16",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.7910276271748975,
+                    "nodeLong": 11.8664246966408,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.791029798855421,
+                    "nodeLong": 11.866849491490918,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.791029798855421,
+                    "nodeLong": 11.866849491490918,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.791029798855421,
+                    "nodeLong": 11.866849491490918,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 5,
+                    "nodeLat": -4.79103297284933,
+                    "nodeLong": 11.867256181435181,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 6,
+                    "nodeLat": -4.79103297284933,
+                    "nodeLong": 11.867677288250102,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 7,
+                    "nodeLat": -4.791035645686623,
+                    "nodeLong": 11.868082301811386,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 8,
+                    "nodeLat": -4.791040991361005,
+                    "nodeLong": 11.86852486629902,
+                    "nodeElev": 18,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Ingress",
+            "approachID": "04",
+            "drivingLanes": [
+              {
+                "laneID": "04",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "1",
+                    "remoteID": "",
+                    "fromLane": "04",
+                    "toLane": "5",
+                    "signal_id": "4",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "2",
+                    "remoteID": "",
+                    "fromLane": "04",
+                    "toLane": "7",
+                    "signal_id": "4",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "3",
+                    "remoteID": "",
+                    "fromLane": "04",
+                    "toLane": "1",
+                    "signal_id": "4",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.791071728988113,
+                    "nodeLong": 11.865956651165241,
+                    "nodeElev": "16",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.791353713240978,
+                    "nodeLong": 11.865955310063168,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.791629015290451,
+                    "nodeLong": 11.865951286749757,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.791898971561322,
+                    "nodeLong": 11.86594860454022,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.7921710994023625,
+                    "nodeLong": 11.865948269262004,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Egress",
+            "approachID": "03",
+            "drivingLanes": [
+              {
+                "laneID": "03",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "",
+                    "remoteID": "",
+                    "toLane": "",
+                    "signal_id": "",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.791069891412735,
+                    "nodeLong": 11.865891942871576,
+                    "nodeElev": "16",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.791348367569053,
+                    "nodeLong": 11.865886913733409,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.791620996785673,
+                    "nodeLong": 11.8658828904191,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.791898971561322,
+                    "nodeLong": 11.865878867105689,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.792168426569612,
+                    "nodeLong": 11.865873167409296,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Ingress",
+            "approachID": "02",
+            "drivingLanes": [
+              {
+                "laneID": "02",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "1",
+                    "remoteID": "",
+                    "fromLane": "02",
+                    "toLane": "3",
+                    "signal_id": "2",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "2",
+                    "remoteID": "",
+                    "fromLane": "02",
+                    "toLane": "5",
+                    "signal_id": "2",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "3",
+                    "remoteID": "",
+                    "fromLane": "02",
+                    "toLane": "7",
+                    "signal_id": "2",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.791030300012114,
+                    "nodeLong": 11.865837292865926,
+                    "nodeElev": "16",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.7910276271748975,
+                    "nodeLong": 11.865571754173704,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.791024954337656,
+                    "nodeLong": 11.865308897690122,
+                    "nodeElev": 16,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.791026290756277,
+                    "nodeLong": 11.865048723416077,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.791023617919035,
+                    "nodeLong": 11.864797936872725,
+                    "nodeElev": 14,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 5,
+                    "nodeLat": -4.79101960866316,
+                    "nodeLong": 11.864524351553683,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 6,
+                    "nodeLat": -4.791018272244527,
+                    "nodeLong": 11.864276247219868,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 7,
+                    "nodeLat": -4.791018272244527,
+                    "nodeLong": 11.864010708526749,
+                    "nodeElev": 12,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 8,
+                    "nodeLat": -4.791016935825804,
+                    "nodeLong": 11.863761263088163,
+                    "nodeElev": 12,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Egress",
+            "approachID": "01",
+            "drivingLanes": [
+              {
+                "laneID": "01",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "",
+                    "remoteID": "",
+                    "toLane": "",
+                    "signal_id": "",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.790942096377758,
+                    "nodeLong": 11.865839975074566,
+                    "nodeElev": "15",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.790942096377758,
+                    "nodeLong": 11.8655851652187,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.79093808712131,
+                    "nodeLong": 11.865318285421708,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.790931405027328,
+                    "nodeLong": 11.864803301290904,
+                    "nodeElev": 14,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.790931405027328,
+                    "nodeLong": 11.864533739285271,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 5,
+                    "nodeLat": -4.790931405027328,
+                    "nodeLong": 11.864282952741917,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 6,
+                    "nodeLat": -4.790930068608529,
+                    "nodeLong": 11.864022778467874,
+                    "nodeElev": 12,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 7,
+                    "nodeLat": -4.7909233865144705,
+                    "nodeLong": 11.863769309715881,
+                    "nodeElev": 12,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Ingress",
+            "approachID": "08",
+            "drivingLanes": [
+              {
+                "laneID": "08",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "1",
+                    "remoteID": "",
+                    "fromLane": "08",
+                    "toLane": "1",
+                    "signal_id": "8",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "2",
+                    "remoteID": "",
+                    "fromLane": "08",
+                    "toLane": "3",
+                    "signal_id": "8",
+                    "maneuvers": []
+                  },
+                  {
+                    "connectionId": "3",
+                    "remoteID": "",
+                    "fromLane": "08",
+                    "toLane": "5",
+                    "signal_id": "8",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.790908685907212,
+                    "nodeLong": 11.865891607598751,
+                    "nodeElev": "15",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.790628037890085,
+                    "nodeLong": 11.865892278150687,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.790339371238044,
+                    "nodeLong": 11.865893619255457,
+                    "nodeElev": 14,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.790064068669212,
+                    "nodeLong": 11.865897642568866,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.789770891358058,
+                    "nodeLong": 11.865899989499294,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Egress",
+            "approachID": "07",
+            "drivingLanes": [
+              {
+                "laneID": "07",
+                "descriptiveName": "",
+                "laneType": "Vehicle",
+                "typeAttributes": [],
+                "sharedWith": [],
+                "connections": [
+                  {
+                    "connectionId": "",
+                    "remoteID": "",
+                    "toLane": "",
+                    "signal_id": "",
+                    "maneuvers": []
+                  }
+                ],
+                "laneManeuvers": [],
+                "laneNodes": [
+                  {
+                    "nodeNumber": 0,
+                    "nodeLat": -4.790908685907212,
+                    "nodeLong": 11.865957321717177,
+                    "nodeElev": "15",
+                    "laneWidthDelta": "0"
+                  },
+                  {
+                    "nodeNumber": 1,
+                    "nodeLat": -4.790632047148263,
+                    "nodeLong": 11.865960674481345,
+                    "nodeElev": 15,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 2,
+                    "nodeLat": -4.790343380497901,
+                    "nodeLong": 11.865966038898629,
+                    "nodeElev": 14,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 3,
+                    "nodeLat": -4.79005872298721,
+                    "nodeLong": 11.865970062212934,
+                    "nodeElev": 13,
+                    "laneWidthDelta": 0
+                  },
+                  {
+                    "nodeNumber": 4,
+                    "nodeLat": -4.789772728937011,
+                    "nodeLong": 11.865974085523648,
+                    "nodeElev": 14,
+                    "laneWidthDelta": 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "approachType": "Crosswalk",
+            "approachID": -1,
+            "crosswalkLanes": []
+          }
+        ]
+      }
+    },
+    "spatData": {
+      "intersections": {
+        "status": "00",
+        "states": []
+      }
+    }
+  },
+  "messageType": "Map",
+  "nodeOffsets": "Tight",
+  "enableElevation": true
+}
