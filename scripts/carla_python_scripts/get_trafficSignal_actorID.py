@@ -1,32 +1,12 @@
 import glob
 import os
 import sys
-from os.path import expanduser
 
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+from find_carla_egg import find_carla_egg
 
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-    
-try:
-    
-    sys.path.append(glob.glob(expanduser("~") + '/carla/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+carla_egg_file = find_carla_egg()
+
+sys.path.append(carla_egg_file)
 
 import carla
 
@@ -40,7 +20,8 @@ try:
     traffic_light_list = world.get_actors().filter('traffic.traffic_light*')
     # Print all index corresponding to all traffic lights in scene (CarlaUE4)
     for index, light in enumerate(traffic_light_list, start=1):
-        world.debug.draw_string(light.get_location(), str(index-1), draw_shadow=False,
+        print(light.id)
+        world.debug.draw_string(light.get_location(), str(light.id), draw_shadow=False,
                                              color=carla.Color(r=255, g=0, b=0), life_time=200,
                                              persistent_lines=True)
     ################################################################################################

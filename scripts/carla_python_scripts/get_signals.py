@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -13,63 +13,11 @@ import os
 import sys
 import time
 
-import fnmatch
-from os.path import expanduser
+from find_carla_egg import find_carla_egg
 
-def find_file(pattern, path):
-    result = []
-    for root, dirs, files in os.walk(path):
-        for name in files:
-            if fnmatch.fnmatch(name, pattern):
-                result.append(os.path.join(root, name))
-    return result      
+carla_egg_file = find_carla_egg()
 
-#this looks for the carla python API .egg file in the directory above the executed directory
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-#this looks for the carla python API .egg file in ~/carla
-try:
-    
-    carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
-    print("Looking for CARLA egg: " + carla_egg_name)
-    carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
-    print("Found carla egg(s): " + str(carla_egg_locations))
-
-    if len(carla_egg_locations) == 1:
-        carla_egg_to_use = carla_egg_locations[0]
-    else:
-        print("\nFound multiple carla egg files: ")
-        for i,egg_found in enumerate(carla_egg_locations):
-            print("[" + str(i+1) + "]    " + egg_found)
-
-        egg_selected = input("\nSelect a carla egg file to use: ")
-
-        try:
-            egg_selected = int(egg_selected)
-        except:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-        if (egg_selected <= len(carla_egg_locations)):
-            carla_egg_to_use = carla_egg_locations[egg_selected-1]
-        else:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-    sys.path.append(carla_egg_to_use)
-
-    #sys.path.append(glob.glob(expanduser("~") + '/carla/CARLA_0.9.10_TFHRC_Ubuntu_20220301/LinuxNoEditor/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-    #    sys.version_info.major,
-    #    sys.version_info.minor,
-    #    'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+sys.path.append(carla_egg_file)
 
 import carla
 
@@ -147,47 +95,36 @@ def main():
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-    vehicles_list = []
-    walkers_list = []
-    all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = False
-    random.seed(args.seed if args.seed is not None else int(time.time()))
 
-    try:
-        world = client.get_world()
-        print("Available Maps: " + ', '.join(client.get_available_maps()))
-        
-        #world = client.load_world('/Game/Carla/Maps/Carla_v14_10_1_2021')
-        #world = client.get_world()
-        
-        #client = carla.Client()
-        #client.set_timeout(10.0)
-        
-        print(world.get_actors().filter('traffic.traffic_light*'))
+    
+    while True:
+        try:
+            world = client.get_world()
+            trafficlights = world.get_actors().filter('traffic.traffic_light*')
 
-        trafficlights = world.get_actors().filter('traffic.traffic_light*')
-        #print("TrafficLights:" + ', '.join(trafficlights))
-        print(dir(trafficlights[0]))
-        for light in trafficlights:
-            print(light.get_group_traffic_lights())
+            traffic_light_id_list = [93,99,110,97]
+            status_string = ""
+            for light in trafficlights:
+                
+                if light.id in traffic_light_id_list:
+                    status_string = f"{status_string}| ID: {light.id} = \t{light.state}\t|"
+                
+            print(status_string)
+            time.sleep(0.25)
             
-            
+        except Exception as err_msg:
+            print(str(err_msg))
+            sys.exit()
         
-
-    finally:
-
-        if args.sync and synchronous_master:
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
-
-        print('\nENDING')
+# phase actor signid
+# 2 -> 195 (93) -> 1629
+# 6 -> 182 (99) -> 1627
+# 4 -> 178 (110) -> 1628
+# 8 -> 184 (97) -> 1626
 
 
-        time.sleep(0.5)
 
 if __name__ == '__main__':
 

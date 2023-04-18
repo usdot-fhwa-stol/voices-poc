@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -12,63 +12,13 @@ import glob
 import os
 import sys
 import time
-import fnmatch
-from os.path import expanduser
+import pygame
 
-def find_file(pattern, path):
-    result = []
-    for root, dirs, files in os.walk(path):
-        for name in files:
-            if fnmatch.fnmatch(name, pattern):
-                result.append(os.path.join(root, name))
-    return result      
+from find_carla_egg import find_carla_egg
 
-#this looks for the carla python API .egg file in the directory above the executed directory
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+carla_egg_file = find_carla_egg()
 
-#this looks for the carla python API .egg file in ~/carla
-try:
-    
-    carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
-    print("Looking for CARLA egg: " + carla_egg_name)
-    carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
-    print("Found carla egg(s): " + str(carla_egg_locations))
-
-    if len(carla_egg_locations) == 1:
-        carla_egg_to_use = carla_egg_locations[0]
-    else:
-        print("\nFound multiple carla egg files: ")
-        for i,egg_found in enumerate(carla_egg_locations):
-            print("[" + str(i+1) + "]    " + egg_found)
-
-        egg_selected = input("\nSelect a carla egg file to use: ")
-
-        try:
-            egg_selected = int(egg_selected)
-        except:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-        if (egg_selected <= len(carla_egg_locations)):
-            carla_egg_to_use = carla_egg_locations[egg_selected-1]
-        else:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-    sys.path.append(carla_egg_to_use)
-
-    #sys.path.append(glob.glob(expanduser("~") + '/carla/CARLA_0.9.10_TFHRC_Ubuntu_20220301/LinuxNoEditor/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-    #    sys.version_info.major,
-    #    sys.version_info.minor,
-    #    'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+sys.path.append(carla_egg_file)
 
 import carla
 
@@ -123,10 +73,6 @@ def main():
         type=int,
         help='port to communicate with TM (default: 8000)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
-        help='Synchronous mode execution')
-    argparser.add_argument(
         '--hybrid',
         action='store_true',
         help='Enanble')
@@ -149,7 +95,7 @@ def main():
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = False
+    synchronous_master = True
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
@@ -157,6 +103,7 @@ def main():
 
         ### Simulation time that goes by between simulation steps ###
         settings = world.get_settings()
+        print("\n----- SETTING TIME MODE -----")
         print("fixed_delta_seconds before: " + str(settings.fixed_delta_seconds))
         print("synchronous_mode before: " + str(settings.synchronous_mode))
         settings.synchronous_mode = True # True
@@ -167,6 +114,8 @@ def main():
         settings = world.get_settings()
         print("fixed_delta_seconds after: " + str(settings.fixed_delta_seconds))
         print("synchronous_mode after: " + str(settings.synchronous_mode))
+
+        print('\n----- SUCCESSFULLY SET TIME MODE, CONTINUOUSLY TICKING WORLD -----\n')
         
         # t_diff = 0.0417
 
@@ -192,18 +141,18 @@ def main():
             #print("need to sleep: " + str(additional_sleep))
             #time.sleep(additional_sleep)
             #time.sleep(1)
+
+            
         
 
     finally:
 
-        if args.sync and synchronous_master:
+        if synchronous_master:
             print('\nENDING SYNCHRONOUS MODE')
             settings = world.get_settings()
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
             world.apply_settings(settings)
-
-        print('\nENDING')
 
 
         time.sleep(0.5)
@@ -214,5 +163,3 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
-    finally:
-        print('\ndone.')

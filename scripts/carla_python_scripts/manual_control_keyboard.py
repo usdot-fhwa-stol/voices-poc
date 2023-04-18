@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -60,63 +60,11 @@ import glob
 import os
 import sys
 
-import fnmatch
-from os.path import expanduser
+from find_carla_egg import find_carla_egg
 
-def find_file(pattern, path):
-    result = []
-    for root, dirs, files in os.walk(path):
-        for name in files:
-            if fnmatch.fnmatch(name, pattern):
-                result.append(os.path.join(root, name))
-    return result      
+carla_egg_file = find_carla_egg()
 
-#this looks for the carla python API .egg file in the directory above the executed directory
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-#this looks for the carla python API .egg file in ~/carla
-try:
-    
-    carla_egg_name = 'carla-*' + str(sys.version_info.major) + '.' + str(sys.version_info.minor) + '-' + str('win-amd64' if os.name == 'nt' else 'linux-x86_64') + '.egg'
-    print("Looking for CARLA egg: " + carla_egg_name)
-    carla_egg_locations = find_file(carla_egg_name,expanduser("~") + '/carla')
-    print("Found carla egg(s): " + str(carla_egg_locations))
-
-    if len(carla_egg_locations) == 1:
-        carla_egg_to_use = carla_egg_locations[0]
-    else:
-        print("\nFound multiple carla egg files: ")
-        for i,egg_found in enumerate(carla_egg_locations):
-            print("[" + str(i+1) + "]    " + egg_found)
-
-        egg_selected = input("\nSelect a carla egg file to use: ")
-
-        try:
-            egg_selected = int(egg_selected)
-        except:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-        if (egg_selected <= len(carla_egg_locations)):
-            carla_egg_to_use = carla_egg_locations[egg_selected-1]
-        else:
-            print("\nInvalid selection, please try again")
-            sys.exit()
-
-    sys.path.append(carla_egg_to_use)
-
-    #sys.path.append(glob.glob(expanduser("~") + '/carla/CARLA_0.9.10_TFHRC_Ubuntu_20220301/LinuxNoEditor/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
-    #    sys.version_info.major,
-    #    sys.version_info.minor,
-    #    'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+sys.path.append(carla_egg_file)
 
 
 # ==============================================================================
@@ -228,13 +176,13 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart()
+        self.restart(args)
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
         self.constant_velocity_enabled = False
 
-    def restart(self):
+    def restart(self,args):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -266,12 +214,16 @@ class World(object):
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.player is None:
-            if not self.map.get_spawn_points():
-                print('There are no spawn points available in your map/town.')
-                print('Please add some Vehicle Spawn Point to your UE4 scene.')
-                sys.exit(1)
-            spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            if args.x and args.y and args.z:
+                spawn_point = carla.Transform(carla.Location(x=args.x,y=args.y,z=args.z),carla.Rotation(yaw=90))
+            else:
+                if not self.map.get_spawn_points():
+                    print('There are no spawn points available in your map/town.')
+                    print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                    sys.exit(1)
+                spawn_points = self.map.get_spawn_points()
+                spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
@@ -350,7 +302,7 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, client, world, clock):
+    def parse_events(self, client, world, clock, args):
         if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
         for event in pygame.event.get():
@@ -362,10 +314,10 @@ class KeyboardControl(object):
                 elif event.key == K_BACKSPACE:
                     if self._autopilot_enabled:
                         world.player.set_autopilot(False)
-                        world.restart()
+                        world.restart(args)
                         world.player.set_autopilot(True)
                     else:
-                        world.restart()
+                        world.restart(args)
                 elif event.key == K_F1:
                     world.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
@@ -1098,7 +1050,7 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
+            if controller.parse_events(client, world, clock,args):
                 return
             world.tick(clock)
             world.render(display)
@@ -1163,6 +1115,18 @@ def main():
         default=2.2,
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
+    argparser.add_argument(
+        '--x', type=float, 
+        default=255, 
+        help='x coordinate of the spawn point')
+    argparser.add_argument(
+        '--y', type=float, 
+        default=-230, 
+        help='y coordinate of the spawn point')
+    argparser.add_argument(
+        '--z', type=float, 
+        default=0.25, 
+        help='z coordinate of the spawn point')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

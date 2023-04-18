@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #  *                                                                              
 #  * Copyright (C) 2022 LEIDOS.                                              
 #  *                                                                              
@@ -146,7 +146,10 @@ for packet in packet_list:
 
         spatPhaseArray = [""] * numSpatPhases
         intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
-        intersectionName = msg()['value'][1]['intersections'][0]['name']
+        try:
+            intersectionName = msg()['value'][1]['intersections'][0]['name']
+        except:
+            intersectionName = ""
         spatTimestamp = msg()['value'][1]['intersections'][0]['timeStamp']
         instersectionPhaseArray = msg()['value'][1]['intersections'][0]['states']
         
