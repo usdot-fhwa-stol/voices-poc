@@ -19,7 +19,7 @@ function print_help {
 	echo "    --low_quality      start CARLA in low quality mode"
 	echo "    --help             show help"
 }
-. ../../../../config/node_info.config
+. ../../../config/node_info.config
 
 if [[ -f $localCarlaPath/CarlaUE4.sh ]]; then
 	echo "Found CARLA Simulator"
