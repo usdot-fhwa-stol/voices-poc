@@ -11,9 +11,9 @@
 username=$(whoami)
 
 #-------------------| LOCAL VARIABLES |-------------------#
-localTenaDir=/home/$username/tena_dev/u2004-gcc9-64/TENA 				#root directory of TENA installation
+localTenaDir=/home/$username/TENA 				#root directory of TENA installation
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
-localTenadevDir=/home/$username/tena_dev			#location of local tenadev
+localTenadevDir=/home/$username/tenadev			#location of local tenadev
 localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
 localVoicesPocDir=/home/$username/voices-poc
 numBuildJobs=4    # number of build jobs to speed up compilation
@@ -36,7 +36,7 @@ remoteCarlaDir=/home/carla
 
 middlewareVersion="MiddlewareSDK-v6.0.8"
 boostVersion="TENA_boost_1.77.0.1_Library"
-vugCombinedVersion="VUG-VOICES-Combined-v0.14.0"
+vugCombinedVersion="VUG-VOICES-Combined-v0.14.2"
 
 vugThreadsVersion="vug-threads-2.2.0"
 vugUdbProtocolioVersion="vug-udp-protocolio-2.2.1"
@@ -82,7 +82,7 @@ carlaTenaAdapterGitUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/carla-tena-ad
 if [[ $tenaAppIndex == 1 ]]; then
 	tenaApp=vug-threads
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/vug-threads.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
@@ -92,7 +92,7 @@ if [[ $tenaAppIndex == 1 ]]; then
 elif [[ $tenaAppIndex == 2 ]]; then
 	tenaApp=vug-udp-protocolio
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/vug-udp-protocolio.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
@@ -102,7 +102,7 @@ elif [[ $tenaAppIndex == 2 ]]; then
 elif [[ $tenaAppIndex == 3 ]]; then
 	tenaApp=scenario-publisher
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/scenario-publisher.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
@@ -122,7 +122,7 @@ elif [[ $tenaAppIndex == 4 ]]; then
 elif [[ $tenaAppIndex == 5 ]]; then
 	tenaApp=tena-j2735-message-adapter
 	gitCloneUrl="git@github.com:usdot-fhwa-stol/tena-j2735-message-adapter.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp 			#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
@@ -132,7 +132,7 @@ elif [[ $tenaAppIndex == 5 ]]; then
 elif [[ $tenaAppIndex == 6 ]]; then
 	tenaApp=tena-entity-generator
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/tena-entity-generator.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
@@ -142,7 +142,7 @@ elif [[ $tenaAppIndex == 6 ]]; then
 elif [[ $tenaAppIndex == 7 ]]; then
 	tenaApp=tena-traffic-light-entity-generator
 	gitCloneUrl="git@github.com:usdot-fhwa-stol/tena-traffic-light-entity-generator.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp 			#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=false
@@ -152,7 +152,7 @@ elif [[ $tenaAppIndex == 7 ]]; then
 elif [[ $tenaAppIndex == 8 ]]; then
 	tenaApp=carma-platform-tena-adapter
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/carma-platform-tena-adapter.git"
-	dockerContainer=tena:carla
+	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp	#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
 	requiresProtocolio=true
