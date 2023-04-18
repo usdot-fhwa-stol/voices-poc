@@ -1,5 +1,20 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB).
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
+"""Spawn NPCs into the simulation"""
+
+import glob
+import os
+import sys
+import time
+
+from find_carla_egg import find_carla_egg
+
 carla_egg_file = find_carla_egg()
 
 sys.path.append(carla_egg_file)
