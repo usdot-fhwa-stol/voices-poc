@@ -119,7 +119,7 @@ def main():
         spec_location = carla.Location(x=298.728577, y=-216.214294, z=46.651649)
         spec_rotation = carla.Rotation(pitch=-43.542046, yaw=144.351303, roll=0.000085)
 
-        # Set the spectator with an empty transform
+        # # Set the spectator with an empty transform
         spectator.set_transform(carla.Transform(spec_location,spec_rotation))
 
     finally:

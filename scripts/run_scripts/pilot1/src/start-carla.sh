@@ -31,12 +31,9 @@ else
 fi
 
 
-
 mkdir -p $localCarmaSimLogPath
 
 CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
-
-# set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
 
 no_tick_enabled=false
 low_quality_flag=""
