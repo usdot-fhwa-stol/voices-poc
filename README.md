@@ -1,9 +1,6 @@
 # VOICES Proof of Concept
 
 
-TODO update
-
-
 # voices-poc
 ## All Components
 CARLA

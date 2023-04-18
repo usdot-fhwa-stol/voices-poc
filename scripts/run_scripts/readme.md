@@ -21,4 +21,3 @@ This script runs the TENA SPaT Plugin for the TFHRC West Intersection.
 
 NOTE: The above scripts for the TENA SPaT Plugin assume the V2X Hub docker container name is `v2xhub` and the instructions for Installing Multiple tenaspatplugins were followed. 
 
-TODO update
