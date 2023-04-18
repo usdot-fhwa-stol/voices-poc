@@ -2,8 +2,7 @@
 
 Contains files to configure and run tests for the VOICES project.
 
-## Scenario Files
-The following files contain the details of the elements which will be used in a specific scenario. Elements can include vehicles, traffic signals, and weather.
+## Directory Structure
 
 <repository-root>
 ├── config -------------------------------------- Site configurations
