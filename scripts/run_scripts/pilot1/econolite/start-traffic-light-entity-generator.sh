@@ -1,0 +1,1 @@
+../src/start-traffic-light-entity-generator.sh
