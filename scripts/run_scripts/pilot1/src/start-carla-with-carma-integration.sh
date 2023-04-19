@@ -101,7 +101,7 @@ if [[ $carla_map == "Town04" ]]; then
 	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
 	sleep 5s
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
+	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_town_04.py
 
 	if [[ $carmaID == "TFHRC-CAR-1" ]]
 	then
@@ -117,7 +117,7 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
 	sleep 5s
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_smart_intersection.py
+	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py
 
 	if [[ $carmaID == "TFHRC-CAR-1" ]]
 	then

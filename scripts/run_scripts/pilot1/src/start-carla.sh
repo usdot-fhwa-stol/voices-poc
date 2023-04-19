@@ -91,7 +91,7 @@ python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
 if [[ $carla_map == "Town04" ]]; then
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
+	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_town_04.py
 	
 fi
 
