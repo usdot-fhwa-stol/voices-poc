@@ -119,12 +119,12 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 
 	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py
 
-	if [[ $carmaID == "TFHRC-CAR-1" ]]
+	if [[ $carmaID == "TFHRC-CAR-2" ]]
 	then
-		SPAWN_PT="44.369656, 86.320465, 1, 0, 99, 0" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
+		SPAWN_PT="44.369656, 86.320465, 1, 0, 0, 263" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
 	elif [[ $carmaID == "UCLA-OPENCDA" ]]
 	then
-		SPAWN_PT="50.003670, 43.160156, 1, 0, 99, 0" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 # 
+		SPAWN_PT="50.003670, 43.160156, 1, 0, 0, 263" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 # 
 	fi
 
 elif [[ $carla_map == "" ]]; then
