@@ -19,7 +19,11 @@ function print_help {
 	echo "    --no-tick          do not set time mode and tick simulation"
 	echo "    --low_quality      start CARLA in low quality mode"
 	echo "    --map <map name>   start carla with given map name"
+	echo "                           Currently supported maps:"
+	echo "                             - Town04"
+	echo "                             - smart_intersection"
 	echo "    --help             show help"
+	echo
 }
 . ../../../../config/node_info.config
 
@@ -73,6 +77,7 @@ do
 	elif [[ $arg == "--help" ]]; then
 		
 		print_help
+		exit
 
 	elif [[ $arg != "" ]]; then
 		
@@ -90,16 +95,11 @@ carla_pid=$!
 echo "CARLA PID: "$carla_pid
 sleep 7s
 
-if [[ $carla_map != "" ]]; then
+if [[ $carla_map == "Town04" ]]; then
+
 	echo "Changing map to: $carla_map"
 	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
 	sleep 5s
-
-fi
-
-python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
-
-if [[ $carla_map == "Town04" ]]; then
 
 	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
 
@@ -113,7 +113,11 @@ if [[ $carla_map == "Town04" ]]; then
 
 elif [[ $carla_map == "smart_intersection" ]]; then
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
+	echo "Changing map to: $carla_map"
+	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
+	sleep 5s
+
+	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_smart_intersection.py
 
 	if [[ $carmaID == "TFHRC-CAR-1" ]]
 	then
@@ -123,7 +127,19 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 		SPAWN_PT="50.003670, 43.160156, 1, 0, 99, 0" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 # 
 	fi
 
+elif [[ $carla_map == "" ]]; then
+
+	echo "Loading default CARLA map"
+
+else
+	echo
+	echo "Map not supported: $carla_map"
+	echo
+	cleanup
+	
 fi
+
+python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
 
 # set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
