@@ -11,9 +11,9 @@
 username=$(whoami)
 
 #-------------------| LOCAL VARIABLES |-------------------#
-localTenaDir=/home/$username/TENA 				#root directory of TENA installation
+localTenaDir=$HOME/tena_dev/u2004-gcc9-64/TENA			#root directory of TENA installation
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
-localTenadevDir=/home/$username/tenadev			#location of local tenadev
+localTenadevDir=/home/$username/tena_dev			#location of local tenadev
 localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
 localVoicesPocDir=/home/$username/voices-poc
 numBuildJobs=4    # number of build jobs to speed up compilation
