@@ -10,16 +10,16 @@
   </OpenDrive>
 
   <vehicles>
-
-    <!-- <vehicle name="TFHRC-CAR-2" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
+<!-- 
+    <vehicle name="TFHRC-CAR-2" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-2" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="34.067713" longitudeInDegrees="-118.445144" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>189</Heading>
       </initialTSPI>
-    </vehicle> -->
+    </vehicle>
 
-    <!-- <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA" generate_bsms="true" ></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="34.068104" longitudeInDegrees="-118.445083" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
@@ -33,8 +33,8 @@
         <GeodeticPosition latitudeInDegrees="34.068494" longitudeInDegrees="-118.445020" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>269</Heading>
       </initialTSPI>
-    </vehicle> -->
-   
+    </vehicle>
+    -->
   </vehicles>
 
   <intersectionSignalControllers>

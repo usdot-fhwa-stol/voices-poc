@@ -1,0 +1,91 @@
+TODO Notes from testing
+(voices) carma@voices-2:~/voices-poc/scripts/carla_python_scripts$ history |grep opencda
+ 1275  cd opencda/
+ 1297  mv opencda/scenario_testing/town04_intersection_test_1_bak.py
+ 1298  mv opencda/scenario_testing/town04_intersection_test_1.py opencda/scenario_testing/town04_intersection_test_1_bak.py
+ 1299  git checkout opencda/scenario_testing/town04_intersection_test_1.py
+ 1300  code opencda/scenario_testing/town04_intersection_test_1.py
+ 1301  cd opencda/
+ 1309  cd opencda/
+ 1313  python3 opencda.py -t town04_intersection_test_1
+ 1318  python3 opencda.py -t town04_intersection_test_1
+ 1321  python3 opencda.py -t town04_intersection_test_1
+ 1322  conda activate opencda
+ 1323  python3 opencda.py -t town04_intersection_test_1
+ 1649  diff -qr voices/ opencda/
+ 1650  diff -qr voices/lib opencda/lib
+ 1877  python3 opencda.py -t town04_intersection_test_1
+ 1878  conda env opencda
+ 1879  conda activate opencda
+ 1880  python3 opencda.py -t town04_intersection_test_1 
+ 2021  cp -nv ~/OpenCDA/opencda.py open-cda-car.py
+ 2022  cp -nv ~/OpenCDA/opencda/scenario_testing/town04_intersection_test_1.py 
+ 2023  cp -nv ~/OpenCDA/opencda/scenario_testing/town04_intersection_test_1.py .
+ 2025  cp -nv ~/OpenCDA/opencda/scenario_testing/config_yaml/town04_intersection_test_1.yaml open-cda-car-config-config.yaml
+ 2026  history |grep opencda
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+description: |-
+  Copyright 2023 <UCLA Mobility Lab>
+  Author: XH
+  Content: This is the scenario testing configuration file for single vehicle perception/localization/behavior/control
+           testing in high speed in the customized 2lanefree simple version.
+
+# First define the basic parameters of the vehicles
+vehicle_base:
+  sensing:
+    perception:
+      camera: # turn off camera
+        visualize: 0
+        num: 0 # how many cameras are mounted on the vehicle. Maximum 3(frontal, left and right cameras)
+        # relative positions (x,y,z,yaw) of the camera. len(positions) should be equal to camera num
+        positions: []
+      lidar: # turn off lidar
+        visualize: false
+
+  map_manager: # turn off BEV map
+    visualize: false # whether to visualize the rasteraization map
+    activate: false # whether activate the map manager
+        
+  behavior:
+    max_speed: 30 # maximum speed, km/h
+    ignore_traffic_light: false # whether to ignore traffic light
+    collision_time_ahead: 2.0 # used for collision checking
+    sample_resolution: 4.5 # the unit distance between two adjacent waypoints in meter
+
+# define the background traffic control by carla --> no background traffic for this scenario
+# carla_traffic_manager:
+#   random: true # whether to random select vehicles' color and model
+#   vehicle_list: ~  # a number or a list
+#   # Used only when vehicle_list is a number.
+#   # x_min, x_max, y_min, y_max, x_step, y_step, veh_num
+#   range:
+#     - [ 2, 10, 0, 200, 3.5, 25, 30]
+
+# define scenario. In this scenario, a 4-vehicle platoon already exists.
+scenario:
+  single_cav_list: # this is for merging vehicle or single cav without v2x
+    - name: UCLA-OPENCDA
+      spawn_position: [210.57, -169.45, 0.69, 0, 0, 0] # x, y, z, roll, yaw, pitch
+      destination: [355.20, -168.74, 0.6]
+      v2x:
+        communication_range: 45
+      behavior:
+        local_planner:
+          debug_trajectory: true
+          debug: true
