@@ -1,0 +1,1 @@
+../src/start-log-collection.sh

@@ -1,0 +1,1 @@
+../../../collect_logs/pilot1_collect_voices_logs.sh
