@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ../../config/node_info.config
+. ../../../../config/node_info.config
 
 echo
 echo "What vehicle position are you? [#]" 
@@ -45,8 +45,8 @@ logs_folder_name=$simId'_'$timestamp
 echo
 echo "Folder Name: "$logs_folder_name
 
-mkdir -p ./log_files/$logs_folder_name
-cd ./log_files/$logs_folder_name
+mkdir -p $logFilesRoot/$logs_folder_name
+cd $logFilesRoot/$logs_folder_name
 
 #if we are not a live vehicle then prompt to collect logs 
 #(live vehicle is not connected to VOICES network)

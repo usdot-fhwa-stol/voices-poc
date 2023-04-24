@@ -112,12 +112,12 @@ def main():
 
         # print(str(spec_transform))
 
-        # more zoomed in 
-        # spec_location = carla.Location(x=295.509583, y=-195.843079, z=24.709198)
-        # spec_rotation = carla.Rotation(pitch=-27.003902, yaw=172.640289, roll=0.0000)
+        #TODO is this a better position?
+        spec_location = carla.Location(x=57.479694, y=189.959412, z=14.635944)
+        spec_rotation = carla.Rotation(pitch=-19.471066, yaw=-117.849419, roll=-0.001497)
 
-        spec_location = carla.Location(x=59.051239, y=200.194794, z=21.216547)
-        spec_rotation = carla.Rotation(pitch=-26.714903, yaw=-120.131447, roll=-0.001495)
+        # spec_location = carla.Location(x=59.051239, y=200.194794, z=21.216547)
+        # spec_rotation = carla.Rotation(pitch=-26.714903, yaw=-120.131447, roll=-0.001495)
 
         # # Set the spectator with an empty transform
         spectator.set_transform(carla.Transform(spec_location,spec_rotation))
