@@ -40,7 +40,7 @@ fi
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
-logs_folder_name=$vehicle_name'_'$timestamp
+logs_folder_name=$simId'_'$timestamp
 
 echo
 echo "Folder Name: "$logs_folder_name

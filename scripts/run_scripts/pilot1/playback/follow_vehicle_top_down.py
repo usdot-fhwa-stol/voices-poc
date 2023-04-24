@@ -1,0 +1,1 @@
+../../../carla_python_scripts/follow_vehicle_top_down.py

@@ -18,7 +18,11 @@ function print_help {
 	echo "    --no-tick          do not set time mode and tick simulation"
 	echo "    --low_quality      start CARLA in low quality mode"
 	echo "    --map <map name>   start carla with given map name"
+	echo "                           Currently supported maps:"
+	echo "                             - Town04"
+	echo "                             - smart_intersection"
 	echo "    --help             show help"
+	echo
 }
 . ../../../../config/node_info.config
 
@@ -63,6 +67,7 @@ do
 	elif [[ $arg == "--help" ]]; then
 		
 		print_help
+		exit
 
 	elif [[ $arg != "" ]]; then
 		
@@ -80,20 +85,37 @@ carla_pid=$!
 echo "CARLA PID: "$carla_pid
 sleep 7s
 
-if [[ $carla_map != "" ]]; then
+
+if [[ $carla_map == "Town04" ]]; then
+
 	echo "Changing map to: $carla_map"
 	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
 	sleep 5s
 
+	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_town_04.py
+
+
+elif [[ $carla_map == "smart_intersection" ]]; then
+
+	echo "Changing map to: $carla_map"
+	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
+	sleep 5s
+
+	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py
+
+elif [[ $carla_map == "" ]]; then
+
+	echo "Loading default CARLA map"
+
+else
+	echo
+	echo "Map not supported: $carla_map"
+	echo
+	cleanup
+	
 fi
 
 python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
-
-if [[ $carla_map == "Town04" ]]; then
-
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_veiw_town_04.py
-	
-fi
 
 
 if [ "$no_tick_enabled" = true ]; then
