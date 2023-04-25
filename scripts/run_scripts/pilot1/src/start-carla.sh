@@ -2,9 +2,11 @@
 trap cleanup SIGINT
 
 function cleanup {
-	echo
 	echo "Stopping CARLA Simulation"
 	pkill -9 CarlaUE4
+  if [[ $timeSyncEnabled == "true" ]]; then
+    kill -9 $set_time_mode_pid
+  fi
 	exit
 }
 
@@ -38,8 +40,19 @@ fi
 mkdir -p $localCarmaSimLogPath
 
 CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
+SIM_LOG=$localCarmaSimLogPath/voices_carla_carma_integration.log
+SET_TIME_MODE_LOG=$localCarmaSimLogPath/set_time_mode.log
+
+echo "" >> $CARLA_LOG
+echo "<< ***** New Session **** >>" >> $CARLA_LOG
+date >> $CARLA_LOG
+echo "" >> $SIM_LOG
+echo "<< ***** New Session **** >>" >> $SIM_LOG
+date >> $SIM_LOG
+
 
 no_tick_enabled=false
+timeSyncEnabled=false
 low_quality_flag=""
 next_flag_is_map=false
 carla_map=""
@@ -108,21 +121,13 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map --weather ClearNoon
 	sleep 5s
 
-  echo "Changing perspective to simulation site: $simId"
+	echo "Changing perspective to simulation site: $simId"
 
     if [[ $simId == "CARLA-TFHRC-1" ]]; then
     	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 59.992634 195.027710 17.727715 -29.558195 -125.864532 0.002484
     elif [[ $simId == "CARLA-TFHRC-2" ]]; then
     	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 28.327816 139.781906 16.607105 -25.901394 56.039539 0.000042
     fi
-
-	if [[ $carmaID == "TFHRC_CAR_2" ]]
-	then
-		SPAWN_PT="28.44,300.06,0,0,0,85" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
-	elif [[ $carmaID == "UCLA-OPENCDA" ]]
-	then
-		SPAWN_PT="50.003670,43.160156,1,0,0,263" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 # 
-	fi
 
 elif [[ $carla_map == "" ]]; then
 
@@ -138,15 +143,23 @@ fi
 
 python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
-
 if [ "$no_tick_enabled" = true ]; then
 
 	read -s -n 1 -p "Press any key to quit . . ."
 
 else
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
-
+  # set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
+  echo "Setting time mode."
+  nohup python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py 2>&1 > $SET_TIME_MODE_LOG &
+  set_time_mode_pid=$!
+  exit
+  echo "Set time mode PID: "$set_time_mode_pid
+  echo
+  echo "----- SUCCESSFULLY SET TIME MODE, CONTINUOUSLY TICKING WORLD -----"
+  echo
 fi
+
+read x
 
 cleanup

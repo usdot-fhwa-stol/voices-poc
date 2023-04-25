@@ -37,6 +37,7 @@ else
 	exit
 fi
 
+
 mkdir -p $localCarmaSimLogPath
 
 CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
@@ -98,6 +99,7 @@ carla_pid=$!
 echo "CARLA PID: "$carla_pid
 sleep 7s
 
+
 if [[ $carla_map == "Town04" ]]; then
 
 	echo "Changing map to: $carla_map"
@@ -151,7 +153,12 @@ fi
 python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
 
-if [[ $timeSyncEnabled == "true" ]]; then
+if [ "$no_tick_enabled" = true ]; then
+
+	read -s -n 1 -p "Press any key to quit . . ."
+
+else
+
   # set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
   echo "Setting time mode."
   nohup python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py 2>&1 > $SET_TIME_MODE_LOG &
@@ -171,7 +178,6 @@ docker run \
        --net=host \
        usdotfhwastol/carma-carla-integration:K900-test
 echo "------------------------exec---------------------------------"
-set -x
 docker exec \
         -it \
         carma_carla_integration \
