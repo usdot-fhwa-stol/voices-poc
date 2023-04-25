@@ -89,6 +89,15 @@ def main():
         action='store_true',
         default=False,
         help='Enanble car lights')
+
+    argparser.add_argument("x", type=float, help="Position x (m)")
+    argparser.add_argument("y", type=float, help="Position y (m)")
+    argparser.add_argument("z", type=float, help="Position z (m)")
+
+    argparser.add_argument("pitch", type=float, help="Rotation pitch (deg)")
+    argparser.add_argument("yaw", type=float, help="Rotation yaw (deg)")
+    argparser.add_argument("roll", type=float, help="Rotation roll (deg)")
+
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -112,14 +121,9 @@ def main():
 
         # print(str(spec_transform))
 
-        #TODO is this a better position?
-        spec_location = carla.Location(x=57.479694, y=189.959412, z=14.635944)
-        spec_rotation = carla.Rotation(pitch=-19.471066, yaw=-117.849419, roll=-0.001497)
-
-        # spec_location = carla.Location(x=59.051239, y=200.194794, z=21.216547)
-        # spec_rotation = carla.Rotation(pitch=-26.714903, yaw=-120.131447, roll=-0.001495)
-
-        # # Set the spectator with an empty transform
+        # Set spectator transformation
+        spec_location = carla.Location(x=args.x, y=args.y, z=args.z)
+        spec_rotation = carla.Rotation(pitch=args.pitch, yaw=args.yaw, roll=args.roll)
         spectator.set_transform(carla.Transform(spec_location,spec_rotation))
 
     finally:

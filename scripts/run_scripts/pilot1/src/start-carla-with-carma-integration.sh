@@ -117,11 +117,17 @@ if [[ $carla_map == "Town04" ]]; then
 elif [[ $carla_map == "smart_intersection" ]]; then
 
 	echo "Changing map to: $carla_map"
-	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
+	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map --weather ClearNoon
 	sleep 5s
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py
-  set -x
+  echo "Changing perspective to simulation site: $simId"
+
+    if [[ $simId == "CARLA-TFHRC-1" ]]; then
+    	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 59.992634 195.027710 17.727715 -29.558195 -125.864532 0.002484
+    elif [[ $simId == "CARLA-TFHRC-2" ]]; then
+    	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 28.327816 139.781906 16.607105 -25.901394 56.039539 0.000042
+    fi
+
 	if [[ $carmaID == "TFHRC_CAR_2" ]]
 	then
 		SPAWN_PT="28.44,300.06,0,0,0,85" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
