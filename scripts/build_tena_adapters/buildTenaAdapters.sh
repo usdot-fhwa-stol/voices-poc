@@ -325,7 +325,6 @@ else
 fi
 
 #look for VUG Combined
-set -x
 if [ -d $localTenaDir/$tenaVersion/src/$vugCombinedVersion* ]; then
 	echo "$vugCombinedVersion found..."
 else
