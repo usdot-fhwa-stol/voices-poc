@@ -36,7 +36,7 @@
       </initialTSPI>
     </vehicle> -->
 
-    <vehicle name="TFHRC-CAR-2" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="TFHRC_CAR_2" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-2" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.001522" longitudeInDegrees="0.001931" heightAboveEllipsoidInMeters="2"> </GeodeticPosition>
