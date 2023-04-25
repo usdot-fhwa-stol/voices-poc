@@ -3,7 +3,7 @@ trap cleanup SIGINT
 
 function cleanup {
 	echo
-	echo "Stopping CARMA Simulation"
+	echo "Stopping CARLA Simulation"
 	pkill -9 CarlaUE4
 	exit
 }
@@ -94,14 +94,35 @@ if [[ $carla_map == "Town04" ]]; then
 
 	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_town_04.py
 
+	if [[ $carmaID == "TFHRC-CAR-1" ]]
+	then
+		SPAWN_PT="255,-230,1,0,0,0" # latitude=0.002066, longitude=0.002291, altitude=1.000000
+	elif [[ $carmaID == "TFHRC_CAR_2" ]]
+	then
+		SPAWN_PT="215,-169.4,1,0,0,0" # latitude=0.001522, longitude=0.001931, altitude=1.000000
+	fi
 
 elif [[ $carla_map == "smart_intersection" ]]; then
 
 	echo "Changing map to: $carla_map"
-	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
+	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map --weather ClearNoon
 	sleep 5s
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py
+  echo "Changing perspective to simulation site: $simId"
+
+    if [[ $simId == "CARLA-TFHRC-1" ]]; then
+    	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 59.992634 195.027710 17.727715 -29.558195 -125.864532 0.002484
+    elif [[ $simId == "CARLA-TFHRC-2" ]]; then
+    	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 28.327816 139.781906 16.607105 -25.901394 56.039539 0.000042
+    fi
+
+	if [[ $carmaID == "TFHRC_CAR_2" ]]
+	then
+		SPAWN_PT="28.44,300.06,0,0,0,85" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
+	elif [[ $carmaID == "UCLA-OPENCDA" ]]
+	then
+		SPAWN_PT="50.003670,43.160156,1,0,0,263" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 # 
+	fi
 
 elif [[ $carla_map == "" ]]; then
 
@@ -129,6 +150,3 @@ else
 fi
 
 cleanup
-
-
-
