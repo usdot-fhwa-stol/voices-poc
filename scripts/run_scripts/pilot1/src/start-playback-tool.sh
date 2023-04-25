@@ -27,13 +27,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$entityGeneratorVersion
+localadapterPath=$localInstallPath/$scenarioPublisherVersion
 
 adapterVerbosity='4'
 
 mkdir -p $localAdapterLogPath
 
-adapterLogFile=$localAdapterLogPath/entity_generator_terminal_out.log
+adapterLogFile=$localAdapterLogPath/scenario_publisher_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -46,5 +46,7 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
+cd $voicesPocPath/scripts/collect_logs/log_files/tdcs_data
 
+
+$playbackToolPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress
