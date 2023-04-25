@@ -106,7 +106,7 @@ if [[ $carla_map == "Town04" ]]; then
 	if [[ $carmaID == "TFHRC-CAR-1" ]]
 	then
 		SPAWN_PT="255,-230,1,0,0,0" # latitude=0.002066, longitude=0.002291, altitude=1.000000
-	elif [[ $carmaID == "TFHRC-CAR-2" ]]
+	elif [[ $carmaID == "TFHRC_CAR_2" ]]
 	then
 		SPAWN_PT="215,-169.4,1,0,0,0" # latitude=0.001522, longitude=0.001931, altitude=1.000000
 	fi
@@ -119,7 +119,7 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 
 	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py
 
-	if [[ $carmaID == "TFHRC-CAR-2" ]]
+	if [[ $carmaID == "TFHRC_CAR_2" ]]
 	then
 		SPAWN_PT="44.369656,86.320465,1,0,0,263" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
 	elif [[ $carmaID == "UCLA-OPENCDA" ]]
@@ -165,7 +165,7 @@ docker exec \
        bash -c \
        "export PYTHONPATH=$PYTHONPATH:/home/PythonAPI/carla/dist/carla-0.9.10-py3.7-linux-x86_64.egg && \
     	source /home/carma_carla_ws/devel/setup.bash && \
-       roslaunch carma_carla_agent carma_carla_agent.launch spawn_point:='$SPAWN_PT' role_name:='$carmaID' town:='$carla_map' selected_route:='Voices_Pilot1_Test4_TFHRC-CAR-2' synchronous_mode:='false' speed_Kp:='0.4' speed_Ki:='0.03' speed_Kd:='0'"
+       roslaunch carma_carla_agent carma_carla_agent.launch spawn_point:='$SPAWN_PT' role_name:='$carmaID' town:='$carla_map' selected_route:='Voices_Pilot1_Test4_TFHRC_CAR_2' synchronous_mode:='false' speed_Kp:='0.4' speed_Ki:='0.03' speed_Kd:='0'"
 	    # &> $SIM_LOG
 
 cleanup
