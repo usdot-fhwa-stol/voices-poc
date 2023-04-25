@@ -13,7 +13,7 @@
     <vehicle name="TFHRC_CAR_2" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-2" roleName="ego_vehicle"></CARMA></userData>
       <initialTSPI>
-        <GeodeticPosition latitudeInDegrees="34.067713" longitudeInDegrees="-118.445144" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
+        <GeodeticPosition latitudeInDegrees="34.068493" longitudeInDegrees="-118.445629" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>189</Heading>
       </initialTSPI>
     </vehicle>
