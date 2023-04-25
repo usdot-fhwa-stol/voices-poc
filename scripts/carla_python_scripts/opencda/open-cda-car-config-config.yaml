@@ -1,27 +1,27 @@
 TODO Notes from testing
 (voices) carma@voices-2:~/voices-poc/scripts/carla_python_scripts$ history |grep opencda
  1275  cd opencda/
- 1297  mv opencda/scenario_testing/town04_intersection_test_1_bak.py
- 1298  mv opencda/scenario_testing/town04_intersection_test_1.py opencda/scenario_testing/town04_intersection_test_1_bak.py
- 1299  git checkout opencda/scenario_testing/town04_intersection_test_1.py
- 1300  code opencda/scenario_testing/town04_intersection_test_1.py
+ 1297  mv opencda/scenario_testing/town04_intersection_test_1_bak.py.py
+ 1298  mv opencda/scenario_testing/town04_intersection_test_1.py.py opencda/scenario_testing/town04_intersection_test_1_bak.py.py
+ 1299  git checkout opencda/scenario_testing/town04_intersection_test_1.py.py
+ 1300  code opencda/scenario_testing/town04_intersection_test_1.py.py
  1301  cd opencda/
  1309  cd opencda/
- 1313  python3 opencda.py -t town04_intersection_test_1
- 1318  python3 opencda.py -t town04_intersection_test_1
- 1321  python3 opencda.py -t town04_intersection_test_1
+ 1313  python3 opencda.py -t town04_intersection_test_1.py
+ 1318  python3 opencda.py -t town04_intersection_test_1.py
+ 1321  python3 opencda.py -t town04_intersection_test_1.py
  1322  conda activate opencda
- 1323  python3 opencda.py -t town04_intersection_test_1
+ 1323  python3 opencda.py -t town04_intersection_test_1.py
  1649  diff -qr voices/ opencda/
  1650  diff -qr voices/lib opencda/lib
- 1877  python3 opencda.py -t town04_intersection_test_1
+ 1877  python3 opencda.py -t town04_intersection_test_1.py
  1878  conda env opencda
  1879  conda activate opencda
- 1880  python3 opencda.py -t town04_intersection_test_1 
+ 1880  python3 opencda.py -t town04_intersection_test_1.py 
  2021  cp -nv ~/OpenCDA/opencda.py open-cda-car.py
- 2022  cp -nv ~/OpenCDA/opencda/scenario_testing/town04_intersection_test_1.py 
- 2023  cp -nv ~/OpenCDA/opencda/scenario_testing/town04_intersection_test_1.py .
- 2025  cp -nv ~/OpenCDA/opencda/scenario_testing/config_yaml/town04_intersection_test_1.yaml open-cda-car-config-config.yaml
+ 2022  cp -nv ~/OpenCDA/opencda/scenario_testing/town04_intersection_test_1.py.py 
+ 2023  cp -nv ~/OpenCDA/opencda/scenario_testing/town04_intersection_test_1.py.py .
+ 2025  cp -nv ~/OpenCDA/opencda/scenario_testing/config_yaml/town04_intersection_test_1.py.yaml open-cda-car-config-config.yaml
  2026  history |grep opencda
 
 
