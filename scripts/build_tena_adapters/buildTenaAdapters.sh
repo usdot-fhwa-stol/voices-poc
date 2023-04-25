@@ -11,7 +11,7 @@
 username=$(whoami)
 
 #-------------------| LOCAL VARIABLES |-------------------#
-localTenaDir=$HOME/TENA
+localTenaDir=$HOME/tena_dev/u2004-gcc9-64/TENA
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
 localTenadevDir=/home/$username/tenadev			#location of local tenadev
 localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
@@ -22,7 +22,7 @@ numBuildJobs=4    # number of build jobs to speed up compilation
 #-------------------| TENA VARIABLES |-------------------#
 tenaVersion=6.0.8
 tenaBuildVersion=u2004-gcc9-64
-tenaSourceScript=$localTenaDir/$tenaVersion/scripts/tenaenv-$tenaBuildVersion-v$tenaVersion.sh
+tenaSourceScript=/home/carma/tena_dev/u2004-gcc9-64/TENA/6.0.8/scripts/tenaenv-u2004-gcc9-64-v6.0.8.sh
 #--------------------------------------------------------#
 
 
@@ -38,7 +38,7 @@ middlewareVersion="MiddlewareSDK-v6.0.8"
 boostVersion="TENA_boost_1.77.0.1_Library"
 vugCombinedVersion="VUG-VOICES-Combined-v0.14.2"
 
-vugThreadsVersion="vug-threads-2.2.0"
+vugThreadsVersion="vug-threads"
 vugUdbProtocolioVersion="vug-udp-protocolio-2.2.1"
 
 
