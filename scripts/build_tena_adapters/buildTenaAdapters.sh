@@ -521,7 +521,7 @@ if [[ "$skipMake" == true ]]
 		echo
 		echo "MAKE COMMAND: "
 		echo
-		if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make VERBOSE=1" ); then
+		if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j4 VERBOSE=1" ); then
 			echo
 			echo "[!!!] MAKE FAILED"
 			exit
@@ -538,7 +538,7 @@ if [[ "$skipMake" == true ]]
 				
 				echo
 				echo "MAKE PACKAGE COMMAND: "
-				if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make package VERBOSE=1" ); then
+				if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j4 package VERBOSE=1" ); then
 					echo
 					echo "[!!!] MAKE PACKAGE FAILED"
 					exit
