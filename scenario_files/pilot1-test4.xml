@@ -18,7 +18,6 @@
       </initialTSPI>
     </vehicle>
 
-<!-- 
     <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA" generate_bsms="true" ></CARMA></userData>
       <initialTSPI>
@@ -27,6 +26,7 @@
       </initialTSPI>
     </vehicle>
 
+<!-- 
     <vehicle name="TFHRC-MANUAL-2" bsmid="f03ad619" type="vehicle.toyota.prius" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
       <userData><CARLA manual="true"></CARLA></userData>
       <initialTSPI>
