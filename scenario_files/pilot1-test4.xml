@@ -51,22 +51,22 @@
   <phaseSignalMappings>
         <configuration name="smart_intersection_Main Configuration" intersectionName="smart_intersection_Main">
       <controller name="ctrl549-502A" id="549">
-        <control signalId="1629" type="">
+        <control signalId="-6" type="">
           <userData><phase>4</phase></userData>
         </control>
       </controller>
       <controller name="ctrl549-497A" id="549">
-        <control signalId="1628" type="">
+        <control signalId="2" type="">
           <userData><phase>2</phase></userData>
         </control>
       </controller>
       <controller name="ctrl549-508A" id="549">
-        <control signalId="1627" type="">
+        <control signalId="-3" type="">
           <userData><phase>8</phase></userData>
         </control>
       </controller>
       <controller name="ctrl549-504A" id="549">
-        <control signalId="1626" type="">
+        <control signalId="-4" type="">
           <userData><phase>6</phase></userData>
         </control>
       </controller>
