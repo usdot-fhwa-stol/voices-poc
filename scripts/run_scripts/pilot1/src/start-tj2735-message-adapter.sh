@@ -44,6 +44,4 @@ exec 4>> $adapterLogFile
 # redirect trace logs to fd 4
 BASH_XTRACEFD=4
 
-set -x
-
 $localadapterPath/bin/tena-j2735-message-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -adapterSendEndpoint $j2735AdapterSendAddress:$j2735AdapterSendPort -adapterReceiveEndpoint $j2735AdapterReceiveAddress:$j2735AdapterReceivePort -verbosity $adapterVerbosity | tee -a $adapterLogFile
