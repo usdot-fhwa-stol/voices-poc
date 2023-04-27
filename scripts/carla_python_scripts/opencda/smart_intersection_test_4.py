@@ -47,6 +47,8 @@ def run_scenario(opt, scenario_params):
                               script_name='smart_intersection_test_4',
                               current_time=scenario_params['current_time'])
 
+        # scenario_manager.world.set_weather('ClearNoon')
+        count=0
         spectator = scenario_manager.world.get_spectator()
         # run steps
         while True:
@@ -60,7 +62,9 @@ def run_scenario(opt, scenario_params):
             carla.Rotation(
                 pitch=-8,
                 yaw = -90)))
-            
+            count=count+1
+            if count == 10:
+                input("Press Enter to continue...")
 
             for i, single_cav in enumerate(single_cav_list):
                 single_cav.update_info()
