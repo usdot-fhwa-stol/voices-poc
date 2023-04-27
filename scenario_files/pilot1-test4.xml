@@ -18,6 +18,7 @@
       </initialTSPI>
     </vehicle>
 
+
     <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
       <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA" generate_bsms="true" ></CARMA></userData>
       <initialTSPI>
