@@ -57,7 +57,7 @@
         </control>
       </controller>
       <controller name="ctrl549-497A" id="549">
-        <control signalId="2" type="">
+        <control signalId="-5" type="">
           <userData><phase>2</phase></userData>
         </control>
       </controller>
