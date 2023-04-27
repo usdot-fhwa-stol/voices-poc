@@ -4,9 +4,6 @@ trap cleanup SIGINT
 function cleanup {
 	echo "Stopping CARLA Simulation"
 	pkill -9 CarlaUE4
-  if [[ $timeSyncEnabled == "true" ]]; then
-    kill -9 $set_time_mode_pid
-  fi
 	exit
 }
 
@@ -147,17 +144,6 @@ if [ "$no_tick_enabled" = true ]; then
 
 	read -s -n 1 -p "Press any key to quit . . ."
 
-else
-
-  # set time mode producing faster that real time clock, disabled for Pilot 1 tests 1-3
-  echo "Setting time mode."
-  nohup python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py 2>&1 > $SET_TIME_MODE_LOG &
-  set_time_mode_pid=$!
-  exit
-  echo "Set time mode PID: "$set_time_mode_pid
-  echo
-  echo "----- SUCCESSFULLY SET TIME MODE, CONTINUOUSLY TICKING WORLD -----"
-  echo
 fi
 
 read x
