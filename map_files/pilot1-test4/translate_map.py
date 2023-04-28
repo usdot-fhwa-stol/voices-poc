@@ -40,10 +40,23 @@ if __name__ == '__main__':
     templateFile = open(args.t)
     dataMap = json.load(templateFile)
 
+
+    # Compute offsets
+    deltaLat = args.lat - dataMap["vectors"]["features"][0]["properties"]["verifiedLat"]
+    deltaLon = args.lon - dataMap["vectors"]["features"][0]["properties"]["verifiedLon"]
+
+
+
+
+
     with open("dataMap.0.json", "w") as outputFile:
         outputFile.write(json.dumps(dataMap, indent=4))
 
-    process(dataMap, "lat", lambda dataMap: 0)
+    process(dataMap, "lat", lambda x: x + deltaLat)
+    process(dataMap, "lon", lambda x: x + deltaLon)
+
+    process(dataMap, "verifiedLat", lambda x: x + deltaLat)
+    process(dataMap, "verifiedLon", lambda x: x + deltaLon)
 
     with open("dataMap.1.json", "w") as outputFile:
         outputFile.write(json.dumps(dataMap, indent=4))

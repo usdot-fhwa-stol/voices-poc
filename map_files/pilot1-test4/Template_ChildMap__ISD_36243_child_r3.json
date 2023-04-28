@@ -40,8 +40,8 @@
             "lon": 11.865893283975447,
             "lat": -4.790909521169101
           },
-          "verifiedLat": "0.001524",
-          "verifiedLon": "0.002215",
+          "verifiedLat": 34.0669644,
+          "verifiedLon": -118.4452023,
           "marker": {
             "id": 1,
             "name": "Verified Point Marker",
