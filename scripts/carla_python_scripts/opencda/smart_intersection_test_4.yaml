@@ -33,7 +33,7 @@ vehicle_base:
     activate: false # whether activate the map manager
         
   behavior:
-    max_speed: 30 # maximum speed, km/h
+    max_speed: 28 # maximum speed, km/h
     ignore_traffic_light: false # whether to ignore traffic light
     collision_time_ahead: 2.0 # used for collision checking
     sample_resolution: 4.5 # the unit distance between two adjacent waypoints in meter
