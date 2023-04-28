@@ -51,23 +51,39 @@
   <phaseSignalMappings>
         <configuration name="smart_intersection_Main Configuration" intersectionName="smart_intersection_Main">
       <controller name="ctrl549-502A" id="549">
-        <control signalId="-6" type="">
-          <userData><phase>4</phase></userData>
+        <!-- UCLA smart_intersection map: North-facing left turn arrow -->
+        <control signalId="-1" type="">
+          <userData><phase>10</phase></userData>
         </control>
       </controller>
       <controller name="ctrl549-497A" id="549">
-        <control signalId="-5" type="">
-          <userData><phase>2</phase></userData>
+        <!-- UCLA smart_intersection map: South-facing straight lanes -->
+        <control signalId="-2" type="">
+          <userData><phase>6</phase></userData>
         </control>
       </controller>
       <controller name="ctrl549-508A" id="549">
+        <!-- UCLA smart_intersection map: East-facing all lanes -->
         <control signalId="-3" type="">
-          <userData><phase>8</phase></userData>
+          <userData><phase>4</phase></userData>
         </control>
       </controller>
       <controller name="ctrl549-504A" id="549">
+        <!-- UCLA smart_intersection map: West-facing all lanes -->
         <control signalId="-4" type="">
-          <userData><phase>6</phase></userData>
+          <userData><phase>8</phase></userData>
+        </control>
+      </controller>
+      <controller name="ctrl549-502A" id="549">
+        <!-- UCLA smart_intersection map: South-facing left turn arrow -->
+        <control signalId="-5" type="">
+          <userData><phase>10</phase></userData>
+        </control>
+      </controller>
+      <controller name="ctrl549-502A" id="549">
+        <!-- UCLA smart_intersection map: North-facing straight lanes -->
+        <control signalId="-6" type="">
+          <userData><phase>2</phase></userData>
         </control>
       </controller>
     </configuration>
