@@ -1,0 +1,1437 @@
+{
+    "vectors": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "LonLat": {
+                        "lon": 0.0,
+                        "lat": 0.0
+                    },
+                    "verifiedLat": 0.0,
+                    "verifiedLon": 0.0,
+                    "marker": {
+                        "id": 0,
+                        "name": "Reference Point Marker",
+                        "description": "Used to mark the center of the intersection",
+                        "img_src": "./img/intersection-builder/markers/Map-Marker-Marker-Outside-Azure-icon.png"
+                    },
+                    "lane_attributes": {},
+                    "intersectionName": "Carla lane and Sumo blvd.",
+                    "elevation": "15",
+                    "intersectionID": "36243",
+                    "masterLaneWidth": "366",
+                    "revisionNum": "3"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        1320909.0795635933,
+                        -533950.4490880023
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "LonLat": {
+                        "lon": 130.31109558397546,
+                        "lat": -38.8578739211691
+                    },
+                    "verifiedLat": 0.0,
+                    "verifiedLon": 0.0,
+                    "marker": {
+                        "id": 1,
+                        "name": "Verified Point Marker",
+                        "description": "Used to mark a known, verified location near an intersection",
+                        "img_src": "./img/intersection-builder/markers/Map-Marker-Ball-Azure-icon.png"
+                    },
+                    "lane_attributes": {},
+                    "verifiedElev": "15",
+                    "elevation": "15"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        1320905.1979956173,
+                        -533944.17886302
+                    ]
+                }
+            }
+        ]
+    },
+    "box": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Ingress",
+                    "approachID": "06"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320915.6856938,
+                                -533951.40081856
+                            ],
+                            [
+                                1320915.6856938,
+                                -533945.13059359
+                            ],
+                            [
+                                1320919.7165527,
+                                -533945.13059359
+                            ],
+                            [
+                                1320919.7165527,
+                                -533951.40081856
+                            ],
+                            [
+                                1320915.6856938,
+                                -533951.40081856
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Egress",
+                    "approachID": "05"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320915.9842758998,
+                                -533960.58221942
+                            ],
+                            [
+                                1320915.9842758998,
+                                -533954.23734891
+                            ],
+                            [
+                                1320919.9404893,
+                                -533954.23734891
+                            ],
+                            [
+                                1320919.9404893,
+                                -533960.58221942
+                            ],
+                            [
+                                1320915.9842758998,
+                                -533960.58221942
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Ingress",
+                    "approachID": "04"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320909.1915322,
+                                -533964.0159140502
+                            ],
+                            [
+                                1320909.1915322,
+                                -533960.43292835
+                            ],
+                            [
+                                1320915.4617572,
+                                -533960.43292835
+                            ],
+                            [
+                                1320915.4617572,
+                                -533964.0159140502
+                            ],
+                            [
+                                1320909.1915322,
+                                -533964.0159140502
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Egress",
+                    "approachID": "03"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320901.7269786997,
+                                -533964.2398506601
+                            ],
+                            [
+                                1320901.7269786997,
+                                -533960.43292835
+                            ],
+                            [
+                                1320908.2211403,
+                                -533960.43292835
+                            ],
+                            [
+                                1320908.2211403,
+                                -533964.2398506601
+                            ],
+                            [
+                                1320901.7269786997,
+                                -533964.2398506601
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Ingress",
+                    "approachID": "02"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320897.3975375998,
+                                -533960.28363728
+                            ],
+                            [
+                                1320897.3975375998,
+                                -533954.53593105
+                            ],
+                            [
+                                1320901.0551688,
+                                -533954.53593105
+                            ],
+                            [
+                                1320901.0551688,
+                                -533960.28363728
+                            ],
+                            [
+                                1320897.3975375998,
+                                -533960.28363728
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Egress",
+                    "approachID": "01"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320897.173601,
+                                -533951.32617303
+                            ],
+                            [
+                                1320897.173601,
+                                -533945.35453019
+                            ],
+                            [
+                                1320901.0551688,
+                                -533945.35453019
+                            ],
+                            [
+                                1320901.0551688,
+                                -533951.32617303
+                            ],
+                            [
+                                1320897.173601,
+                                -533951.32617303
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Ingress",
+                    "approachID": "08"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320901.8016242,
+                                -533945.80240341
+                            ],
+                            [
+                                1320901.8016242,
+                                -533941.69689896
+                            ],
+                            [
+                                1320907.9972036,
+                                -533941.69689896
+                            ],
+                            [
+                                1320907.9972036,
+                                -533945.80240341
+                            ],
+                            [
+                                1320901.8016242,
+                                -533945.80240341
+                            ]
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "lane_attributes": {},
+                    "approachType": "Egress",
+                    "approachID": "07"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [
+                                1320909.1168867,
+                                -533945.50382126
+                            ],
+                            [
+                                1320909.1168867,
+                                -533941.62225342
+                            ],
+                            [
+                                1320915.3871116,
+                                -533941.62225342
+                            ],
+                            [
+                                1320915.3871116,
+                                -533945.50382126
+                            ],
+                            [
+                                1320909.1168867,
+                                -533945.50382126
+                            ]
+                        ]
+                    ]
+                }
+            }
+        ]
+    },
+    "lanes": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "15",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31109390759875,
+                                "lat": -38.857873085907215
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3110945781507,
+                                "lat": -38.85759243789009
+                            }
+                        },
+                        {
+                            "value": 14,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31109591925545,
+                                "lat": -38.85730377123805
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31109994256886,
+                                "lat": -38.85702846866921
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3111022894993,
+                                "lat": -38.85673529135806
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "1",
+                            "remoteID": "",
+                            "fromLane": "08",
+                            "toLane": "1",
+                            "signal_id": "8",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "2",
+                            "remoteID": "",
+                            "fromLane": "08",
+                            "toLane": "3",
+                            "signal_id": "8",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "3",
+                            "remoteID": "",
+                            "fromLane": "08",
+                            "toLane": "5",
+                            "signal_id": "8",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "08",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320905.0113822275,
+                            -533944.0855560879
+                        ],
+                        [
+                            1320905.0860277,
+                            -533912.73443121
+                        ],
+                        [
+                            1320905.2353188,
+                            -533880.48755991
+                        ],
+                        [
+                            1320905.683192,
+                            -533849.73359931
+                        ],
+                        [
+                            1320905.9444511,
+                            -533816.98287066
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "15",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31104227507547,
+                                "lat": -38.85790649637776
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3107874652187,
+                                "lat": -38.85790649637776
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31052058542173,
+                                "lat": -38.857902487121315
+                            }
+                        },
+                        {
+                            "value": 14,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3100056012909,
+                                "lat": -38.85789580502733
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30973603928527,
+                                "lat": -38.85789580502733
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30948525274192,
+                                "lat": -38.85789580502733
+                            }
+                        },
+                        {
+                            "value": 12,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30922507846788,
+                                "lat": -38.857894468608535
+                            }
+                        },
+                        {
+                            "value": 12,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30897160971588,
+                                "lat": -38.857887786514475
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "",
+                            "remoteID": "",
+                            "toLane": "",
+                            "signal_id": "",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "01",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320899.2636759484,
+                            -533947.8178328642
+                        ],
+                        [
+                            1320870.8983725,
+                            -533947.81783286
+                        ],
+                        [
+                            1320841.1894494,
+                            -533947.36995964
+                        ],
+                        [
+                            1320783.8616782,
+                            -533946.62350429
+                        ],
+                        [
+                            1320753.854173,
+                            -533946.62350429
+                        ],
+                        [
+                            1320725.9367427,
+                            -533946.62350429
+                        ],
+                        [
+                            1320696.974275,
+                            -533946.47421322
+                        ],
+                        [
+                            1320668.7582626,
+                            -533945.72775787
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "16",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31103959286594,
+                                "lat": -38.857994700012114
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31077405417372,
+                                "lat": -38.8579920271749
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31051119769012,
+                                "lat": -38.85798935433766
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31025102341607,
+                                "lat": -38.85799069075628
+                            }
+                        },
+                        {
+                            "value": 14,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31000023687272,
+                                "lat": -38.85798801791904
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3097266515537,
+                                "lat": -38.857984008663166
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30947854721987,
+                                "lat": -38.85798267224453
+                            }
+                        },
+                        {
+                            "value": 12,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30921300852674,
+                                "lat": -38.85798267224453
+                            }
+                        },
+                        {
+                            "value": 12,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.30896356308816,
+                                "lat": -38.857981335825805
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "1",
+                            "remoteID": "",
+                            "fromLane": "02",
+                            "toLane": "3",
+                            "signal_id": "2",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "2",
+                            "remoteID": "",
+                            "fromLane": "02",
+                            "toLane": "5",
+                            "signal_id": "2",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "3",
+                            "remoteID": "",
+                            "fromLane": "02",
+                            "toLane": "7",
+                            "signal_id": "2",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "02",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320898.9650938085,
+                            -533957.6710435277
+                        ],
+                        [
+                            1320869.4054618,
+                            -533957.37246139
+                        ],
+                        [
+                            1320840.1444119,
+                            -533957.07387925
+                        ],
+                        [
+                            1320811.1819442,
+                            -533957.22317032
+                        ],
+                        [
+                            1320783.2645139,
+                            -533956.92458818
+                        ],
+                        [
+                            1320752.8091355,
+                            -533956.47671497
+                        ],
+                        [
+                            1320725.1902874,
+                            -533956.3274239
+                        ],
+                        [
+                            1320695.6306553,
+                            -533956.3274239
+                        ],
+                        [
+                            1320667.8625161,
+                            -533956.17813282
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "16",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31109424287249,
+                                "lat": -38.858034291412736
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31108921373342,
+                                "lat": -38.85831276756905
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3110851904191,
+                                "lat": -38.85858539678568
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3110811671057,
+                                "lat": -38.85886337156133
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3110754674093,
+                                "lat": -38.85913282656961
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "",
+                            "remoteID": "",
+                            "toLane": "",
+                            "signal_id": "",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "03",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320905.0487046475,
+                            -533962.0937915258
+                        ],
+                        [
+                            1320904.4888635,
+                            -533993.2023184
+                        ],
+                        [
+                            1320904.0409902,
+                            -534023.65769685
+                        ],
+                        [
+                            1320903.593117,
+                            -534054.71023959
+                        ],
+                        [
+                            1320902.9586297,
+                            -534084.81105177
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "16",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31115895116525,
+                                "lat": -38.85803612898812
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31115761006316,
+                                "lat": -38.85831811324098
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31115358674975,
+                                "lat": -38.85859341529046
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31115090454023,
+                                "lat": -38.85886337156133
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.311150569262,
+                                "lat": -38.85913549940236
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "1",
+                            "remoteID": "",
+                            "fromLane": "04",
+                            "toLane": "5",
+                            "signal_id": "4",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "2",
+                            "remoteID": "",
+                            "fromLane": "04",
+                            "toLane": "7",
+                            "signal_id": "4",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "3",
+                            "remoteID": "",
+                            "fromLane": "04",
+                            "toLane": "1",
+                            "signal_id": "4",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "04",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320912.251998873,
+                            -533962.2990667379
+                        ],
+                        [
+                            1320912.1027081,
+                            -533993.79948268
+                        ],
+                        [
+                            1320911.6548349,
+                            -534024.55344328
+                        ],
+                        [
+                            1320911.3562527,
+                            -534054.71023959
+                        ],
+                        [
+                            1320911.3189297,
+                            -534085.10963391
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "16",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31121058369033,
+                                "lat": -38.8579853450818
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3116269966408,
+                                "lat": -38.8579920271749
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31205179149092,
+                                "lat": -38.85799419885542
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31205179149092,
+                                "lat": -38.85799419885542
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31205179149092,
+                                "lat": -38.85799419885542
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3124584814352,
+                                "lat": -38.85799737284933
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3128795882501,
+                                "lat": -38.85799737284933
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3132846018114,
+                                "lat": -38.85800004568662
+                            }
+                        },
+                        {
+                            "value": 18,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31372716629903,
+                                "lat": -38.858005391361004
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "",
+                            "remoteID": "",
+                            "toLane": "",
+                            "signal_id": "",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "05",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320917.9997052636,
+                            -533956.6260060419
+                        ],
+                        [
+                            1320964.3545829,
+                            -533957.37246139
+                        ],
+                        [
+                            1321011.6425293,
+                            -533957.61505941
+                        ],
+                        [
+                            1321011.6425293,
+                            -533957.61505941
+                        ],
+                        [
+                            1321011.6425293,
+                            -533957.61505941
+                        ],
+                        [
+                            1321056.9150468,
+                            -533957.96962567
+                        ],
+                        [
+                            1321103.792443,
+                            -533957.96962567
+                        ],
+                        [
+                            1321148.8783464,
+                            -533958.26820782
+                        ],
+                        [
+                            1321198.1443998,
+                            -533958.8653721
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "16",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31120857203453,
+                                "lat": -38.85790649637776
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3115170260704,
+                                "lat": -38.85791184205287
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31182548010713,
+                                "lat": -38.85791718772803
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31214466298024,
+                                "lat": -38.85791986056553
+                            }
+                        },
+                        {
+                            "value": 14,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31245579922566,
+                                "lat": -38.85791986056553
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3127776643074,
+                                "lat": -38.85792253340304
+                            }
+                        },
+                        {
+                            "value": 16,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31309952939006,
+                                "lat": -38.85792253340304
+                            }
+                        },
+                        {
+                            "value": 17,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3134133478441,
+                                "lat": -38.85792253340304
+                            }
+                        },
+                        {
+                            "value": 18,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3137325307172,
+                                "lat": -38.85792520624054
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "1",
+                            "remoteID": "",
+                            "fromLane": "06",
+                            "toLane": "7",
+                            "signal_id": "6",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "2",
+                            "remoteID": "",
+                            "fromLane": "06",
+                            "toLane": "1",
+                            "signal_id": "6",
+                            "maneuvers": []
+                        },
+                        {
+                            "connectionId": "3",
+                            "remoteID": "",
+                            "fromLane": "06",
+                            "toLane": "3",
+                            "signal_id": "6",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "06",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320917.7757688535,
+                            -533947.8178328642
+                        ],
+                        [
+                            1320952.112715,
+                            -533948.41499714
+                        ],
+                        [
+                            1320986.4496613,
+                            -533949.01216143
+                        ],
+                        [
+                            1321021.9809362,
+                            -533949.31074357
+                        ],
+                        [
+                            1321056.6164646,
+                            -533949.31074357
+                        ],
+                        [
+                            1321092.4463216,
+                            -533949.60932571
+                        ],
+                        [
+                            1321128.2761787,
+                            -533949.60932571
+                        ],
+                        [
+                            1321163.2102892,
+                            -533949.60932571
+                        ],
+                        [
+                            1321198.7415641,
+                            -533949.90790785
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "elevation": [
+                        {
+                            "value": "15",
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.3111596217172,
+                                "lat": -38.857873085907215
+                            }
+                        },
+                        {
+                            "value": 15,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31116297448136,
+                                "lat": -38.85759644714827
+                            }
+                        },
+                        {
+                            "value": 14,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31116833889863,
+                                "lat": -38.857307780497905
+                            }
+                        },
+                        {
+                            "value": 13,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31117236221294,
+                                "lat": -38.857023122987215
+                            }
+                        },
+                        {
+                            "value": 14,
+                            "edited": true,
+                            "latlon": {
+                                "lon": 130.31117638552365,
+                                "lat": -38.85673712893701
+                            }
+                        }
+                    ],
+                    "laneWidth": [
+                        "0",
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "connections": [
+                        {
+                            "connectionId": "",
+                            "remoteID": "",
+                            "toLane": "",
+                            "signal_id": "",
+                            "maneuvers": []
+                        }
+                    ],
+                    "laneNumber": "07",
+                    "laneType": "Vehicle",
+                    "descriptiveName": "",
+                    "spatRevision": "1",
+                    "signalGroupID": "",
+                    "startTime": "",
+                    "minEndTime": "",
+                    "maxEndTime": "",
+                    "likelyTime": "",
+                    "nextTime": "",
+                    "sharedWith": [],
+                    "typeAttribute": [],
+                    "lane_attributes": {},
+                    "inBox": true
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            1320912.32664438,
+                            -533944.0855560879
+                        ],
+                        [
+                            1320912.6998724,
+                            -533913.18230442
+                        ],
+                        [
+                            1320913.2970366,
+                            -533880.93543312
+                        ],
+                        [
+                            1320913.7449099,
+                            -533849.13643503
+                        ],
+                        [
+                            1320914.1927828,
+                            -533817.18814588
+                        ]
+                    ]
+                }
+            }
+        ]
+    },
+    "laneMarkers": {
+        "type": "FeatureCollection",
+        "features": []
+    }
+}
