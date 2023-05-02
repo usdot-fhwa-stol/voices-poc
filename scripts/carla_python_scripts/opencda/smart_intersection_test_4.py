@@ -32,7 +32,7 @@ def run_scenario(opt, scenario_params):
                 start_recorder("single_town04_carla_no_traffic.log", True)
 
         # pause until press enter
-        input("Press Enter to continue...")
+        # input("Press Enter to continue...")
 
         single_cav_list = \
             scenario_manager.create_vehicle_manager(application=['single'])
@@ -63,8 +63,8 @@ def run_scenario(opt, scenario_params):
                 pitch=-8,
                 yaw = -90)))
             count=count+1
-            if count == 10:
-                input("Press Enter to continue...")
+            #if count == 10:
+                # input("Press Enter to continue...")
 
             for i, single_cav in enumerate(single_cav_list):
                 single_cav.update_info()
