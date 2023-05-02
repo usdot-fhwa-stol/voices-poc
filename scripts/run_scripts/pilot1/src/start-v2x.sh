@@ -17,6 +17,10 @@ if [[ ! -f $v2xRepo/configuration/amd64/secrets/mysql_root_password.txt ]]; then
   echo "password" >$v2xRepo/configuration/amd64/secrets/mysql_root_password.txt
 fi
 
+## Initialize
+#cd $v2xRepo/configuration/amd64
+#./initialization.sh
+
 # Start V2X
 cd $v2xRepo/configuration/amd64
 docker-compose up
