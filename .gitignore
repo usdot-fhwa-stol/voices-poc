@@ -3,7 +3,7 @@ scripts/J2735_pcap_decoder/data/
 scripts/J2735_pcap_decoder/src/__pycache__/
 
 #ignore log directories
-log_files/
+logs/
 
 #ignore carla script pycache
 scripts/carla_python_scripts/__pycache__/
