@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## VOICES-1
+
 # em
 
 # tdcs
@@ -26,5 +28,24 @@ https://127.0.0.1:8443/
 
 # carla-tena
 ~/voices-poc/scripts/run_scripts/pilot1/src$ ./start-carla-tena-adapter.sh
+
+
+
+## VOICES-2
+
+
+em
+
+voices-poc
+tdcs
+sp
+carma
+carla
+carla-tena-adapter
+tj2735
+tleg
+ros
+build
+
 
 
