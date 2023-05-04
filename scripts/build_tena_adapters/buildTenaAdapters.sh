@@ -1,28 +1,22 @@
 #!/bin/bash
 
-##############################
-#	TODO
-# 	- make a general build container for most apps instead of using CARLA build container
-# 
-# 
-# 
-
+source ~/.voices-config
 
 username=$(whoami)
 
 #-------------------| LOCAL VARIABLES |-------------------#
-localTenaDir=$HOME/tena_dev/u2004-gcc9-64/TENA
+localTenaDir=$localTenaPath
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
-localTenadevDir=/home/$username/tenadev			#location of local tenadev
-localInstallDir=$localTenadevDir/INSTALL		#location to install/build TENA adapters
-localVoicesPocDir=/home/$username/voices-poc
+localTenadevDir=$localTenadevDir			#location of local tenadev
+localInstallDir=$localInstallPath		#location to install/build TENA adapters
+localVoicesPocDir=voicesPocPath
 numBuildJobs=4    # number of build jobs to speed up compilation
 #---------------------------------------------------------#
 
 #-------------------| TENA VARIABLES |-------------------#
 tenaVersion=6.0.8
 tenaBuildVersion=u2004-gcc9-64
-tenaSourceScript=/home/carma/tena_dev/u2004-gcc9-64/TENA/6.0.8/scripts/tenaenv-u2004-gcc9-64-v6.0.8.sh
+tenaSourceScript=$tenaSourceScript
 #--------------------------------------------------------#
 
 
@@ -333,6 +327,7 @@ else
 fi
 
 #look for VUG Threads
+set -x
 if [ $tenaApp == "vug-threads" ] || [ -d $localInstallDir/$vugThreadsVersion ]; then
 	echo "vug-threads found..."
 else
@@ -521,7 +516,7 @@ if [[ "$skipMake" == true ]]
 		echo
 		echo "MAKE COMMAND: "
 		echo
-		if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j8 VERBOSE=1" ); then
+		if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j $numBuildJobs VERBOSE=1" ); then
 			echo
 			echo "[!!!] MAKE FAILED"
 			exit
@@ -538,7 +533,7 @@ if [[ "$skipMake" == true ]]
 				
 				echo
 				echo "MAKE PACKAGE COMMAND: "
-				if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j8 package VERBOSE=1" ); then
+				if ! ( set -x ; sudo docker run --entrypoint /bin/bash --rm -v $localAppDir:$remoteAppDir -v $localTenaDir:$remoteTenaDir -v $localInstallDir:$remoteInstallDir $dockerContainer -c "cd $remoteAppDir/build/$buildVersion; export TENA_PLATFORM=$tenaBuildVersion; export TENA_HOME=$remoteTenaDir; export TENA_VERSION=6.0.8; export CARLA_HOME=/home/carla; make -j $numBuildJobs package VERBOSE=1" ); then
 					echo
 					echo "[!!!] MAKE PACKAGE FAILED"
 					exit
