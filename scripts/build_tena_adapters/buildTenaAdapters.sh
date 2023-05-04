@@ -327,6 +327,7 @@ else
 fi
 
 #look for VUG Threads
+set -x
 if [ $tenaApp == "vug-threads" ] || [ -d $localInstallDir/$vugThreadsVersion ]; then
 	echo "vug-threads found..."
 else
