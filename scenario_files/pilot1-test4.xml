@@ -20,7 +20,7 @@
                 <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-2" roleName="ego_vehicle"/>
             </userData>
             <initialTSPI>
-                <GeodeticPosition latitudeInDegrees="34.068493" longitudeInDegrees="-118.445629"
+                <GeodeticPosition latitudeInDegrees="34.0649831" longitudeInDegrees="-118.4453244"
                                   heightAboveEllipsoidInMeters="1"/>
                 <Heading>189</Heading>
             </initialTSPI>

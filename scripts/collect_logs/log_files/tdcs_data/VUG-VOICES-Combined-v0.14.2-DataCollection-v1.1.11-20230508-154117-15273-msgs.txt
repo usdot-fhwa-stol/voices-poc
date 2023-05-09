@@ -1,0 +1,2 @@
+Log file opened by '/opt/TENA/VOICES-Combined-v0.14.2-DataCollection-v1.1.11/bin/tenaCollector-VUG-VOICES-Combined-v0.14.2-v1.1.11' at 2023-05-08T19:41:20.744758Z
+NOTE: VUG-VOICES-Combined-v0.14.2 has started collecting data. [2023-05-08T19:41:20.744695Z,src/ApplicationMain.cpp:931:setupObservers,TID=139871624611584]
