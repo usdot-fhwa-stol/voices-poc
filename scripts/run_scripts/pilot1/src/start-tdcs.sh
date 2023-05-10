@@ -46,8 +46,8 @@ BASH_XTRACEFD=4
 
 set -x
 
-mkdir -p $voicesPocPath/scripts/collect_logs/log_files/tdcs_data
-cd $voicesPocPath/scripts/collect_logs/log_files/tdcs_data
+mkdir -p $voicesPocPath/logs/tdcs_data
+cd $voicesPocPath/logs/tdcs_data
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
