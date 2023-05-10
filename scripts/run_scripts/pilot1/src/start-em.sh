@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Start Execution Manager
+
 . ../../../../config/node_info.config
 
 $tenaExecutionManagerPath/bin/executionManager \
