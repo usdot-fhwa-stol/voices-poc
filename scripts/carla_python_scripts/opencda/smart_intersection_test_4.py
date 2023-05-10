@@ -63,8 +63,8 @@ def run_scenario(opt, scenario_params):
                 pitch=-8,
                 yaw = -90)))
             count=count+1
-            #if count == 10:
-                # input("Press Enter to continue...")
+            if count == 10:
+                input("Press Enter to continue...")
 
             for i, single_cav in enumerate(single_cav_list):
                 single_cav.update_info()
