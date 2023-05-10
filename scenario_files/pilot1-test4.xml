@@ -55,6 +55,7 @@
     <phaseSignalMappings>
 
         <!-- Intersection center (lat, lon): 34.0669644, -118.4452023 -->
+        <!-- OSM Reference Point: <geoReference>+proj=tmerc +lat_0=34.0684932 +lon_0=-118.4456287 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs </geoReference> -->
         <configuration name="smart_intersection_Main Configuration" intersectionName="smart_intersection_Main">
 
             <controller name="ctrl549-502A" id="549">
