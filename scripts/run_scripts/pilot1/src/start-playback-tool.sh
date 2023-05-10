@@ -46,7 +46,7 @@ BASH_XTRACEFD=4
 
 set -x
 
-cd $voicesPocPath/scripts/collect_logs/log_files/tdcs_data
+cd $voicesPocPath/logs/tdcs_data
 
 
 $playbackToolPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress
