@@ -3,7 +3,8 @@ trap cleanup SIGINT
 
 function cleanup {
 	echo "Stopping CARMA Simulation"
-	docker kill carla_carma_integration
+	sleep 3s
+	docker kill carma_carla_integration
 	pkill -9 CarlaUE4
   if [[ $timeSyncEnabled == "true" ]]; then
     kill -9 $set_time_mode_pid
@@ -157,7 +158,7 @@ python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
 
 if [ "$no_tick_enabled" = true ]; then
 
-	read -s -n 1 -p "Press any key to quit . . ."
+	echo "Not ticking clock"
 
 else
 
@@ -186,7 +187,7 @@ docker exec \
         bash -c \
         "export PYTHONPATH=$PYTHONPATH:/home/PythonAPI/carla/dist/carla-0.9.10-py3.7-linux-x86_64.egg && \
         source /home/carma_carla_ws/devel/setup.bash && \
-        roslaunch carma_carla_agent carma_carla_agent.launch spawn_point:='$SPAWN_PT' town:='$carla_map' selected_route:='UCLA' synchronous_mode:='true' speed_Kp:=0.4 speed_Ki:=0.03 speed_Kd:=0
+        roslaunch carma_carla_agent carma_carla_agent.launch spawn_point:=\"$SPAWN_PT\" town:=\"$carla_map\" selected_route:='UCLA' synchronous_mode:='true' speed_Kp:=0.4 speed_Ki:=0.03 speed_Kd:=0
         &> $SIM_LOG
 
 # Should work but doesn't
