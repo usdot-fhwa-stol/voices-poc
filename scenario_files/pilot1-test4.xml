@@ -26,10 +26,10 @@
             </initialTSPI>
         </vehicle>
 
-        <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum"
+        <vehicle name="TFHRC-CAR-1" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-TFHRC-1" material="Aluminum"
                  lvcIndicator="Live">
             <userData>
-                <CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA" generate_bsms="true"/>
+                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-1" roleName="TFHRC-CAR-1" generate_bsms="true"/>
             </userData>
             <initialTSPI>
                 <GeodeticPosition latitudeInDegrees="34.065482" longitudeInDegrees="-118.445302"
