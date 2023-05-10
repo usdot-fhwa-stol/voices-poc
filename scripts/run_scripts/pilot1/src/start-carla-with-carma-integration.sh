@@ -13,6 +13,8 @@ function cleanup {
 
 function print_help {
 	echo
+	echo "Pilot 1 Test 4 usage: --map smart_intersection --no_tick"
+	echo
 	echo "usage: start-carla.sh [--no_tick] [--low_quality] [--help]"
 	echo
 	echo "Start CARLA Simulator for VOICES"

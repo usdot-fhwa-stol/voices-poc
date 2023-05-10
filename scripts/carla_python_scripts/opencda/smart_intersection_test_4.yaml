@@ -83,7 +83,7 @@ vehicle_base:
 # define scenario. In this scenario, a 4-vehicle platoon already exists.
 scenario:
   single_cav_list: # this is for merging vehicle or single cav without v2x
-    - name: UCLA-OPENCDA
+    - name: TFHRC-CAR-1
       spawn_position: [34, 250, 1, 0, -85, 0] # x, y, z, roll, yaw, pitch
       destination: [60.5, 38.7, 0]
       v2x:
