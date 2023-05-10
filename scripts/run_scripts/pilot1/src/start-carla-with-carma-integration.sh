@@ -184,7 +184,7 @@ docker exec \
         bash -c \
         "export PYTHONPATH=$PYTHONPATH:/home/PythonAPI/carla/dist/carla-0.9.10-py3.7-linux-x86_64.egg && \
         source /home/carma_carla_ws/devel/setup.bash && \
-        roslaunch carma_carla_agent carma_carla_agent.launch spawn_point:='28.44,300.06,0,0,0,85' town:='smart_intersection' selected_route:='UCLA' synchronous_mode:='true' speed_Kp:=0.4 speed_Ki:=0.03 speed_Kd:=0
+        roslaunch carma_carla_agent carma_carla_agent.launch spawn_point:='32.44,300.06,0,0,0,85' town:='smart_intersection' selected_route:='UCLA' synchronous_mode:='true' speed_Kp:=0.4 speed_Ki:=0.03 speed_Kd:=0
         &> $SIM_LOG
 
 # Should work but doesn't
