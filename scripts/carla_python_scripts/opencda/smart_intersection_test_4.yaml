@@ -33,7 +33,7 @@ vehicle_base:
     activate: false # whether activate the map manager
         
   behavior:
-    max_speed: 20 # maximum speed, km/h
+    max_speed: 40 # maximum speed, km/h
     #tailgate_speed: 100 # when a vehicles needs to be close to another vehicle asap
     #speed_lim_dist: 3 # max_speed - speed_lim_dist = target speed
     #speed_decrease: 10 # used in car following mode to decrease speed for distance keeping
@@ -83,8 +83,8 @@ vehicle_base:
 # define scenario. In this scenario, a 4-vehicle platoon already exists.
 scenario:
   single_cav_list: # this is for merging vehicle or single cav without v2x
-    - name: TFHRC-CAR-1
-      spawn_position: [34, 250, 1, 0, -85, 0] # x, y, z, roll, yaw, pitch
+    - name: UCLA-OPENCDA
+      spawn_position: [28, 308.3, 1, 0, -85, 0] # x, y, z, roll, yaw, pitch
       destination: [60.5, 38.7, 0]
       v2x:
         communication_range: 45
@@ -92,3 +92,4 @@ scenario:
         local_planner:
           debug_trajectory: true
           debug: true
+
