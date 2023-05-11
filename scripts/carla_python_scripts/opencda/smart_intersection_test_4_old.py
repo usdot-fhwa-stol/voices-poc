@@ -13,13 +13,9 @@ from opencda.scenario_testing.evaluations.evaluate_manager import \
     EvaluationManager
 from opencda.scenario_testing.utils.yaml_utils import add_current_time
 
-import pygame
-import sys
-
 
 def run_scenario(opt, scenario_params):
     try:
-
         scenario_params = add_current_time(scenario_params)
 
         # create CAV world
@@ -29,12 +25,14 @@ def run_scenario(opt, scenario_params):
         scenario_manager = sim_api.ScenarioManager(scenario_params,
                                                    opt.apply_ml,
                                                    opt.version,
-                                                #    town='smart_intersection', #smart_intersection, Town04
+                                                   town='smart_intersection', #smart_intersection, Town04
                                                    cav_world=cav_world)
-
         if opt.record:
             scenario_manager.client. \
                 start_recorder("single_town04_carla_no_traffic.log", True)
+
+        # pause until press enter
+        # input("Press Enter to continue...")
 
         single_cav_list = \
             scenario_manager.create_vehicle_manager(application=['single'])
@@ -49,38 +47,12 @@ def run_scenario(opt, scenario_params):
                               script_name='smart_intersection_test_4',
                               current_time=scenario_params['current_time'])
 
+        # scenario_manager.world.set_weather('ClearNoon')
+        count=0
         spectator = scenario_manager.world.get_spectator()
-        
-        world = scenario_manager.client.get_world()
-
-        print("Press SPACE key to start the vehicle")
-        running = False
-
-        # Set up the Pygame window and clock
-        pygame.init()
-
-        screen = pygame.display.set_mode((700, 100))
-        # Set the font and text for the message
-        font = pygame.font.SysFont("monospace", 30)
-        text = font.render("Press SPACE to start vehicle movement", True, (255, 255, 255))
-
-        # Draw the message on the screen
-        screen.blit(text, (10, 10))
-        pygame.display.flip()
-
-        clock = pygame.time.Clock()
-
         # run steps
         while True:
             scenario_manager.tick()
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    running = True
-                    
             # transform = single_cav_list[0].vehicle.get_transform()
             # spectator.set_transform(carla.Transform(
             # transform.location +
@@ -90,15 +62,14 @@ def run_scenario(opt, scenario_params):
             # carla.Rotation(
             #     pitch=-8,
             #     yaw = -90)))
+            count=count+1
+            if count == 10:
+                input("Press Enter to continue...")
 
-            if running == True:
-                # scenario_manager.tick()
-                # pygame.display.quit()
-                for i, single_cav in enumerate(single_cav_list):
-                    single_cav.update_info()
-                    control = single_cav.run_step()
-                    single_cav.vehicle.apply_control(control)
-
+            for i, single_cav in enumerate(single_cav_list):
+                single_cav.update_info()
+                control = single_cav.run_step()
+                single_cav.vehicle.apply_control(control)
 
     finally:
         eval_manager.evaluate()
@@ -112,3 +83,4 @@ def run_scenario(opt, scenario_params):
             v.destroy()
         # for v in bg_veh_list:
         #     v.destroy()
+
