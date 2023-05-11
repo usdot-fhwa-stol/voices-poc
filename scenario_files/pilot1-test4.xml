@@ -12,42 +12,36 @@
 
     <OpenDrive>
         <MapFileName name="smart_intersection.xodr">
-            <MapOrigin latitudeInDegrees="34.0684932" longitudeInDegrees="-118.4456287"
-                       heightAboveEllipsoidInMeters="0"/>
+            <MapOrigin latitudeInDegrees="34.0684932" longitudeInDegrees="-118.4456287" heightAboveEllipsoidInMeters="0"/>
         </MapFileName>
     </OpenDrive>
 
     <vehicles>
 
-        <vehicle name="TFHRC_CAR_2" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-2" material="Aluminum"
-                 lvcIndicator="Live">
+        <vehicle name="TFHRC_CAR_2" bsmid="f03ad614" type="vehicle.audi.etron" owner="CARLA-TFHRC-2" material="Aluminum" lvcIndicator="Live">
             <userData>
                 <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-2" roleName="ego_vehicle"/>
             </userData>
             <initialTSPI>
-                <GeodeticPosition latitudeInDegrees="34.065799" longitudeInDegrees="-118.445287"
-                                  heightAboveEllipsoidInMeters="1"/>
+                <GeodeticPosition latitudeInDegrees="34.065799" longitudeInDegrees="-118.445287" heightAboveEllipsoidInMeters="1"/>
                 <Heading>189</Heading>
             </initialTSPI>
         </vehicle>
 
-        <vehicle name="TFHRC-CAR-1" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-TFHRC-1" material="Aluminum"
-                 lvcIndicator="Live">
+        <vehicle name="TFHRC-CAR-1" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-TFHRC-1" material="Aluminum" lvcIndicator="Live">
             <userData>
-                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-1" roleName="TFHRC-CAR-1" generate_bsms="true"/>
+                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-1" roleName="CARLA-TFHRC-1" generate_bsms="true"/>
             </userData>
             <initialTSPI>
-                <GeodeticPosition latitudeInDegrees="34.065482" longitudeInDegrees="-118.445302"
-                                  heightAboveEllipsoidInMeters="1"/>
-                <Heading>3</Heading>
+                <GeodeticPosition latitudeInDegrees="34.068493" longitudeInDegrees="-118.445629" heightAboveEllipsoidInMeters="1"/>
+                <Heading>189</Heading>
             </initialTSPI>
         </vehicle>
 
     </vehicles>
 
     <intersectionSignalControllers>
-        <intersectionSignalController name="smart_intersection_Main" adapterType="spat-adapter" adapterName="SPAT-1"
-                                      lvcIndicator="Live">
+        <intersectionSignalController name="smart_intersection_Main" adapterType="spat-adapter" adapterName="SPAT-1" lvcIndicator="Live">
             <userData>
                 <CARLA>
                     <controllers>

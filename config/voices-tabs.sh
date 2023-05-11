@@ -34,16 +34,14 @@ https://127.0.0.1:8443/
 ## VOICES-2
 
 
-em
-
-voices-poc
 tdcs
+
 sp
 carma
 carla
 carla-tena-adapter
 tj2735
-tleg
+
 ros
 build
 
