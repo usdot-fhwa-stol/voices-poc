@@ -2,7 +2,9 @@
 
 . ../../../../config/node_info.config
 
-# Run `conda activate opencda` before starting this script
+echo
+echo "!!!*** Run \`conda activate opencda\` before starting this script ***!!!"
+echo
 
 openCdaCarName=smart_intersection_test_4
 
