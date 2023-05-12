@@ -17,7 +17,7 @@
 #  * the License.
 #  *
 
-. ../../../../config/node_info.config
+. ../../../../config/scenario_config.config
 
 if [[ $? -ne 0 ]] ; then
     echo
