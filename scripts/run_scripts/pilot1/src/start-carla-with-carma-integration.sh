@@ -135,7 +135,8 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 
 	if [[ $carmaID == "TFHRC_CAR_2" ]]
 	then
-		SPAWN_PT="31.2,308.3,0,0,0,85" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
+		SPAWN_PT="34,250,0,0,0,85" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
+#		SPAWN_PT="31.2,308.3,0,0,0,85" # latitude=34.067713, longitude=-118.445144, altitude=1.000000
 	elif [[ $carmaID == "UCLA-OPENCDA" ]]
 	then
 		SPAWN_PT="30.0,340.5,1,0,0,85" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 #
