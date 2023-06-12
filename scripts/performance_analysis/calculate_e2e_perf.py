@@ -16,7 +16,7 @@ import pandas as pd
 # - change all data param modifiers (round, buffer, radian) to check if key exists, not value
 # - add checks for all param modifiers to check for the proper datatype before attempting to perform modifier
 # - remove places where underscore is added to message types
-# 
+# - incorporate intersection name outside the script (un-hard code )
 
 # checks if value is a number
 def is_number(s):
@@ -27,47 +27,90 @@ def is_number(s):
         return False
 
 # filter dataset based on specified parameters
-def filter_dataset(data_to_search,desired_num_of_skipped_packets):
+def filter_dataset(data_to_filter):
 
-    logging.info("----- FILTERING DATASET: " + dataset["dataset_name"] + " -----")
-    logging.debug("Before packets total: " + str(len(dataset["original_data_list"])))
+    logging.info("----- FILTERING DATASET: " + data_to_filter["dataset_name"] + " -----")
+    logging.debug("Before packets total: " + str(len(data_to_filter["original_data_list"])))
     
     search_starting_row = None
     found_packet_matching_search = False
     cleaned_data_to_search_list = []
    
-    
-    if data_to_search["data_order"] != 1:
-        source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
-        source_data_obj = all_data[source_data_obj_index]
-        source_data_list_filtered = source_data_obj["filtered_data_list"]
-        source_packet_to_match = source_data_list_filtered[0]
-        source_packet_params = source_data_obj["dataset_params"]
+    # source_data_obj = source_data
+    # source_data_list_filtered = source_data_obj["filtered_data_list"]
+    # source_packet_to_match = source_data_list_filtered[0]
+    # source_packet_params = source_data_obj["dataset_params"]
 
-        logging.debug("Looking at source packetIndex: " + source_packet_to_match[source_data_obj["dataset_index_column_name"]])
+    # logging.debug("Looking at source packetIndex: " + source_packet_to_match[source_data_obj["dataset_index_column_name"]])
 
 
-    data_to_search_list = data_to_search["original_data_list"]
-    data_to_search_params = data_to_search["dataset_params"]
+    data_to_search_list = data_to_filter["original_data_list"]
+    data_to_search_params = data_to_filter["dataset_params"]
 
     skipped_packets = 0
 
     for search_i,search_packet in enumerate(data_to_search_list):
 
-        if data_to_search["data_order"] == 1:
-            logging.debug("Checking packet index: [" + search_packet[data_to_search["dataset_index_column_name"]] + "]")
-        else:
-            logging.debug("Checking packet index: [" + source_packet_to_match[source_data_obj["dataset_index_column_name"]] + ":" + search_packet[data_to_search["dataset_index_column_name"]] + "]")
+        # if data_to_filter["data_order"] == 1:
+        logging.debug("Checking packet index: [" + search_packet[data_to_filter["dataset_index_column_name"]] + "]")
+        # else:
+        #     logging.debug("Checking packet index: [" + source_packet_to_match[source_data_obj["dataset_index_column_name"]] + ":" + search_packet[data_to_filter["dataset_index_column_name"]] + "]")
         
         # UNABLE TO USE THIS BECAUSE NO WAY TO IDENTIFY TCM BY VEHICLE AT THE MOMENT
         # LEAVING IN AS MAY BE USED LATER
         # quick and dirty way to align multiple tcm with one tcr
         # if the next row contains the same 
         if J2735_message_type_name == "Traffic_Control_Request":
-            if (search_i + 1) < len(data_to_search_list) and data_to_search_list[search_i][data_to_search["dataset_reqid_field"]] == data_to_search_list[search_i + 1][data_to_search["dataset_reqid_field"]]:
+            if (search_i + 1) < len(data_to_search_list) and data_to_search_list[search_i][data_to_filter["dataset_reqid_field"]] == data_to_search_list[search_i + 1][data_to_filter["dataset_reqid_field"]]:
                 logging.debug("Skipping TCM since next is from the same request")
                 continue
         
+        # # if source packet key is j2735_vector, combine all array elements to a single hex value
+        # if J2735_message_type_name == "J2735":
+
+        #     j2735_payload = ""
+        #     num_j2735_vector_elements = int(search_packet["Vector,binaryContent,count"])
+            
+        #     for array_element in range(1,num_j2735_vector_elements+1):
+        #         binary_element = int(search_packet["binaryContent^UInt8 (" + str(array_element) + ")"])
+        #         hex_element = hex(binary_element).split('x')[-1].zfill(2)
+        #         j2735_payload = j2735_payload + hex_element
+
+        #     search_packet["binaryContent^UInt8"] = j2735_payload
+        
+        
+        if data_to_filter["dataset_type"] == "pcap":
+            filter_packet_timestamp = float(search_packet["packetTimestamp"])
+        elif data_to_filter["dataset_type"] == "tdcs":
+            if J2735_message_type_name in J2735_message_types_as_tena_message:
+                # this is ideally time of transmission, but it functions the same
+                filter_packet_timestamp = float(search_packet["Metadata,TimeOfTransmission"])/1000000000
+            else:
+                filter_packet_timestamp = float(search_packet["Metadata,TimeOfCommit"])/1000000000
+        
+        if filter_packet_timestamp < data_to_filter["start_time"] or filter_packet_timestamp > data_to_filter["end_time"]:
+            logging.debug("Skipping packet because not in time bounds")
+            continue
+
+
+        # if the J2735_message_subtype is not none, we must be J2735 
+        if J2735_message_subtype_name != None:
+            
+            # check the value of the first match key (which should be the J2735 payload since that is the only value for J2735) and check whether the first 4 digits are equal to the appropriate subtype id value
+            if data_to_filter["dataset_type"] == "pcap":
+                j2735_payload_key = data_to_search_params["J2735"]["match_keys"][0]["key"]
+
+                if not search_packet[j2735_payload_key].startswith(J2735_message_type_ids[J2735_message_subtype_name]):
+                    logging.debug("Skipping packet because doesnt start with correct ID")
+                    logging.debug("  " + search_packet[j2735_payload_key] + " !^ " + J2735_message_type_ids[J2735_message_subtype_name])
+                    continue
+
+            elif data_to_filter["dataset_type"] == "tdcs":
+                if search_packet["messageType,String"] != J2735_message_subtype_name:
+                    logging.debug("Skipping packet because doesnt start with correct ID")
+                    logging.debug("  " + search_packet["messageType,String"] + " !^ " + J2735_message_subtype_name)
+                    continue
+
         # iterate through the neqs to check
         all_neqs_pass = True
 
@@ -91,7 +134,7 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
                 continue
             
             # if we are looking at TCM, all TCM come from the v2xhub so check against the v2xhub IP
-            if data_to_search["dataset_message_type"] == "Traffic_Control_Message" and "use_v2xhub_ip_for_tcm" in current_neq and current_neq["use_v2xhub_ip_for_tcm"]:
+            if data_to_filter["dataset_message_type"] == "Traffic_Control_Message" and "use_v2xhub_ip_for_tcm" in current_neq and current_neq["use_v2xhub_ip_for_tcm"]:
                 logging.debug("    Using v2xhub IP since all TCM are generated by the v2xhub")
                 neq_param_value = v2xhub_ip_address
 
@@ -112,19 +155,19 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
             if "mobility_timestamp_check" in current_neq and current_neq["mobility_timestamp_check"]:
                 
                 # we need to use this timesstamp check for filtering pcaps in but it breaks if we dont have a first data point
-                # if data_to_search["data_order"] == 1:
+                # if data_to_filter["data_order"] == 1:
                 #     neq_bypass = True
                 
                 # if the cleaned data list is empty, this must be the first packet and we need to feed a starting timestamp value
                 if len(cleaned_data_to_search_list) == 0:
                     
                     # if we are the first dataset, use the timestamp from the current packet
-                    if data_to_search["data_order"] == 1:
+                    if data_to_filter["data_order"] == 1:
                         previous_timestamp = float(search_packet["headerTimestamp"])
                     else:
                         previous_timestamp = float(all_data[0]["filtered_data_list"][0]["headerTimestamp"])
                         
-                        if data_to_search["dataset_type"] == "tdcs":
+                        if data_to_filter["dataset_type"] == "tdcs":
                             previous_timestamp = previous_timestamp * 1000000 # tdcs timestamps are in nanoseconds, mobility header timestamp is in ms
 
                     
@@ -142,7 +185,7 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
                     neq_bypass = True
                     
             if "reqid_check" in current_neq and current_neq["reqid_check"]:
-                if data_to_search["data_order"] == 1:
+                if data_to_filter["data_order"] == 1:
                     neq_bypass = True
                 elif search_packet_neq_value in source_reqid_list:
                     logging.debug("  reqid found in source reqids, keeping packet")
@@ -222,24 +265,28 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
         # this is accomplished by skipping and counting the number of skipped packets 
         # until it matches the desired skipped packet number
         # TODO: This can probably get moved up before the eq and neqs 
-        if data_to_search["data_order"] == 1 and skipped_packets < desired_num_of_skipped_packets:
+        # if data_to_filter["data_order"] == 1 and skipped_packets < desired_num_of_skipped_packets:
                         
-            logging.debug("Skipping packet to find one that exists in all datasets")
-            skipped_packets += 1
-            continue         
+        #     logging.debug("Skipping packet to find one that exists in all datasets")
+        #     skipped_packets += 1
+        #     continue
+
+        # because J2735 data can repeat for BSMs, we need to look for the first unique value so we can eliminate the repeating values in the start
         
-        if data_to_search["data_order"] == 1 and J2735_message_type_name == "Traffic_Control_Request":
-            logging.debug("Adding source reqid to list: " + search_packet[data_to_search["dataset_reqid_field"]])
-            source_reqid_list.append(search_packet[data_to_search["dataset_reqid_field"]])
+        if data_to_filter["data_order"] == 1 and J2735_message_type_name == "Traffic_Control_Request":
+            logging.debug("Adding source reqid to list: " + search_packet[data_to_filter["dataset_reqid_field"]])
+            source_reqid_list.append(search_packet[data_to_filter["dataset_reqid_field"]])
 
         # if we are filtering the source data, we are not matching it against anything so skip this bottom part
-        if data_to_search["data_order"] == 1 and not found_packet_matching_search:
-            found_packet_matching_search = True
-            search_starting_row = search_i
-            logging.debug("Found source search_starting_row: " + str(search_starting_row))
-            logging.debug("Keeping Packet: " + str(search_packet[data_to_search["dataset_index_column_name"]]))
-            cleaned_data_to_search_list.append(search_packet)
-            continue
+        # if not kept_at_least_one_packet:
+        #     kept_at_least_one_packet = True
+            # search_starting_row = search_i
+            # logging.debug("Found source search_starting_row: " + str(search_starting_row))
+        
+        logging.debug("Keeping Packet: " + str(search_packet[data_to_filter["dataset_index_column_name"]]))
+        cleaned_data_to_search_list.append(search_packet)
+
+        
 
         # the first time all fields match, this is the start of the data we want
         # get the offset between the source start index and the search start index
@@ -247,42 +294,179 @@ def filter_dataset(data_to_search,desired_num_of_skipped_packets):
         # UPDATE:   with the new method of filtering out the data lists, ideally all lists index 0 align
         #           this might not always be the case (if the first valid packet was dropped) so we do this anyway
 
-        if not found_packet_matching_search:
+        # if not found_packet_matching_search:
 
-            all_fields_match = check_if_data_matches(source_packet_params,data_to_search_params,source_packet_to_match,search_packet)
+        #     all_fields_match = check_if_data_matches(source_packet_params,data_to_search_params,source_packet_to_match,search_packet)
             
-            if all_fields_match:
-                logging.debug("All Fields match for " + data_to_search["dataset_name"])
-                found_packet_matching_search = True
+        #     if all_fields_match:
+        #         logging.debug("All Fields match for " + data_to_filter["dataset_name"])
+        #         found_packet_matching_search = True
 
         # since it was not eliminated from the NEQ and EQs, add the packet to the filtered data list
-        if found_packet_matching_search:
-            logging.debug("Keeping Packet: " + str(search_packet[data_to_search["dataset_index_column_name"]]))
-            cleaned_data_to_search_list.append(search_packet)
+        # if found_packet_matching_search:
+        #     logging.debug("Keeping Packet: " + str(search_packet[data_to_filter["dataset_index_column_name"]]))
+        #     cleaned_data_to_search_list.append(search_packet)
 
-    if data_to_search["data_order"] == 1 and search_starting_row == None:
-        if desired_num_of_skipped_packets == len(data_to_search_list):
-                logging.critical("Unable to find any packets in source dataset that exits in all other datasets. Consider changing the EQ and NEQ")
-                print("\nUnable to find any packets in source dataset that exits in all other datasets. Consider changing the EQ and NEQ")
-                sys.exit()
-        else:
-            logging.critical("search_starting_row not set - Unable to find a single packet in source that satisfies the EQ and NEQ. Consider changing the EQ and NEQ to find a starting packet")
-            print("\nUnable to find a single packet in source data that satisfies the EQ and NEQ, Consider changing the EQ and NEQ to find a starting packet")
-            sys.exit()
+    # if search_starting_row == None:
+    #     # if desired_num_of_skipped_packets == len(data_to_search_list):
+    #     #         logging.critical("Unable to find any packets in source dataset that exits in all other datasets. Consider changing the EQ and NEQ")
+    #     #         print("\nUnable to find any packets in source dataset that exits in all other datasets. Consider changing the EQ and NEQ")
+    #     #         sys.exit()
+    #     # else:
+    #     logging.critical("search_starting_row not set - Unable to find a single packet in source that satisfies the EQ and NEQ. Consider changing the EQ and NEQ to find a starting packet")
+    #     print("\nUnable to find a single packet in source data that satisfies the EQ and NEQ, Consider changing the EQ and NEQ to find a starting packet")
+    #     sys.exit()
 
         
-    if not found_packet_matching_search:
+    if len(cleaned_data_to_search_list) == 0:
         logging.warning("[!!!] found_packet_matching_search false - Unable to find a single packet that satisfies the EQ and NEQ")
         return
 
-    data_to_search["filtered_data_list"] = cleaned_data_to_search_list
-    data_to_search["found_packet_matching_search"] = found_packet_matching_search
+    data_to_filter["filtered_data_list"] = cleaned_data_to_search_list
+    # data_to_filter["found_packet_matching_search"] = found_packet_matching_search
 
     # filtered_data_list = dataset["cleaned_data_to_search_list"]
-    filtered_total_packets = len(data_to_search["filtered_data_list"])
-    logging.info("Cleaned packets total - " + data_to_search["dataset_name"] + ": " + str(filtered_total_packets))
+    filtered_total_packets = len(data_to_filter["filtered_data_list"])
+    logging.info("Cleaned packets total - " + data_to_filter["dataset_name"] + ": " + str(filtered_total_packets))
 
-    logging.debug("Last packetIndex: " + dataset["filtered_data_list"][filtered_total_packets -1][dataset["dataset_index_column_name"]])
+    logging.debug("Last packetIndex: " + data_to_filter["filtered_data_list"][filtered_total_packets -1][data_to_filter["dataset_index_column_name"]])
+
+def align_dataset(source_data,data_to_search):
+
+    logging.info("----- ALIGNING DATASETS: " + source_data["dataset_name"] + " and " + data_to_search["dataset_name"] + " -----")
+    logging.debug("Before packets total: " + str(len(source_data["filtered_data_list"])))
+    
+    search_starting_row = None
+    found_packet_matching_search = False
+    cleaned_data_to_search_list = []
+   
+    source_data_obj = source_data
+    source_data_list_filtered = source_data_obj["filtered_data_list"]
+    source_packet_to_match = source_data_list_filtered[0]
+    source_packet_params = source_data_obj["dataset_params"]
+
+    logging.debug("Looking at source packetIndex: " + source_packet_to_match[source_data_obj["dataset_index_column_name"]])
+
+    data_to_search_list = data_to_search["filtered_data_list"]
+    data_to_search_params = data_to_search["dataset_params"]
+
+    for search_i,search_packet in enumerate(data_to_search_list):
+        
+        # if data_to_search["data_order"] == 1:
+        #     logging.debug("Checking packet index: [" + search_packet[data_to_search["dataset_index_column_name"]] + "]")
+        # else:
+        logging.debug("Checking packet index: [" + source_packet_to_match[source_data_obj["dataset_index_column_name"]] + ":" + search_packet[data_to_search["dataset_index_column_name"]] + "]")
+        
+        # UNABLE TO USE THIS BECAUSE NO WAY TO IDENTIFY TCM BY VEHICLE AT THE MOMENT
+        # LEAVING IN AS MAY BE USED LATER
+        # quick and dirty way to align multiple tcm with one tcr
+        # if the next row contains the same 
+        if J2735_message_type_name == "Traffic_Control_Request":
+            if (search_i + 1) < len(data_to_search_list) and data_to_search_list[search_i][data_to_search["dataset_reqid_field"]] == data_to_search_list[search_i + 1][data_to_search["dataset_reqid_field"]]:
+                logging.debug("Skipping TCM since next is from the same request")
+                continue  
+
+        all_fields_match = check_if_data_matches(source_packet_params,data_to_search_params,source_packet_to_match,search_packet)
+        
+        if all_fields_match:
+            logging.debug("All Fields match for " + data_to_search["dataset_name"])
+            found_packet_matching_search = True
+            search_starting_row = search_i
+            break
+
+        
+    if not found_packet_matching_search:
+        logging.warning("[!!!] found_packet_matching_search false - Unable to find first source packet in dataset")
+        return
+    else:
+        logging.warning("[!!!] found_packet_matching_search true - " + str(search_starting_row))
+
+    # data_to_search["filtered_data_list"] = cleaned_data_to_search_list
+    data_to_search["found_packet_matching_search"] = found_packet_matching_search
+    data_to_search["starting_dataset_index"] = search_i
+
+    # filtered_data_list = dataset["cleaned_data_to_search_list"]
+    # filtered_total_packets = len(data_to_search["filtered_data_list"])
+    # logging.info("Cleaned packets total - " + data_to_search["dataset_name"] + ": " + str(filtered_total_packets))
+
+    # logging.debug("Last packetIndex: " + dataset["filtered_data_list"][filtered_total_packets -1][dataset["dataset_index_column_name"]])
+
+def find_first_unique_packet_old(data_to_search):
+
+    logging.info("----- FINDING FIRST UNIQUE PACKET: " + data_to_search["dataset_name"] + " -----")
+    logging.debug("Before total: " + str(len(data_to_search["filtered_data_list"])))
+
+    data_to_search_list = data_to_search["filtered_data_list"]
+    data_to_search_params = data_to_search["dataset_params"]
+
+    for search_i,search_packet in enumerate(data_to_search_list):
+
+        packet_is_unique = True
+
+        logging.debug("Checking if packet is unique")
+        for unique_search_i,unique_search_packet in enumerate(data_to_search_list,start=search_i+1):
+            # if unique_search_i < search_i:
+            #     continue
+            
+            logging.debug("Checking if packet is unique [" + str(search_i) + ":" + str(unique_search_i) + "]")
+            unique_packet_check = check_if_data_matches(data_to_search_params,data_to_search_params,search_packet,unique_search_packet)
+
+            if unique_packet_check:
+                packet_is_unique = False
+                break
+
+        if not packet_is_unique:
+            logging.debug("Packet is not unique")
+            continue
+        else:
+            logging.debug("Packet is unique")
+            data_to_search_list = data_to_search["filtered_data_list"][search_i:]
+            break
+    
+    logging.debug("After total: " + str(len(data_to_search["filtered_data_list"])))
+
+def find_first_unique_packet(data_to_search):
+    
+    logging.info("Searching for first unique packet in dataset")
+
+    # Create a dictionary to store the count of each payload value
+    unique_packets = []
+
+    data_to_search_list = data_to_search["filtered_data_list"]
+    data_to_search_params = data_to_search["dataset_params"]
+
+    # Count the occurrences of each payload value
+    for packet_to_check in data_to_search_list:
+        logging.debug("  Checking packet index: " + str(packet_to_check[data_to_search["dataset_index_column_name"]]))
+
+        packet_is_in_unique_packets = False
+
+        for unique_packet_obj in unique_packets:
+            
+            packet_is_in_unique_packets = check_if_data_matches(data_to_search_params,data_to_search_params,unique_packet_obj["packet"],packet_to_check)
+
+            if packet_is_in_unique_packets:
+                break
+
+        if packet_is_in_unique_packets:
+            unique_packet_obj["count"] += 1
+            logging.debug("  Found duplicate packet: " + str(packet_to_check[data_to_search["dataset_index_column_name"]]) + " = " + str(unique_packet_obj["packet"][data_to_search["dataset_index_column_name"]]) + " count: " + str(unique_packet_obj["count"]))
+        else:
+            unique_packets.append(
+                {
+                    "packet"    : packet_to_check,
+                    "count"     : 1
+                }
+            )
+            logging.debug("  Found unique packet: " + str(packet_to_check[data_to_search["dataset_index_column_name"]]) )
+
+    # Find the first element with a payload value that occurs only once
+    for unique_packet_obj in unique_packets:
+        if unique_packet_obj["count"] == 1:
+            return unique_packet_obj["packet"]
+
+    # Return None if no unmatched element is found
+    return None
 
 def extract_dtd_from_mob_ops(ops_params_value):
     # logging.debug("  EXTRACTING DTD FROM: " + str(ops_params_value))
@@ -356,10 +540,40 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
         ):
             logging.debug("  Skipping match key " + str(match_i) + " since one or more keys are None: " + str(source_packet_key) + "," + str(search_packet_key))
             continue
+        
+        # if source packet key is j2735_vector, combine all array elements to a single hex value
+        if "j2735_vector" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["j2735_vector"]:
+
+            j2735_payload = ""
+            num_j2735_vector_elements = int(source_packet_to_match["Vector,binaryContent,count"])
+            
+            for array_element in range(1,num_j2735_vector_elements+1):
+                binary_element = int(source_packet_to_match["binaryContent^UInt8 (" + str(array_element) + ")"])
+                hex_element = hex(binary_element).split('x')[-1].zfill(2)
+                j2735_payload = j2735_payload + hex_element
+
+            source_packet_to_match[source_packet_key] = j2735_payload
+
+        # if source packet key is j2735_vector, combine all array elements to a single hex value
+        if "j2735_vector" in data_to_search_params[J2735_message_type_name]["match_keys"][match_i] and data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["j2735_vector"]:
+
+            j2735_payload = ""
+            num_j2735_vector_elements = int(search_packet["Vector,binaryContent,count"])
+            
+            for array_element in range(1,num_j2735_vector_elements+1):
+                binary_element = int(search_packet["binaryContent^UInt8 (" + str(array_element) + ")"])
+                hex_element = hex(binary_element).split('x')[-1].zfill(2)
+                j2735_payload = j2735_payload + hex_element
+
+            search_packet[search_packet_key] = j2735_payload
 
         
         source_packet_value = source_packet_to_match[source_packet_key]
         search_packet_value = search_packet[search_packet_key]
+
+        # print(source_packet_value)
+        # print(search_packet_value)
+
 
         if "extract_mobility_dtd" in source_packet_params[J2735_message_type_name]["match_keys"][match_i] and source_packet_params[J2735_message_type_name]["match_keys"][match_i]["extract_mobility_dtd"]:
             
@@ -423,12 +637,16 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
         spat_state_mappings = {
             "VUG::Entities::Signals::TrafficLightState_Green" : "green",
             "protected-Movement-Allowed" : "green",
+            "VUG::Entities::Signals::TrafficLightState_Green" : "green",
+            "permissive-Movement-Allowed" : "green",
 
             "VUG::Entities::Signals::TrafficLightState_Red" : "red",
             "stop-And-Remain" : "red",
 
             "VUG::Entities::Signals::TrafficLightState_Yellow" : "yellow",
-            "protected-clearance" : "yellow",            
+            "protected-clearance" : "yellow",
+            "VUG::Entities::Signals::TrafficLightState_Yellow" : "yellow",
+            "permissive-clearance" : "yellow",             
 
         }
 
@@ -497,7 +715,7 @@ def clean_name(input_name):
     logging.debug("Clean Name: " + clean_name)
     return clean_name
 
-def load_data(dataset_name,dataset_infile,dataset_type,dataset_message_type):
+def load_data(dataset_name,dataset_infile,dataset_type,dataset_message_type,adapter_ip,start_time,end_time):
 
     dataset_name_clean = clean_name(dataset_name)
 
@@ -526,7 +744,18 @@ def load_data(dataset_name,dataset_infile,dataset_type,dataset_message_type):
         dataset_params = data_params["tdcs_params"]
         dataset_index_column_name = "rowID"
         dataset_reqid_field = "requestID,String"
-        
+    
+
+    if "J2735-" in dataset_message_type:
+        dataset_message_subtype = dataset_message_type.replace("J2735-","")
+        dataset_message_type = "J2735"
+
+    # if the dataset has an adapter_ip row and the neq wants to filter on it, insert the configured IP to the neq value
+    if adapter_ip:
+        for neq in dataset_params[dataset_message_type]["skip_if_neqs"]:
+            if neq["key"] == "Metadata,Endpoint":
+                neq["value"] = adapter_ip
+    
 
 
     
@@ -543,6 +772,9 @@ def load_data(dataset_name,dataset_infile,dataset_type,dataset_message_type):
         "found_packet_matching_search"  : False,
         "dataset_reqid_field"           : dataset_reqid_field,
         "dataset_message_type"          : dataset_message_type,
+        "dataset_message_subtype"       : dataset_message_subtype,
+        "start_time"                    : float(start_time),
+        "end_time"                      : float(end_time),
         
     })
 
@@ -560,8 +792,12 @@ def check_for_dropped_packets():
 
     dropped_packet_counts = {}
 
+    dataset_offsets = {}
+
     for dataset_i in range(1,len(all_data)):
         dropped_packet_counts[all_data[dataset_i]["dataset_name"]] = 0
+        dataset_offsets[all_data[dataset_i]["dataset_name"]] = 0
+
 
     logging.debug("----- CHECKING FOR DROPPED PACKETS -----")
     for source_i,source_packet in enumerate(source_data_list_filtered):
@@ -586,13 +822,34 @@ def check_for_dropped_packets():
                 dataset["filtered_data_list"].insert(source_i ,dropped_packet_placeholder)
 
                 continue
-
             
             logging.debug("Checking against source packet: " + source_packet[source_data_obj["dataset_index_column_name"]])
-            
-            current_dataset_packet = dataset["filtered_data_list"][source_i]
 
-            all_fields_match = check_if_data_matches(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet)            
+            packet_lookahead = 0
+            packet_lookahead_max = 50
+
+            # we are unable to completely filter the pcap in dataset since we are not decoding the J2735 payload to get any filtering criteria
+            # therefore, we are trying to look ahead in the dataset to skip unfiltered rows
+            while packet_lookahead < packet_lookahead_max:
+                
+                if len(dataset["filtered_data_list"]) <= source_i + packet_lookahead:
+                    logging.debug("Reached end of dataset")
+                    all_fields_match = False
+                    break
+
+                current_dataset_packet = dataset["filtered_data_list"][source_i + packet_lookahead]
+
+                all_fields_match = check_if_data_matches(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet)
+
+                if not all_fields_match:
+                    logging.debug("Skipping ahead " + str(packet_lookahead) + " for desired packet")
+                    packet_lookahead += 1
+                else:
+                    dataset_offsets[all_data[dataset_i]["dataset_name"]] += packet_lookahead
+                    logging.debug("Found packet by looking ahead " + str(packet_lookahead) + ", new total offset is " + str(dataset_offsets[all_data[dataset_i]["dataset_name"]]))
+                    del dataset["filtered_data_list"][source_i:source_i + packet_lookahead]
+
+                    break
 
             if not all_fields_match:
                 logging.warning("  [!!!] Found dropped packet in " + dataset["dataset_name"] +  " [" + source_packet[source_data_obj["dataset_index_column_name"]] + ":" + current_dataset_packet[dataset["dataset_index_column_name"]] + "]: ")
@@ -610,6 +867,7 @@ def check_for_dropped_packets():
 
             else:
                 logging.debug("  Found matching packet in " + dataset["dataset_name"] +  " [" + source_packet[source_data_obj["dataset_index_column_name"]] + ":" + current_dataset_packet[dataset["dataset_index_column_name"]] + "]: ")
+                
                 print_keys(source_packet_params,dataset["dataset_params"],source_packet,current_dataset_packet,"debug")
     
     print("\nDropped Packet Totals: ")
@@ -631,13 +889,16 @@ def calculate_performance_metrics():
         current_row_data[ source_data_obj["dataset_name"] + "_" + source_data_obj["dataset_index_column_name"] ] = source_packet[source_data_obj["dataset_index_column_name"]]
 
         if source_data_obj["dataset_type"] == "pcap":
-            current_row_data[ source_data_obj["dataset_name"] + "_timestamp"] = float(source_packet["packetTimestamp"])
+            source_packet_timestamp = float(source_packet["packetTimestamp"])
         elif source_data_obj["dataset_type"] == "tdcs":
-            current_row_data[ source_data_obj["dataset_name"] + "_timestamp"] = float(source_packet["Metadata,TimeOfCommit"])/1000000000
+            if J2735_message_type_name in J2735_message_types_as_tena_message:
+                # this is ideally time of transmission, but it functions the same
+                source_packet_timestamp = float(source_packet["Metadata,TimeOfTransmission"])/1000000000
+            else:
+                source_packet_timestamp = float(source_packet["Metadata,TimeOfCommit"])/1000000000
 
 
-
-        source_packet_timestamp = source_packet["packetTimestamp"]
+        current_row_data[ source_data_obj["dataset_name"] + "_timestamp"] = source_packet_timestamp
         logging.debug("----- CALCULATING PERFORMANCE FOR SOURCE PACKET " + source_packet[source_data_obj["dataset_index_column_name"]] + " -----")
         logging.debug("source_packet_timestamp: " + str(source_packet_timestamp))
 
@@ -826,6 +1087,7 @@ def performance_post_processing(results_file):
     except:
         logging.error("Unable to open results file")
         print("\tERROR: Unable to open results file")
+        sys.exit()
     
     
     found_first_total_latency = False
@@ -838,7 +1100,12 @@ def performance_post_processing(results_file):
     
     # convert values to numeric
     filtered_dataset_numeric = filtered_dataset.apply(pd.to_numeric,errors='coerce')
-        
+    
+    if args.results_summary_prefix:
+
+        results_summary_outfile_obj = open("results/" + args.results_summary_prefix + "_results_summary.csv",'a')
+        results_summary_outfile_writer = csv.writer(results_summary_outfile_obj)
+
         
     
     for column in filtered_dataset:
@@ -870,11 +1137,41 @@ def performance_post_processing(results_file):
             # print(str(filtered_dataset_numeric_diff_abs))
             
             column_mean_diff = filtered_dataset_numeric_diff_abs.mean()
+            column_std_dev = "NA"
             print("\t\tJitter: " + str(column_mean_diff))
         else:
             filtered_dataset_numeric_dropna = filtered_dataset_numeric[column].dropna()
             column_std_dev = filtered_dataset_numeric_dropna.std()
+            column_mean_diff = "NA"
             print("\t\tStd Dev: " + str(column_std_dev))
+
+        if args.results_summary_prefix:
+            column_split = column.split("_to_")
+
+            src_name_and_type = column_split[0]
+            src_name_and_type_split = src_name_and_type.split("_")
+            src_name = src_name_and_type_split[0]
+            src_type = src_name_and_type_split[1]
+
+            # print("src_name: " + src_name)
+
+            dst_name_type_step_split = column_split[1].split("_")
+            dst_name = dst_name_type_step_split[0]
+            dst_type = dst_name_type_step_split[1]
+            # print("dst_name: " + dst_name)
+
+
+            if "_transmit" in column_split[1]:
+                step_type = "sdo_transmit"
+            elif "_commit" in column_split[1]:
+                step_type = "sdo_commit"
+            elif "_pcap_in" in column_split[1]:
+                step_type = "pcap_in"
+            elif "_pcap_out" in column_split[1]:
+                step_type = "pcap_out"
+
+            results_summary_outfile_writer.writerow([J2735_message_subtype_name,src_name,src_type,dst_name,dst_type,step_type,column_min,column_max,column_mean,column_mean_diff,column_std_dev])
+
     
         
 #################### LOAD DATA ####################
@@ -945,12 +1242,12 @@ def load_data_from_csv(datasets_infile):
 
     for dataset_line in datasets_list:
         if str(dataset_line["load_data"]) == "true":
-            load_data(dataset_line["dataset_name"],dataset_line["dataset_file_location"],dataset_line["dataset_type"],dataset_line["message_type"])
+            load_data(dataset_line["dataset_name"],dataset_line["dataset_file_location"],dataset_line["dataset_type"],dataset_line["message_type"],dataset_line["adapter_ip"],dataset_line["start_time"],dataset_line["end_time"])
 
 
 #################### SELECT SOURCE VEHICLE ####################
 
-voices_vehicles = [
+sit1_voices_vehicles = [
         {
             "tena_host_id"       : "CARMA-TFHRC-LIVE",
             "host_static_id":   "CARMA-TFHRC-LIVE", #CARMA-TFHRC-LIVE",
@@ -1001,6 +1298,33 @@ voices_vehicles = [
         },
     ]
 
+pilot1_voices_participants = [
+        {
+            "tena_host_id"       : "TFHRC_CAR_2",
+            "host_static_id":   "TFHRC_CAR_2",
+            "bsm_id"        : "f03ad614",
+            "lvc_designation" : "constructive",
+            "traffic_control_ip_address"    : None,
+            
+        },
+        {
+            "tena_host_id"       : "UCLA-OPENCDA",
+            "host_static_id":   "UCLA-OPENCDA",
+            "bsm_id"        : "f03ad612",
+            "lvc_designation" : "constructive",
+            "traffic_control_ip_address"    : None,
+        },
+        {
+            "tena_host_id"       : "NISSAN-SVM",
+            "host_static_id":   "NISSAN-SVM",
+            "bsm_id"        : "f03ad614",
+            "lvc_designation" : "constructive",
+            "traffic_control_ip_address"    : None,
+        },
+    ]
+
+voices_vehicles = pilot1_voices_participants
+
 def select_vehicle_user_input():
 
     print("\nWhat is the source vehicle? [#]\n")
@@ -1046,7 +1370,9 @@ def select_message_type_user_input():
 #         "dataset_type"                    : "pcap" or "tdcs"
 #         "dataset_params"                  : {},
 #         "found_packet_matching_search"    : bool,
+#         "starting_dataset_index"          : int of starting index in dataset to align with other datasets (NOT PACKET INDEX)
 #         "dataset_index_column_name"       : packetIndex for pcap, rowID for tdcs,
+#         "dataset_subtype"                 : SPAT or BSM or other - used for J2735 messages
 #     },
 #     {
 #         "dataset_name"                    : "some_other_dataset_name",
@@ -1056,7 +1382,9 @@ def select_message_type_user_input():
 #         "dataset_type"                    : "pcap" or "tdcs"
 #         "dataset_params"                  : {},
 #         "found_packet_matching_search"    : bool,
+#         "starting_dataset_index"          : int of starting index in dataset to align with other datasets (NOT PACKET INDEX)
 #         "dataset_index_column_name"       : packetIndex for pcap, rowID for tdcs,
+#         "dataset_subtype"                 : SPAT or BSM or other - used for J2735 messages
 #     },
 #     ...
 
@@ -1066,13 +1394,19 @@ def select_message_type_user_input():
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
 
-J2735_message_types = ["MAP","SPAT","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","MAP","SPAT","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
+
+J2735_message_type_ids = {
+    "BSM"   : "0014",
+    "SPAT"  : "0013",
+    "MAP"   : "0012"
+}
 
 # list of J2735 messages that become TENA Messages (as opposed to SDOs)
-J2735_message_types_as_tena_message = ["Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types_as_tena_message = ["Traffic_Control_Request","Traffic_Control_Message", "J2735"]
 
-desired_intersection_name = "TFHRC West Intersection"
-desired_signal_id = "905"
+desired_intersection_name = ""
+desired_signal_id = "1628"
 
 v2xhub_ip_address = "172.30.1.146"
 
@@ -1095,7 +1429,7 @@ argparser.add_argument(
     dest='data_type',
     type=str,
     default=None,
-    help='Data type to be analyzed OPTIONS: [MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
+    help='Data type to be analyzed OPTIONS: [J2725,MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
 argparser.add_argument(
     '-s', '--source_vehicle',
     metavar='<source_vehicle_index>',
@@ -1111,22 +1445,19 @@ argparser.add_argument(
     default=None,
     help='name of the outfile (no special characters or spaces)')
 argparser.add_argument(
+    '-r', '--results_summary',
+    metavar='<summary file prefix>',
+    dest='results_summary_prefix',
+    type=str,
+    default=None,
+    help='if used, includes results summary using given prefix')
+argparser.add_argument(
     '-i', '--infile',
     metavar='<infile>',
     dest='infile',
     type=str,
     default=None,
     help='a csv input file that contains the datasets to load (columns: "dataset_name","dataset_file_location","dataset_type" ')
-# argparser.add_argument(
-#     '-p', '--port',
-#     metavar='P',
-#     default=2000,
-#     type=int,
-#     help='TCP port to listen to (default: 2000)')
-# argparser.add_argument(
-#     '-a', '--autopilot',
-#     action='store_true',
-#     help='enable autopilot')
 args = argparser.parse_args()
 
 log_level = getattr(logging, args.log_level)
@@ -1174,11 +1505,22 @@ else:
 
     J2735_message_type_name = str(args.data_type)
 
+if "J2735-" in J2735_message_type_name:
+    J2735_message_subtype_name = J2735_message_type_name.replace("J2735-","")
+    J2735_message_type_name = "J2735"
+    
+
+else:
+    J2735_message_subtype_name = None
+
 
 print("Message Type: " + J2735_message_type_name + " selected")
 
+if J2735_message_subtype_name:
+    print("Message Sub-Type: " + J2735_message_subtype_name + " selected")
+
 # we do not need to select a vehicle for spat
-if J2735_message_type_name != "SPAT":
+if J2735_message_type_name != "SPAT" and J2735_message_type_name != "J2735":
     if args.source_vehicle_index == None:
         vehicle_info = select_vehicle_user_input()
     else:
@@ -1219,19 +1561,24 @@ else:
 # remove two decimal places 
 # save
 
-
-if vehicle_info["platoon_order"] == 1:
-    mob_ops_tdcs_field = "downtrackDistanceInMeters,Float32"
-    extract_tdcs_mobility_dtd = False
-elif vehicle_info["platoon_order"] == 2:
-    mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (1)"
-    extract_tdcs_mobility_dtd = True
-elif vehicle_info["platoon_order"] == 3:
-    mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (2)"
-    extract_tdcs_mobility_dtd = True
+if J2735_message_type_name == "Mobility_Operations-INFO" or J2735_message_type_name == "Mobility_Operations-STATUS":
+    if vehicle_info["platoon_order"] == 1:
+        mob_ops_tdcs_field = "downtrackDistanceInMeters,Float32"
+        extract_tdcs_mobility_dtd = False
+    elif vehicle_info["platoon_order"] == 2:
+        mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (1)"
+        extract_tdcs_mobility_dtd = True
+    elif vehicle_info["platoon_order"] == 3:
+        mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (2)"
+        extract_tdcs_mobility_dtd = True
+else:
+    mob_ops_tdcs_field = None
+    extract_tdcs_mobility_dtd = None
     
 
 print("Source Vehicle: " + desired_tena_identifier + "(" + desired_bsm_id +  ") selected")
+
+
 
 ############################## SET DATA PARAMS ##############################
 
@@ -1300,7 +1647,7 @@ data_params = {
             "skip_if_eqs"       : [
                 {
                     "key"           : "phase2_eventState",
-                    "value"         : "protected-Movement-Allowed",  # only way to align the data is to skip until a value changes
+                    "value"         : "permissive-Movement-Allowed",  # only way to align the data is to skip until a value changes
                     "start_only"    : True                         
                 },
             ],
@@ -1526,6 +1873,31 @@ data_params = {
             "match_keys"        : [
                 {
                     "key"       : "reqid_hex",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
+        "J2735" : {
+            "skip_if_neqs"      : [
+            ],
+            
+            "skip_if_eqs"       : [
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "payload",
                 },
                 {
                     "key"       : None,
@@ -1922,6 +2294,36 @@ data_params = {
                 }
             ]
         },
+        "J2735" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "Metadata,Endpoint",
+                    "value"         : None,
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "binaryContent^UInt8",
+                    "j2735_vector": True,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
     }
 }
 
@@ -1961,47 +2363,77 @@ max_packets_to_skip = 30
 source_reqid_list = []
 
 
+for dataset_to_filter in all_data:
+    filter_dataset(dataset_to_filter)
+
+print("\nFiltered Packet Totals:")
+for dataset in all_data:
+    print("\t" + dataset["dataset_name"] + ": " + str(len(dataset["filtered_data_list"])))
+
+# print("\nFilter to first unique Totals:")
+# for dataset_to_find_unique in all_data:
+#     find_first_unique_packet(dataset_to_find_unique)
+
+
 # loop through the first 30 packets of the source 
-while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_skip:
-    logging.info("---------- CHECKING ALL DATASETS HAVE FIRST SOURCE PACKET ----------")
-    logging.info("  --> Skipping first " + str(packets_to_skip) + " source packets")
+# while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_skip:
+logging.info("---------- FINDING FIRST PACKET FOR ALL DATASETS ----------")
+# logging.info("  --> Skipping first " + str(packets_to_skip) + " source packets")
+
+# iterate through all datasets and filter the dataset starting at the matched packet
+for source_dataset in all_data:
 
     all_datasets_have_offset = True
-
-    # iterate through all datasets and filter the dataset starting at the matched packet
-    for dataset in all_data:
-
-        filter_dataset(dataset,packets_to_skip)
+    
+    for dataset_to_search in all_data:
         
-        # if we go through the whole dataset and we haven't found the matching packet,
+        # dont align a dataset with itself
+        if source_dataset["dataset_name"] == dataset_to_search["dataset_name"]:
+            source_dataset ["starting_dataset_index"] = 0
+            continue
+
+        align_dataset(source_dataset,dataset_to_search)
+        
+        # if we go through the whole source_dataset and we haven't found the matching packet,
         # break to continue to the next source packet
-        if not dataset["found_packet_matching_search"]:
-            logging.debug("Could not find offset in: " + dataset["dataset_name"] )
+        if not dataset_to_search["found_packet_matching_search"]:
+            logging.debug("Could not find offset in: " + dataset_to_search["dataset_name"] )
             all_datasets_have_offset = False
             break
+
     
+
     # if all datasets found a packet matching the source packet, break to stop looking
     if all_datasets_have_offset == True:
-        logging.debug("All datasets found source offset")
+        logging.info("All datasets found source offset:")
+
+        for dataset in all_data:
+            logging.info("  " + dataset["dataset_name"] + ": " + str(dataset["starting_dataset_index"]))
+
         break
     else:
         # if one of the datasets did not find the matching source packet:
         # clear filtered data, reset found_packet_matching_search, and increase the packets to skip
-        logging.debug("Some datasets could not find source offset, skipping additional source packets")
+        logging.debug("Some datasets could not find source offset, moving to next source dataset")
         for dataset in all_data:
-            dataset["filtered_data_list"] = []
             dataset["found_packet_matching_search"] = False
+            dataset["starting_dataset_index"] = None
 
-        packets_to_skip += 1
+        # packets_to_skip += 1
         
-        if packets_to_skip == max_packets_to_skip:
-            logging.debug("None of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
-            print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
-            sys.exit()
+        # if packets_to_skip == max_packets_to_skip:
+        #     logging.debug("None of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
+        #     print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
+        #     sys.exit()
+        
+if all_datasets_have_offset == False:
+    print("\nUnable to find the first packet of any of the datasets in all other datasets, unable to align data")
+    logging.error("Unable to find the first packet of any of the datasets in all other datasets, unable to align data")
+    sys.exit()
 
-print("\nCleaned Packet Totals:")
 for dataset in all_data:
-    print("\t" + dataset["dataset_name"] + ": " + str(len(dataset["filtered_data_list"])))
+    dataset["filtered_data_list"] = dataset["filtered_data_list"][dataset["starting_dataset_index"]:]
+
 
 check_for_dropped_packets()
 
