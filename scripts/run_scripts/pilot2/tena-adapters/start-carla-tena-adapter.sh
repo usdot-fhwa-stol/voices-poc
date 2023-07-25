@@ -17,7 +17,6 @@
 #  * the License.
 #  *
 
-
 . ../../../../config/node_info.config
 
 if [[ $? -ne 0 ]] ; then
@@ -27,13 +26,15 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$TENATrafficLightEntityGeneratorVersion
+localadapterPath=$localInstallPath/$carlaAdapterVersion
+
+carlaHost=$carlaAddress
 
 adapterVerbosity='4'
 
 mkdir -p $localAdapterLogPath
 
-adapterLogFile=$localAdapterLogPath/traffic_light_entity_generator_terminal_out.log
+adapterLogFile=$localAdapterLogPath/carla_adapter_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -46,5 +47,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -intersectionID $intersectionID -verbosity $adapterVerbosity | tee -a $adapterLogFile
-
+$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile

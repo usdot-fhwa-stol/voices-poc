@@ -27,13 +27,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$TENATrafficLightEntityGeneratorVersion
+localadapterPath=$localInstallPath/$j3244AdapterVersion
 
 adapterVerbosity='4'
 
 mkdir -p $localAdapterLogPath
 
-adapterLogFile=$localAdapterLogPath/traffic_light_entity_generator_terminal_out.log
+adapterLogFile=$localAdapterLogPath/j3244_adapter_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -46,5 +46,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -intersectionID $intersectionID -verbosity $adapterVerbosity | tee -a $adapterLogFile
-
+$localadapterPath/bin/tena-j3244-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -adapterSendEndpoint $j3244AdapterSendAddress:$j3244AdapterSendPort -adapterReceiveEndpoint $j3244AdapterReceiveAddress:$j3244AdapterReceivePort -verbosity $adapterVerbosity | tee -a $adapterLogFile

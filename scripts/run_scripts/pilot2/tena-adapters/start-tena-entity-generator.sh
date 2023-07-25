@@ -27,13 +27,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$TENATrafficLightEntityGeneratorVersion
+localadapterPath=$localInstallPath/$entityGeneratorVersion
 
 adapterVerbosity='4'
 
 mkdir -p $localAdapterLogPath
 
-adapterLogFile=$localAdapterLogPath/traffic_light_entity_generator_terminal_out.log
+adapterLogFile=$localAdapterLogPath/entity_generator_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -46,5 +46,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -intersectionID $intersectionID -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
 
