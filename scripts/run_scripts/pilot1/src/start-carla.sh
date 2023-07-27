@@ -14,7 +14,7 @@ function print_help {
 	echo "Start CARLA Simulator for VOICES"
 	echo
 	echo "optional arguments:"
-	echo "    --no-tick          do not set time mode and tick simulation"
+	echo "    --no_tick          do not set time mode and tick simulation"
 	echo "    --low_quality      start CARLA in low quality mode"
 	echo "    --map <map name>   start carla with given map name"
 	echo "                           Currently supported maps:"
@@ -23,7 +23,31 @@ function print_help {
 	echo "    --help             show help"
 	echo
 }
-. ../../../../config/node_info.config
+
+
+voices_config=~/.voices_config
+
+if [ -L ${voices_config} ] ; then
+   if [ -e ${voices_config} ] ; then
+      config_link_dest=$(readlink -f $voices_config)
+      link_base_name=$(basename ${config_link_dest})
+
+      . $voices_config
+
+
+      echo "Site Config: "$link_base_name
+      echo "Scenario Config: "$scenario_config_file
+   else
+      echo "[!!!] .voices_config link is broken"
+      exit 1
+   fi
+elif [ -e ${voices_config} ] ; then
+   echo "[!!!] .voices_config file is not a symbolic link"
+   exit 1
+else
+   echo "[!!!] .voices_config link is is missing"
+   exit 1
+fi
 
 if [[ -f $localCarlaPath/CarlaUE4.sh ]]; then
 	echo "Found CARLA Simulator"

@@ -21,7 +21,7 @@ function print_help {
 	echo "Start CARLA Simulator for VOICES"
 	echo
 	echo "optional arguments:"
-	echo "    --no-tick          do not set time mode and tick simulation"
+	echo "    --no_tick          do not set time mode and tick simulation"
 	echo "    --low_quality      start CARLA in low quality mode"
 	echo "    --map <map name>   start carla with given map name"
 	echo "                           Currently supported maps:"
@@ -30,7 +30,30 @@ function print_help {
 	echo "    --help             show help"
 	echo
 }
-. ../../../../config/node_info.config
+
+voices_config=~/.voices_config
+
+if [ -L ${voices_config} ] ; then
+   if [ -e ${voices_config} ] ; then
+      config_link_dest=$(readlink -f $voices_config)
+      link_base_name=$(basename ${config_link_dest})
+
+      . $voices_config
+
+
+      echo "Site Config: "$link_base_name
+      echo "Scenario Config: "$scenario_config_file
+   else
+      echo "[!!!] .voices_config link is broken"
+      exit 1
+   fi
+elif [ -e ${voices_config} ] ; then
+   echo "[!!!] .voices_config file is not a symbolic link"
+   exit 1
+else
+   echo "[!!!] .voices_config link is is missing"
+   exit 1
+fi
 
 if [[ -f $localCarlaPath/CarlaUE4.sh ]]; then
 	echo "Found CARLA Simulator"
@@ -39,7 +62,6 @@ else
 	echo "CARLA Simulator not found at $localCarlaPath/CarlaUE4.sh"
 	exit
 fi
-
 
 mkdir -p $localCarmaSimLogPath
 
@@ -96,6 +118,16 @@ do
 	fi
 done
 
+# require map becuase it determines spawn points
+if [[ $carla_map == "" ]]; then
+
+		echo
+		echo "[!!!] --map flag is required"
+		print_help
+		exit
+	
+fi
+
 $localCarlaPath/CarlaUE4.sh $low_quality_flag > $CARLA_LOG 2>&1 &
 
 carla_pid=$!
@@ -108,6 +140,8 @@ if [[ $carla_map == "Town04" ]]; then
 	echo "Changing map to: $carla_map"
 	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
 	sleep 5s
+
+	echo "Changing perspective to Test Intersection"
 
 	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_town_04.py
 
@@ -141,10 +175,6 @@ elif [[ $carla_map == "smart_intersection" ]]; then
 	then
 		SPAWN_PT="30.0,340.5,1,0,0,85" # latitude=34.068104, longitude=-118.445083, altitude=1.000000 #
 	fi
-
-elif [[ $carla_map == "" ]]; then
-
-	echo "Loading default CARLA map"
 
 else
 	echo
