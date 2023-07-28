@@ -24,6 +24,8 @@ import sys
 import csv
 import numpy
 import datetime
+import os
+import shutil
 
 print("\n----- DECODING J2735 PACKETS -----")
 
@@ -78,16 +80,25 @@ def convID(id, length):
 
 infile_obj = open(inFile,'r')
 
-bsm_outfile_obj         = open(outfile.replace(".csv","_BSM.csv"),'w',newline='')
-spat_outfile_obj        = open(outfile.replace(".csv","_SPAT.csv"),'w',newline='')
-map_outfile_obj         = open(outfile.replace(".csv","_MAP.csv"),'w',newline='')
-mob_req_outfile_obj     = open(outfile.replace(".csv","_Mobility-Request.csv"),'w',newline='')
-mob_resp_outfile_obj    = open(outfile.replace(".csv","_Mobility-Response.csv"),'w',newline='')
-mob_path_outfile_obj    = open(outfile.replace(".csv","_Mobility-Path.csv"),'w',newline='')
-mob_ops_outfile_obj     = open(outfile.replace(".csv","_Mobility-Operations.csv"),'w',newline='')
-platooning_outfile_obj  = open(outfile.replace(".csv","_Platooning.csv"),'w',newline='')
-tcr_outfile_obj         = open(outfile.replace(".csv","_Traffic-Control-Request.csv"),'w',newline='')
-tcm_outfile_obj         = open(outfile.replace(".csv","_Traffic-Control-Message.csv"),'w',newline='')
+decoded_output_folder = outfile.replace(".csv","")
+
+if os.path.exists(decoded_output_folder):
+    print("\nRemoving leftover files from previous failed run")
+    shutil.rmtree(decoded_output_folder)
+
+os.makedirs(decoded_output_folder)
+
+bsm_outfile_obj         = open(decoded_output_folder + "/" + outfile.replace(".csv","_BSM.csv"),'w',newline='')
+spat_outfile_obj        = open(decoded_output_folder + "/" + outfile.replace(".csv","_SPAT.csv"),'w',newline='')
+map_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_MAP.csv"),'w',newline='')
+mob_req_outfile_obj     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Request.csv"),'w',newline='')
+mob_resp_outfile_obj    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Response.csv"),'w',newline='')
+mob_path_outfile_obj    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Path.csv"),'w',newline='')
+mob_ops_outfile_obj     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Operations.csv"),'w',newline='')
+platooning_outfile_obj  = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Platooning.csv"),'w',newline='')
+tcr_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Request.csv"),'w',newline='')
+tcm_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Message.csv"),'w',newline='')
+j2735_payload_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_J2735-Payload.csv"),'w',newline='')
 
 bsm_outfile_writer         = csv.writer(bsm_outfile_obj)
 spat_outfile_writer        = csv.writer(spat_outfile_obj)
@@ -99,6 +110,7 @@ mob_ops_outfile_writer     = csv.writer(mob_ops_outfile_obj)
 platooning_outfile_writer  = csv.writer(platooning_outfile_obj)
 tcr_outfile_writer         = csv.writer(tcr_outfile_obj)
 tcm_outfile_writer         = csv.writer(tcm_outfile_obj)
+j2735_payload_outfile_writer         = csv.writer(j2735_payload_outfile_obj)
 
 numSpatPhases = 31 #use one more than desired phases
 
@@ -119,6 +131,7 @@ mob_ops_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestam
 platooning_outfile_writer.writerow(["platooningPacketType","packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","other_params"])
 tcr_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","scale","bounds"])
 tcm_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","msgtot","msgnum","tcmID_hex","tcmID_dec_list","updated","label","tcID_hex","tcID_dec_list","vclasses","schedule","detail","geometry"])
+j2735_payload_outfile_writer.writerow(["packetIndex","packetTimestamp","payload"])
 
 
 infile_reader = csv.reader(infile_obj,delimiter=',')
@@ -141,66 +154,94 @@ for packet in packet_list:
         print("    [" + str(packet[0])+'] ' + str(packet[2]) )
         continue
 
+    j2735_payload_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(packet[trimmed_packet_column])])
+
     if (packet[message_type_id_column] == "0013") :
         # print("Parsing SPAT")
-
-        spatPhaseArray = [""] * numSpatPhases
-        intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
         try:
-            intersectionName = msg()['value'][1]['intersections'][0]['name']
+            spatPhaseArray = [""] * numSpatPhases
+            intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
+            try:
+                intersectionName = msg()['value'][1]['intersections'][0]['name']
+            except:
+                intersectionName = ""
+            spatTimestamp = msg()['value'][1]['intersections'][0]['timeStamp']
+            instersectionPhaseArray = msg()['value'][1]['intersections'][0]['states']
+            
+            for phase in range(len(instersectionPhaseArray)):
+                currentPhase = msg()['value'][1]['intersections'][0]['states'][phase].get('signalGroup')
+                currentState = str(msg()['value'][1]['intersections'][0]['states'][phase]['state-time-speed'][0]['eventState'])
+                spatPhaseArray[currentPhase] = currentState
+            
+            spatRowList = [str(packet[0]),str(packet[1]),str(spatTimestamp),str(intersectionID),intersectionName ]
+            
+            for printPhase in range(1,numSpatPhases):
+                spatRowList.append(spatPhaseArray[printPhase])
+            spatRowList.append(str(packet[trimmed_packet_column]))
+            
+            spat_outfile_writer.writerow(spatRowList)
         except:
-            intersectionName = ""
-        spatTimestamp = msg()['value'][1]['intersections'][0]['timeStamp']
-        instersectionPhaseArray = msg()['value'][1]['intersections'][0]['states']
-        
-        for phase in range(len(instersectionPhaseArray)):
-            currentPhase = msg()['value'][1]['intersections'][0]['states'][phase].get('signalGroup')
-            currentState = str(msg()['value'][1]['intersections'][0]['states'][phase]['state-time-speed'][0]['eventState'])
-            spatPhaseArray[currentPhase] = currentState
-        
-        spatRowList = [str(packet[0]),str(packet[1]),str(spatTimestamp),str(intersectionID),intersectionName ]
-        
-        for printPhase in range(1,numSpatPhases):
-            spatRowList.append(spatPhaseArray[printPhase])
-        spatRowList.append(str(packet[trimmed_packet_column]))
-        
-        spat_outfile_writer.writerow(spatRowList)
+            print("ERROR PARSING DECODED PACKET: " )
+            print("[" + str(packet[0])+"] " + str(packet[5]) + " - " + str(msg()['value']))
+
+            spatRowList = [str(packet[0]),str(packet[1]),"","",""]
+            
+            for printPhase in range(1,numSpatPhases):
+                spatRowList.append("")
+
+            spatRowList.append(str(packet[trimmed_packet_column]))
+            
+            spat_outfile_writer.writerow(spatRowList)
 
     elif (packet[message_type_id_column] == "0012") :
         # print("Parsing MAP")
+        try:
+            intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
+            #if intersectionID == intersection:
+            lat = msg()['value'][1]['intersections'][0]['refPoint']['lat']
+            longstr = msg()['value'][1]['intersections'][0]['refPoint']['long']
+            laneWidth = msg()['value'][1]['intersections'][0]['laneWidth']
 
-        intersectionID = msg()['value'][1]['intersections'][0]['id']['id']
-        #if intersectionID == intersection:
-        lat = msg()['value'][1]['intersections'][0]['refPoint']['lat']
-        longstr = msg()['value'][1]['intersections'][0]['refPoint']['long']
-        laneWidth = msg()['value'][1]['intersections'][0]['laneWidth']
-        map_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(intersectionID),str(lat/10000000.0),str(longstr/10000000.0),str(laneWidth),str(packet[trimmed_packet_column])])
+            map_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(intersectionID),str(lat/10000000.0),str(longstr/10000000.0),str(laneWidth),str(packet[trimmed_packet_column])])
+        except:
+            print("ERROR PARSING DECODED PACKET: " )
+            print("[" + str(packet[0])+"] " + str(packet[5]) + " - " + str(msg()['value']))
+
+            map_outfile_writer.writerow([str(packet[0]),str(packet[1]),"","","","",str(packet[trimmed_packet_column])])
 
     elif (packet[message_type_id_column] == "0014") : # if bsm , look for lat, long, speed along with time
         # print("Parsing BSM")
-        bsmId = msg()['value'][1]['coreData']['id']
-        lat= msg()['value'][1]['coreData']['lat']
-        longstr = msg()['value'][1]['coreData']['long']
-        speed = msg()['value'][1]['coreData']['speed']
-        elevation = msg()['value'][1]['coreData']['elev']
-        secMark = msg()['value'][1]['coreData']['secMark']
-        heading = msg()['value'][1]['coreData']['heading']
-        speed_converted = speed*0.02 #m/s
-        accel_long = msg()['value'][1]['coreData']['accelSet']['long']
-        accel_long_converted = accel_long*0.01 #m^s^2
-        
-        packet_timestamp = datetime.datetime.fromtimestamp(int(float(packet[0])))
-        roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
-        packetSecondsAfterMin = (float(packet[0]) - roundDownMinTime)
-        latency = packetSecondsAfterMin*1000 - secMark
-        if (latency < 0) :
-            #print("[!!!] Minute mismatch")
-            latency = latency + 60000
-        #print("latency: " + str(latency))
-        
-        latency_array.append(latency)
-        
-        bsm_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(bsmId.hex()),str(secMark),str(latency),str(lat/10000000.0),str(longstr/10000000.0),str(speed_converted),str(heading),str(accel_long_converted), str(elevation),str(packet[trimmed_packet_column])])
+
+        try:
+            bsmId = msg()['value'][1]['coreData']['id']
+            lat= msg()['value'][1]['coreData']['lat']
+            longstr = msg()['value'][1]['coreData']['long']
+            speed = msg()['value'][1]['coreData']['speed']
+            elevation = msg()['value'][1]['coreData']['elev']
+            secMark = msg()['value'][1]['coreData']['secMark']
+            heading = msg()['value'][1]['coreData']['heading']
+            speed_converted = speed*0.02 #m/s
+            accel_long = msg()['value'][1]['coreData']['accelSet']['long']
+            accel_long_converted = accel_long*0.01 #m^s^2
+            
+            packet_timestamp = datetime.datetime.fromtimestamp(int(float(packet[0])))
+            roundDownMinTime = datetime.datetime(packet_timestamp.year,packet_timestamp.month,packet_timestamp.day,packet_timestamp.hour,packet_timestamp.minute).timestamp()
+            packetSecondsAfterMin = (float(packet[0]) - roundDownMinTime)
+            latency = packetSecondsAfterMin*1000 - secMark
+            if (latency < 0) :
+                #print("[!!!] Minute mismatch")
+                latency = latency + 60000
+            #print("latency: " + str(latency))
+            
+            latency_array.append(latency)
+            
+            bsm_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(bsmId.hex()),str(secMark),str(latency),str(lat/10000000.0),str(longstr/10000000.0),str(speed_converted),str(heading),str(accel_long_converted), str(elevation),str(packet[trimmed_packet_column])])
+        except:
+            print("ERROR PARSING DECODED PACKET: " )
+            print("[" + str(packet[0])+"] " + str(packet[5]) + " - " + str(msg()['value']) )
+
+            bsm_outfile_writer.writerow([str(packet[0]),str(packet[1]),"","","","","","","","","",str(packet[trimmed_packet_column])])
+
 
     elif (packet[message_type_id_column] == "00f0") :
         # print("Parsing Mobility Request")
@@ -302,6 +343,49 @@ for packet in packet_list:
         print("[" + str(packet[0])+'] ' + str(packet[2]) )
 
 
+bsm_outfile_obj.close()
+spat_outfile_obj.close()
+map_outfile_obj.close()
+mob_req_outfile_obj.close()
+mob_resp_outfile_obj.close()
+mob_path_outfile_obj.close()
+mob_ops_outfile_obj.close()
+platooning_outfile_obj.close()
+tcr_outfile_obj.close()
+tcm_outfile_obj.close()
+
+bsm_outfile_obj_read         = open(decoded_output_folder + "/" + outfile.replace(".csv","_BSM.csv"))
+spat_outfile_obj_read        = open(decoded_output_folder + "/" + outfile.replace(".csv","_SPAT.csv"))
+map_outfile_obj_read         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_MAP.csv"))
+mob_req_outfile_obj_read     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Request.csv"))
+mob_resp_outfile_obj_read    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Response.csv"))
+mob_path_outfile_obj_read    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Path.csv"))
+mob_ops_outfile_obj_read     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Operations.csv"))
+platooning_outfile_obj_read  = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Platooning.csv"))
+tcr_outfile_obj_read         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Request.csv"))
+tcm_outfile_obj_read         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Message.csv"))
+
+bsm_outfile_rows         = sum(1 for line in bsm_outfile_obj_read)
+spat_outfile_rows        = sum(1 for line in spat_outfile_obj_read)
+map_outfile_rows         = sum(1 for line in map_outfile_obj_read)
+mob_req_outfile_rows     = sum(1 for line in mob_req_outfile_obj_read)
+mob_resp_outfile_rows    = sum(1 for line in mob_resp_outfile_obj_read)
+mob_path_outfile_rows    = sum(1 for line in mob_path_outfile_obj_read)
+mob_ops_outfile_rows     = sum(1 for line in mob_ops_outfile_obj_read)
+platooning_outfile_rows  = sum(1 for line in platooning_outfile_obj_read)
+tcr_outfile_rows         = sum(1 for line in tcr_outfile_obj_read)
+tcm_outfile_rows         = sum(1 for line in tcm_outfile_obj_read)
+
+print("\nBSM: " + str(bsm_outfile_rows -1))
+print("SPAT: " + str(spat_outfile_rows -1))
+print("MAP: " + str(map_outfile_rows-1))
+print("MAP: " + str(mob_req_outfile_rows-1))
+print("MOB RESP: " + str(mob_resp_outfile_rows-1))
+print("MOB PATH: " + str(mob_path_outfile_rows-1))
+print("MOB OPS: " + str(mob_ops_outfile_rows-1))
+print("PLATOONING: " + str(platooning_outfile_rows-1))
+print("TCR: " + str(tcr_outfile_rows-1))
+print("TCM: " + str(tcr_outfile_rows-1))
 
 # if (payload_type_id == "0014") : 
 #     print("")
