@@ -12,7 +12,7 @@
   <vehicles>
 
     <vehicle name="NISSAN-SVM" bsmid="f03ad614" type="vehicle.nissan.micra" owner="CARLA-NISSAN" material="Aluminum" lvcIndicator="Live">
-      <userData><CARLA manual="true" generate_bsms="true" ></CARLA></userData>
+      <!-- <userData><CARLA manual="true" generate_bsms="false" ></CARLA></userData> -->
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.002066" longitudeInDegrees="0.002291" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>180</Heading>
@@ -20,13 +20,13 @@
     </vehicle>
 
     <vehicle name="UCLA-OPENCDA" bsmid="f03ad612" type="vehicle.seat.leon" owner="CARLA-UCLA" material="Aluminum" lvcIndicator="Live">
-      <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA" generate_bsms="true" ></CARMA></userData>
+      <userData><CARMA CARLAcosimulationIdentifier="CARLA-UCLA" roleName="UCLA-OPENCDA" generate_bsms="false" ></CARMA></userData>
       <initialTSPI>
         <GeodeticPosition latitudeInDegrees="0.001532" longitudeInDegrees="0.001931" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
         <Heading>90</Heading>
       </initialTSPI>
     </vehicle>
-
+   
   </vehicles>
 
   <intersectionSignalControllers>
@@ -35,7 +35,7 @@
         <CARLA>
           <controllers>
             <controller name="ctrl549" id="549"/>
-          </controllers>
+          </controllers>      
         </CARLA>
       </userData>
     </intersectionSignalController>
@@ -66,7 +66,7 @@
   </phaseSignalMappings>
 
   <simulations>
-
+    
     <simulation name="CARLA-NISSAN" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>

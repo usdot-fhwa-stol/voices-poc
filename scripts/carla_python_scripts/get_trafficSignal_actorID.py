@@ -24,6 +24,7 @@ try:
         world.debug.draw_string(light.get_location(), str(light.id), draw_shadow=False,
                                              color=carla.Color(r=255, g=0, b=0), life_time=200,
                                              persistent_lines=True)
+        
     ################################################################################################
     # Once you see all index number, you can manually change its states and timimg.
     # Your signal control scripts.

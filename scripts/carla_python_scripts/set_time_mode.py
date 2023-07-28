@@ -140,7 +140,7 @@ def main():
 
             #print("need to sleep: " + str(additional_sleep))
             #time.sleep(additional_sleep)
-            #time.sleep(1)
+            time.sleep(3)
 
             
         

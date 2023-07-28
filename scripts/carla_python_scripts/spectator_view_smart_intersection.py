@@ -21,8 +21,6 @@ sys.path.append(carla_egg_file)
 
 import carla
 
-from carla import VehicleLightState as vls
-
 import argparse
 import logging
 from numpy import random
@@ -91,6 +89,15 @@ def main():
         action='store_true',
         default=False,
         help='Enanble car lights')
+
+    argparser.add_argument("x", type=float, help="Position x (m)")
+    argparser.add_argument("y", type=float, help="Position y (m)")
+    argparser.add_argument("z", type=float, help="Position z (m)")
+
+    argparser.add_argument("pitch", type=float, help="Rotation pitch (deg)")
+    argparser.add_argument("yaw", type=float, help="Rotation yaw (deg)")
+    argparser.add_argument("roll", type=float, help="Rotation roll (deg)")
+
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -105,47 +112,22 @@ def main():
 
     try:
         world = client.get_world()
-        print("Available Maps: " + ', '.join(client.get_available_maps()))
         
-        #world = client.load_world('/Game/Carla/Maps/Carla_v14_10_1_2021')
-        #world = client.get_world()
-        
-        #client = carla.Client()
-        #client.set_timeout(10.0)
-        
-        print("All current vehicle locations")
-        vehicles = world.get_actors().filter('vehicle.*')
-        for vehicle in vehicles:
-            print(vehicle)
-            print("attributes: " + str(vehicle.attributes))
-            print("vehicle transform: " + str(vehicle.get_transform()))
+        # Retrieve the spectator object
+        spectator = world.get_spectator()
 
+        # Get the location and rotation of the spectator through its transform
+        # spec_transform = spectator.get_transform()
 
-        
-        #print(world.get_actors().find(102))
-        #print("TrafficLights:" + ', '.join(trafficlights))
-        #print(dir(trafficlights[0]))
-        #for light in trafficlights:
-            #print(light.get_group_traffic_lights())
-        print("")
-        print("All Vehicle Blueprints:")
-        blueprints = [bp for bp in world.get_blueprint_library().filter('vehicle.*')]
-        for blueprint in blueprints:
-            print(blueprint.id)
-            for attr in blueprint:
-                print('  - {}'.format(attr))
+        # print(str(spec_transform))
+
+        # Set spectator transformation
+        spec_location = carla.Location(x=args.x, y=args.y, z=args.z)
+        spec_rotation = carla.Rotation(pitch=args.pitch, yaw=args.yaw, roll=args.roll)
+        spectator.set_transform(carla.Transform(spec_location,spec_rotation))
 
     finally:
-
-        if args.sync and synchronous_master:
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
-
-        print('\nENDING')
-
-
+        print('\n----- SUCCESSFULLY SET SPECTATOR VIEW -----\n')
         time.sleep(0.5)
 
 if __name__ == '__main__':
@@ -154,5 +136,3 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
-    finally:
-        print('\ndone.')

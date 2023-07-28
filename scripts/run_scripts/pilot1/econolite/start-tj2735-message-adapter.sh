@@ -1,0 +1,1 @@
+../src/start-tj2735-message-adapter.sh

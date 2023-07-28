@@ -6,7 +6,7 @@ Contains files to configure and run tests for the VOICES project.
 
 <repository-root>
 ├── config -------------------------------------- Site configurations
-│   ├── node_info.config -> <site-name>.config -- Symlink to this specific site configuration.
+├── node_info.config -> <site-name>.config -- Symlink to this specific site configuration.
 ├── scenario_files ------------------------------ Scenario definitions.
 └── scripts
     ├── build_tena_adapters --------------------- TENA adapter build configuration.
