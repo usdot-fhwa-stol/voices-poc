@@ -17,6 +17,14 @@
 #  * the License.                                                                 
 #  *
 
+
+#	TODO
+# - take files as input params
+#
+#
+#
+#
+
 #exit on error
 #
 set -e
@@ -55,80 +63,20 @@ mkdir -p decodedOutput
 
 cd $directory
 
-# REMOVED AS NOW WE DECODE ALL MESSAGE TYPES
-#
-# printf "\n\nWhat type of J2735 message type would you like to decode?\n"
-
-# message_type_list=("MAP" "SPAT" "BSM" "Mobility Request" "Mobility Response" "Mobility Path" "Mobility Operation" "Traffic Control Request" "Traffic Control Message")
-
-# for i in ${!message_type_list[@]}; do
-#   printf "\n[$i] ${message_type_list[$i]}"
-# done
-
-# printf "\n\n"
-# read -p "--> " message_type_index
-
-# message_type_name=${message_type_list[$message_type_index]}
-
-# if [[ $message_type_name == "MAP" ]]; then
-# 	message_type_id=0012
-# elif [[ $message_type_name == "SPAT" ]]; then
-# 	message_type_id=0013
-# elif [[ $message_type_name == "BSM" ]]; then
-# 	message_type_id=0014
-# elif [[ $message_type_name == "Mobility Request" ]]; then
-# 	message_type_id=00f0
-# elif [[ $message_type_name == "Mobility Response" ]]; then
-# 	message_type_id=00f1
-# elif [[ $message_type_name == "Mobility Path" ]]; then	
-# 	message_type_id=00f2
-# elif [[ $message_type_name == "Mobility Operation" ]]; then
-# 	message_type_id=00f3
-# elif [[ $message_type_name == "Traffic Control Request" ]]; then
-# 	message_type_id=00f4
-# elif [[ $message_type_name == "Traffic Control Message" ]]; then	
-# 	message_type_id=00f5
-# else 
-# 	echo "Invalid J2735 message type..."
-# 	exit
-# fi
-
-# echo "Message Type Name: "$message_type_name
-# echo "Message Type ID: "$message_type_id
-
-
 payloadType="hex"
 messageTypeIdFound=false
-
-# REMOVE THIS AS IT IS NO LONGER NEEDED
-#
-# searchForMessageTypeIdInFile(){
-# fileToCheck=$1
-# messageTypeIdToFind=$2
-# numPacketsToCheck=$3
-# messageTypeIdFound=false
-
-# echo
-# #check the first 10 packets for the desired message type ID
-# for (( c=1; c<=$numPacketsToCheck; c++ ))
-# do
-# 	currentPayload=$(sed '$cq;d' $fileToCheck | awk -F ',' '{print $2}')
-# #id=int(sys.argv[2])
-# 	if [[ "$currentPayload" == *"$messageTypeIdToFind"* ]]; then
-# 		messageTypeIdFound=true
-# 		echo "Found desired message ID ($messageTypeIdToFind) in packet $c"
-# 		#echo $currentPayload
-# 		break
-# 	fi
-# done
-# }
-
 
 extractPackets(){ 
 echo
 cd $directory/data
 echo 
-ls *.pcap
+{ 
+	ls *.pcap
+} || { 
+	echo
+	echo "No pcaps found in data directory" 
+	exit 
+}
 
 while true; do
 	echo
@@ -209,7 +157,14 @@ decodePackets(){
 	decoded_file=$input_pcap_base_name"_decoded_packets.csv"
 	python3 $directory/src/J2735decoder.py $parsed_tshark_file $decoded_file
 
-	decoded_output_file_pattern=$input_pcap_base_name"_decoded_packets*" 
+	decoded_output_file_pattern=$input_pcap_base_name"_decoded_packets"
+
+
+
+	if [ -d $directory/data/decodedOutput/$decoded_output_file_pattern ]; then
+		printf "\nResult files from previous decoding found, removing them"
+		rm -rf $directory/data/decodedOutput/$decoded_output_file_pattern
+	fi
 
 	mv $decoded_output_file_pattern $directory/data/decodedOutput
 	

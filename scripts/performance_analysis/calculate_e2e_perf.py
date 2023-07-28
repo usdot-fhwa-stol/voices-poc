@@ -82,7 +82,7 @@ def filter_dataset(data_to_filter):
         if data_to_filter["dataset_type"] == "pcap":
             filter_packet_timestamp = float(search_packet["packetTimestamp"])
         elif data_to_filter["dataset_type"] == "tdcs":
-            if J2735_message_type_name in J2735_message_types_as_tena_message:
+            if data_to_filter["dataset_message_type"] in J2735_message_types_as_tena_message:
                 # this is ideally time of transmission, but it functions the same
                 filter_packet_timestamp = float(search_packet["Metadata,TimeOfTransmission"])/1000000000
             else:
@@ -114,7 +114,7 @@ def filter_dataset(data_to_filter):
         # iterate through the neqs to check
         all_neqs_pass = True
 
-        for current_neq in data_to_search_params[J2735_message_type_name]["skip_if_neqs"]:
+        for current_neq in data_to_search_params[data_to_filter["dataset_message_type"]]["skip_if_neqs"]:
             
             neq_bypass = False
 
@@ -207,7 +207,7 @@ def filter_dataset(data_to_filter):
         #iterate through the eqs to check
         all_eqs_pass = True
 
-        for current_eq in data_to_search_params[J2735_message_type_name]["skip_if_eqs"]:
+        for current_eq in data_to_search_params[data_to_filter["dataset_message_type"]]["skip_if_eqs"]:
             
             eq_bypass = False
             
@@ -273,7 +273,7 @@ def filter_dataset(data_to_filter):
 
         # because J2735 data can repeat for BSMs, we need to look for the first unique value so we can eliminate the repeating values in the start
         
-        if data_to_filter["data_order"] == 1 and J2735_message_type_name == "Traffic_Control_Request":
+        if data_to_filter["data_order"] == 1 and data_to_filter["dataset_message_type"] == "Traffic_Control_Request":
             logging.debug("Adding source reqid to list: " + search_packet[data_to_filter["dataset_reqid_field"]])
             source_reqid_list.append(search_packet[data_to_filter["dataset_reqid_field"]])
 
@@ -749,6 +749,8 @@ def load_data(dataset_name,dataset_infile,dataset_type,dataset_message_type,adap
     if "J2735-" in dataset_message_type:
         dataset_message_subtype = dataset_message_type.replace("J2735-","")
         dataset_message_type = "J2735"
+    else:
+        dataset_message_subtype = None
 
     # if the dataset has an adapter_ip row and the neq wants to filter on it, insert the configured IP to the neq value
     if adapter_ip:
@@ -1394,7 +1396,7 @@ def select_message_type_user_input():
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
 
-J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","MAP","SPAT","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
 
 J2735_message_type_ids = {
     "BSM"   : "0014",
@@ -1520,7 +1522,7 @@ if J2735_message_subtype_name:
     print("Message Sub-Type: " + J2735_message_subtype_name + " selected")
 
 # we do not need to select a vehicle for spat
-if J2735_message_type_name != "SPAT" and J2735_message_type_name != "J2735":
+if J2735_message_type_name != "TrafficLight" and J2735_message_type_name != "J2735":
     if args.source_vehicle_index == None:
         vehicle_info = select_vehicle_user_input()
     else:
@@ -1635,7 +1637,7 @@ data_params = {
                 }
             ]
         },
-        "SPAT" : {
+        "TrafficLight" : { # actually decoded spat
             "skip_if_neqs"      : [
                 {
                     "key"           : "intersectionName",
@@ -1965,7 +1967,7 @@ data_params = {
                 }
             ]
         },
-        "SPAT" : {
+        "TrafficLight" : {
             "skip_if_neqs"      : [
                 {
                     "key"           : "const^signalID,String",
@@ -2366,9 +2368,21 @@ source_reqid_list = []
 for dataset_to_filter in all_data:
     filter_dataset(dataset_to_filter)
 
+all_filtered_datasets_contain_data = True
+
 print("\nFiltered Packet Totals:")
 for dataset in all_data:
-    print("\t" + dataset["dataset_name"] + ": " + str(len(dataset["filtered_data_list"])))
+    
+    dataset_len = len(dataset["filtered_data_list"])
+    print("\t" + dataset["dataset_name"] + ": " + str(dataset_len))
+
+    if dataset_len == 0: 
+        all_filtered_datasets_contain_data = False
+
+if all_filtered_datasets_contain_data == False:
+    print("\nERROR: One or more filtered datasets does not contain any data")
+    sys.exit()
+
 
 # print("\nFilter to first unique Totals:")
 # for dataset_to_find_unique in all_data:

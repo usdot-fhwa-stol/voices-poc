@@ -54,7 +54,7 @@ test_1_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/eco_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/pilot1_test1-3_eco_ip_packet_in_decoded_packets",
         "pcap_out_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/pilot1_test1-3_eco_ip_packet_out_decoded_packets",
-        "start_time" : 1681497750.65608,
+        "start_time" : 1681497807.1860852,
         "end_time" : 1681497950.75627,
         "adapter_addresses_by_type" : {
             "J2735-SPAT" : ["10.40.36.12:36403"],
@@ -69,7 +69,7 @@ test_1_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/nissan_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/pilot1_test1-3_nissan_ip_packet_in_decoded_packets",
         "pcap_out_dir" : None,
-        "start_time" : 1681497750.65608,
+        "start_time" : 1681497807.1860852,
         "end_time" : 1681497950.75627,
         "adapter_addresses_by_type" : {
             "J2735-BSM" : [
@@ -86,7 +86,7 @@ test_1_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/ucla_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/pilot1_test1-3_ucla_ip_packet_in_decoded_packets",
         "pcap_out_dir" : None,
-        "start_time" : 1681497750.65608,
+        "start_time" : 1681497807.1860852,
         "end_time" : 1681497950.75627,
         "adapter_addresses_by_type" : {
             # "J2735-BSM" : [
@@ -103,7 +103,7 @@ test_1_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/v2x_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_in_decoded_packets",
         "pcap_out_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_out_decoded_packets",
-        "start_time" : 1681497750.65608,
+        "start_time" : 1681497807.1860852,
         "end_time" : 1681497950.75627,
         "adapter_addresses_by_type" : {
             "J2735-MAP" : ["192.168.55.244:41403"],
@@ -190,7 +190,7 @@ test_3_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/eco_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/pilot1_test1-3_eco_ip_packet_in_decoded_packets",
         "pcap_out_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/pilot1_test1-3_eco_ip_packet_out_decoded_packets",
-        "start_time" : 1681498301.67224,
+        "start_time" : 1681498302.0121028,
         "end_time" : 1681498332.77518,
         "adapter_addresses_by_type" : {
             "J2735-SPAT" : ["10.40.36.12:36403"],
@@ -205,7 +205,7 @@ test_3_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/nissan_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/pilot1_test1-3_nissan_ip_packet_in_decoded_packets",
         "pcap_out_dir" : None,
-        "start_time" : 1681498301.67224,
+        "start_time" : 1681498302.0121028,
         "end_time" : 1681498332.77518,
         "adapter_addresses_by_type" : {
             "J2735-BSM" : [
@@ -222,7 +222,7 @@ test_3_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/ucla_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/pilot1_test1-3_ucla_ip_packet_in_decoded_packets",
         "pcap_out_dir" : None,
-        "start_time" : 1681498301.67224,
+        "start_time" : 1681498302.0121028,
         "end_time" : 1681498332.77518,
         "adapter_addresses_by_type" : {
             "J2735-BSM" : [
@@ -239,7 +239,7 @@ test_3_site_list = [
         "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/v2x_exported_tdcs",
         "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_in_decoded_packets",
         "pcap_out_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_out_decoded_packets",
-        "start_time" : 1681498301.67224,
+        "start_time" : 1681498302.0121028,
         "end_time" : 1681498332.77518,
         "adapter_addresses_by_type" : {
             "J2735-MAP" : ["192.168.55.244:41403"],
@@ -251,8 +251,82 @@ test_3_site_list = [
 ]
 
 
+# 10.40.36.12:35777 # tleg
+# 10.40.36.12:37627 # j2735
+# 192.168.2.6:45747 # test 4a carla
+# 192.168.2.6:39119 # test 4b carla
+# 192.168.55.244:43655 # v2x
+# 192.168.55.231:34505 # test 4a carla
+# 192.168.55.231:42251 # test 4b carla
+# 192.168.55.231:343655 # scenario 
+
+test_4a_site_list = [
+    {
+        "site_name" : "eco",
+        "lvc" : "constructive",
+        "is_v2xhub" : False,
+        "tdcs_dir" : "/home/andrew/Downloads/test-4/ECONOLITE_20230511150907/exported_tdcs",
+        "pcap_in_dir" : "/home/andrew/Downloads/test-4/ECONOLITE_20230511150907/pilot-1_test-4_eco_ip_packet_in_decoded_packets",
+        "pcap_out_dir" : "/home/andrew/Downloads/test-4/ECONOLITE_20230511150907/pilot-1_test-4_eco_ip_packet_out_decoded_packets",
+        "start_time" : 1683832241.16251,
+        "end_time" : 1683832294.14485,
+        "adapter_addresses_by_type" : {
+            "J2735-SPAT" : ["10.40.36.12:37627"],
+            "TrafficLight" : ["10.40.36.12:35777"]
+        },
+
+    },
+    {
+        "site_name" : "ucla",
+        "is_v2xhub" : False,
+        "lvc" : "constructive",
+        "tdcs_dir" : "/home/andrew/Downloads/test-4/CARLA-UCLA_20230511120740/exported_tdcs",
+        "pcap_in_dir" : "/home/andrew/Downloads/test-4/CARLA-UCLA_20230511120740/fixed_pilot-1_test-4_ucla_ip_packet_in_decoded_packets",
+        "pcap_out_dir" : None,
+        "start_time" : 1683832241.16251,
+        "end_time" : 1683832294.14485,
+        "adapter_addresses_by_type" : {
+            "J2735-BSM" : [
+                "192.168.2.6:45747",      # test 4a
+                # "192.168.2.6:39119"         # test 4b
+            ],
+        },
+
+    },
+    {
+        "site_name" : "tfhrc",
+        "is_v2xhub" : False,
+        "lvc" : "constructive",
+        "tdcs_dir" : "/home/andrew/Downloads/test-4/CARLA-TFHRC-2_20230511150531-4a/exported_tdcs",
+        "pcap_in_dir" : "/home/andrew/Downloads/test-4/CARLA-TFHRC-2_20230511150531-4a/pilot-1_test-4_tfhrc-1_ip_packet_in_decoded_packets",
+        "pcap_out_dir" : "/home/andrew/Downloads/test-4/CARLA-TFHRC-2_20230511150531-4a/pilot-1_test-4_thfrc-1_ip_packet_out_decoded_packets",
+        "start_time" : 1683832241.16251,
+        "end_time" : 1683832294.14485,
+        "adapter_addresses_by_type" : {
+            # "J2735-BSM" : [
+            #     "192.168.55.231:34505",      # test 4a
+            #     # "192.168.55.231:42251"         # test 4b
+            # ],
+        },
+
+    },
+    # {
+    #     "site_name" : "v2xhub",
+    #     "is_v2xhub" : True,
+    #     "lvc" : "constructive",
+    #     "tdcs_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/v2x_exported_tdcs",
+    #     "pcap_in_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_in_decoded_packets",
+    #     "pcap_out_dir" : "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_out_decoded_packets",
+    #     "start_time" : 1683832241.16251,
+    #     "end_time" : 1683832294.14485,
+    #     "adapter_addresses_by_type" : {
+    #         "J2735-MAP" : ["192.168.55.244:41403"],
+    #     },
+
+    # },
 
 
+]
 
 test_list = {
     "pilot_1_test_1" : {
@@ -267,53 +341,30 @@ test_list = {
         "name"      : "pilot_1_test_3",
         "site_list" : test_3_site_list
     },
+    "pilot_1_test_4a" : {
+        "name"      : "pilot_1_test_4a",
+        "site_list" : test_4a_site_list
+    },
 }
 
-test_to_run = "pilot_1_test_1"
+test_to_run = "pilot_1_test_4a"
 
 test_name = test_list[test_to_run]["name"]
 site_list = test_list[test_to_run]["site_list"]
 
 
-##### TESTS 1-3 #####
-
-# # eco
-
-# eco_exported_tcds_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/eco_exported_tdcs"
-# eco_decoded_pcap_in_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/pilot1_test1-3_eco_ip_packet_in_decoded_packets"
-# eco_decoded_pcap_out_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/econolite-20230414143600/_20230414143600/pilot1_test1-3_eco_ip_packet_out_decoded_packets"
-
-# # nissan
-
-# nissan_exported_tcds_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/nissan_exported_tdcs"
-# nissan_decoded_pcap_in_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/pilot1_test1-3_nissan_ip_packet_in_decoded_packets"
-# nissan_decoded_pcap_out_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/nissan_20230414144026/pilot1_test1-3_nissan_ip_packet_out_decoded_packets"
-
-# # UCLA
-
-# ucla_exported_tcds_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/ucla_exported_tdcs"
-# ucla_decoded_pcap_in_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/pilot1_test1-3_ucla_ip_packet_in_decoded_packets"
-# ucla_decoded_pcap_out_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/UCLA_logs_20230414/UCLA_logs/pilot1_test1-3_ucla_ip_packet_out_decoded_packets"
-
-# # # V2X Hub
-
-# v2xhub_exported_tcds_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/v2x_exported_tdcs"
-# v2xhub_decoded_pcap_in_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_in_decoded_packets"
-# v2xhub_decoded_pcap_out_dir = "/home/andrew/Downloads/230414_Pilot_1-20230512T163409Z-001/230414_Pilot_1/v2xhub_pilot1/pilot1_test1-3_v2x_ip_packet_out_decoded_packets"
-
-
 data_types = {
     "J2735-SPAT": {
         "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : "TJ2735Msg"
+        "sdo_file_pattern"   : ["TJ2735Msg"]
     },
     "J2735-BSM": {
         "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : "TJ2735Msg"
+        "sdo_file_pattern"   : ["TJ2735Msg"]
     },
     "J2735-MAP": {
         "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : "TJ2735Msg"
+        "sdo_file_pattern"   : ["TJ2735Msg"]
     },
     # "BSM": {
     #     "pcap_file_pattern" : "BSM",
@@ -349,17 +400,16 @@ data_types = {
     # },
     # "MAP": {
     #     "pcap_file_pattern" : "MAP",
-    #     "sdo_file_pattern"   : "MAP"
+    #     "sdo_file_pattern"   : ["MAP"]
     # },
-    # "SPAT": {
+    # "TrafficLight": {
     #     "pcap_file_pattern" : "SPAT",
-    #     "sdo_file_pattern"   : "TrafficLight"
+    #     "sdo_file_pattern"   : ["TJ2735Msg","TrafficLight"]
     # },
 }
 
-
-
-
+################################################## MAIN ##################################################
+    
 def find_file_at_path(pattern, path):
     result = []
     for root, dirs, files in os.walk(path):
@@ -417,8 +467,13 @@ def find_data_files(exported_tcds_dir,decoded_pcap_in_dir,decoded_pcap_out_dir):
     if exported_tcds_dir:
         print("\n  Locating exported tdcs files: ")
         for data_type in data_types:
-            data_file_locations[data_type]["exported_tcds_file"] = find_file_at_path("*" + data_types[data_type]["sdo_file_pattern"] + "*", exported_tcds_dir)
-            print("\t" + data_type + ": " + str(data_file_locations[data_type]["exported_tcds_file"]))
+            data_file_locations[data_type]["exported_tcds_file"] = []
+
+            for sdo_type_pattern in data_types[data_type]["sdo_file_pattern"]:
+                print(sdo_type_pattern)
+                found_file = find_file_at_path("*" + sdo_type_pattern + "*", exported_tcds_dir)
+                data_file_locations[data_type]["exported_tcds_file"].append(found_file)
+                print("\t" + data_type + ": " + str(data_file_locations[data_type]["exported_tcds_file"]))
     else:
         for data_type in data_types:
             data_file_locations[data_type]["exported_tcds_file"] = None
@@ -535,6 +590,8 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
                 this_importfile_name_writer = csv.writer(this_importfile_name_obj,quoting=csv.QUOTE_ALL)
 
                 print("  Generating import file: " + this_importfile_name)
+
+                import_data_type = data_type
                 
                 this_importfile_name_writer.writerow(["load_data","dataset_name","dataset_file_location","dataset_type","message_type","adapter_ip","start_time","end_time"])
                 
@@ -542,18 +599,47 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
                 # this particular logic is always true for pilot 1 but will not always be 
                 
                 print(str(all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"]) + " : " +  str(all_data[source_data["site_name"]][data_type]))
-                if all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"] and data_type == "J2735-SPAT":
-                    this_importfile_name_writer.writerow(["true",source_data["site_name"] + " J2735 pcap out",all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"],"pcap",data_type,None,source_data["start_time"],source_data["end_time"]])
+                if all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"] and data_type in ["J2735-SPAT","J2735-MAP","SPAT","TrafficLight"]:
+                    
+                    if data_type == "TrafficLight":
+                        import_data_type = "TrafficLight"
+
+                    this_importfile_name_writer.writerow(["true",source_data["site_name"] + " J2735 pcap out",all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"],"pcap",import_data_type,None,source_data["start_time"],source_data["end_time"]])
                 
-                this_importfile_name_writer.writerow(["true",source_data["site_name"] + " J2735 in to " + source_data["site_name"] + " SDO commit",all_data[source_data["site_name"]][data_type]["exported_tcds_file"],"tdcs",data_type,adapter_ip,source_data["start_time"],source_data["end_time"]])
-                this_importfile_name_writer.writerow(["true",source_data["site_name"] + " SDO to " + dest_data["site_name"] +  " SDO transmit",all_data[dest_data["site_name"]][data_type]["exported_tcds_file"],"tdcs",data_type,None,source_data["start_time"],source_data["end_time"]])
-                this_importfile_name_writer.writerow(["true",dest_data["site_name"] + " J2735 to " + dest_data["site_name"] + " J2735 pcap in",all_data[dest_data["site_name"]][data_type]["decoded_pcap_in_file"],"pcap",data_type,None,source_data["start_time"],source_data["end_time"]])
+                for sdo_type_file_i,sdo_type_file in enumerate(all_data[source_data["site_name"]][data_type]["exported_tcds_file"]):
+                    
+                    if sdo_type_file_i == 0:
+                        if data_type == "TrafficLight":
+                            import_data_type = "J2735-SPAT"
+                            import_adapter_ip = source_data["adapter_addresses_by_type"]["J2735-SPAT"][0]
+                        else:
+                            import_data_type = data_type
+                            import_adapter_ip = adapter_ip
+                        
+                        this_importfile_name_writer.writerow(["true",source_data["site_name"] + " J2735 in to " + source_data["site_name"] + " SDO commit",sdo_type_file,"tdcs",import_data_type,import_adapter_ip,source_data["start_time"],source_data["end_time"]])
+                    else:
+                        this_importfile_name_writer.writerow(["true",source_data["site_name"] + " to " + source_data["site_name"] + " SDO convert",sdo_type_file,"tdcs",data_type,adapter_ip,source_data["start_time"],source_data["end_time"]])
+                
+                # if data_type in ["SPAT"]:
+                #     this_importfile_name_writer.writerow(["true",sourceJ2735-Payload_data["site_name"] + " J2735 in to " + source_data["site_name"] + " SDO commit",all_data[source_data["site_name"]][data_type]["exported_tcds_file"],"tdcs",data_type,adapter_ip,source_data["start_time"],source_data["end_time"]])
+                if data_type == "TrafficLight":
+                    import_data_file = all_data[dest_data["site_name"]][data_type]["exported_tcds_file"][1]
+                else:
+                    import_data_file = all_data[dest_data["site_name"]][data_type]["exported_tcds_file"][0]
+
+                this_importfile_name_writer.writerow(["true",source_data["site_name"] + " SDO to " + dest_data["site_name"] +  " SDO transmit",import_data_file,"tdcs",data_type,None,source_data["start_time"],source_data["end_time"]])
+                
+                if data_type != "TrafficLight":
+                    this_importfile_name_writer.writerow(["true",dest_data["site_name"] + " J2735 to " + dest_data["site_name"] + " J2735 pcap in",all_data[dest_data["site_name"]][data_type]["decoded_pcap_in_file"],"pcap",data_type,None,source_data["start_time"],source_data["end_time"]])
         else:
             print("Invalid vehicle configuration. Must be: live to constructive vehicle, constructive to live vehicle, or constructive to constructive vehicle")
             sys.exit()
     
     return this_import_folder_name
         
+
+
+################################################## MAIN ##################################################
 
 print("\n########## FINDING ALL DATA FILES ##########")
 
@@ -565,27 +651,12 @@ for test_site in site_list:
     all_data[test_site["site_name"]] = find_data_files(test_site["tdcs_dir"],test_site["pcap_in_dir"],test_site["pcap_out_dir"])
 
 
-# print("\nFinding data files for Live")
-# all_data["live"] = find_data_files(live_exported_tcds_dir,live_decoded_pcap_in_dir,live_decoded_pcap_out_dir)
 
-# print("\nFinding data files for econolite")
-# all_data["eco"] = find_data_files(eco_exported_tcds_dir,eco_decoded_pcap_in_dir,eco_decoded_pcap_out_dir)
-
-# print("\nFinding data files for nissan")
-# all_data["nissan"] = find_data_files(nissan_exported_tcds_dir,nissan_decoded_pcap_in_dir,nissan_decoded_pcap_out_dir)
-
-# print("\nFinding data files for V2X-Hub")
-# all_data["v2xhub"] = find_data_files(v2xhub_exported_tcds_dir,v2xhub_decoded_pcap_in_dir,v2xhub_decoded_pcap_out_dir)
 
 print("\n########## GENERATING IMPORT FILES ##########")
 
 import_file_directory_list = []
 
-# import_file_directory_list.append(generate_import_files("live","v2xhub","eco",False))
-# import_file_directory_list.append(generate_import_files("live","v2xhub","nissan",False))
-
-# import_file_directory_list.append(generate_import_files("eco","v2xhub","live",False))
-# import_file_directory_list.append(generate_import_files("nissan","v2xhub","live",False))
 
 for src_test_site in site_list:
     
@@ -603,13 +674,6 @@ for src_test_site in site_list:
             import_file = generate_import_files(src_test_site,v2xhub_site,dest_test_site,False)
             if import_file:
                 import_file_directory_list.append(import_file)
-
-
-# import_file_directory_list.append(generate_import_files("eco",None,"nissan",False))
-# import_file_directory_list.append(generate_import_files("nissan",None,"eco",False))
-
-# import_file_directory_list.append(generate_import_files("live","v2xhub",None,True))
-# import_file_directory_list.append(generate_import_files("eco","v2xhub",None,True))
 
 
 print("\n########## RUNNING DATA ANALYSIS ##########")
@@ -672,17 +736,6 @@ for loader_dir in import_file_directory_list:
                 print("\nExecuting analysis: " + analysis_command)
                 os.system(analysis_command)
                 
-        # loader_file_abs = os.path.join(current_dir, "generated_import_files",loader_dir,loader_file_name_start + ".csv")
-        # print("  Current loader file abs: " + loader_file_abs)
-
-        # source_vehicle_search = re.search('^(.*?)_',loader_dir)
-                
-        # if not source_vehicle_search:
-        #     print("ERROR: Could not identify source vehicle from file name: " + loader_dir)
-        #     sys.exit()
-            
-        # source_vehicle_search_result = str(vehicle_name_to_index[source_vehicle_search.group(1)])
-        # print("    Found source vehicle: " + source_vehicle_search_result)
             
         
                     
