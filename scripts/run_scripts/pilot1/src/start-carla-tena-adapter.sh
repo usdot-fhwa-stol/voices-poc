@@ -41,14 +41,6 @@ else
    exit 1
 fi
 
-if [[ -f $localCarlaPath/CarlaUE4.sh ]]; then
-	echo "Found CARLA Simulator"
-else
-	echo
-	echo "CARLA Simulator not found at $localCarlaPath/CarlaUE4.sh"
-	exit
-fi
-
 if [[ $? -ne 0 ]] ; then
     echo
     echo "[!!!] .config file not found, please run the start script from its containing folder"

@@ -1,0 +1,62 @@
+services:
+  # carla-opengl:
+  #   container_name: carla-opengl
+  #   image: carlasim/carla:0.9.10.1
+  #   command: /bin/bash CarlaUE4.sh -opengl
+  #   envionrment:
+    
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+
+  carla-vulkan:
+    container_name: carla-vulkan
+    image: carlasim/carla:0.9.10.1
+    command: /bin/bash ./CarlaUE4.sh -vulkan -quality-level=Low
+    privileged: true
+    environment:
+      - DISPLAY=$DISPLAY
+      - SDL_VIDEODRIVER=x11
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /home/andrew/voices-poc:/home/voices-poc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  voices:
+    container_name: voices
+    image: test-01
+    # command: /home/start_scripts/setup-docker.sh | tail -f /dev/null
+    # privileged: true
+    tty: true 
+    depends_on:
+      - carla-vulkan
+    environment:
+      - DISPLAY=$DISPLAY
+      - SDL_VIDEODRIVER=x11
+      # - QT_DEBUG_PLUGINS=1
+      - XAUTHORITY=~/.Xauthroity
+      - VOICES_SITE_CONFIG=andrew_docker.config
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /home/andrew/voices-poc:/home/voices-poc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+# sudo docker run 
+# --privileged 
+# --gpus all --net=host -e DISPLAY=$DISPLAY -e SDL_VIDEODRIVER=x11 -v /tmp/.X11-unix:/tmp/.X11-unix:rw carlasim/carla:0.9.10.1 /bin/bash ./CarlaUE4.sh -vulkan
