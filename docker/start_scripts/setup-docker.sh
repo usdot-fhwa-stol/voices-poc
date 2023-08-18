@@ -17,7 +17,7 @@ if [ -L ${voices_config} ] ; then
       config_link_dest=$(readlink -f $voices_config)
       link_base_name=$(basename ${config_link_dest})
 
-      . $voices_config
+      source $voices_config
 
 
       echo "Site Config: "$link_base_name
@@ -33,3 +33,4 @@ else
    echo "[!!!] .voices_config link is is missing"
    exit 1
 fi
+

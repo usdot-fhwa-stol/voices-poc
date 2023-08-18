@@ -26,14 +26,6 @@ else
    exit 1
 fi
 
-if [[ -f $localCarlaPath/CarlaUE4.sh ]]; then
-	echo "Found CARLA Simulator"
-else
-	echo
-	echo "CARLA Simulator not found at $localCarlaPath/CarlaUE4.sh"
-	exit
-fi
-
 $tenaExecutionManagerPath/bin/executionManager \
     -listenendpoints $localAddress:55100 \
     -logDir $tenaExecutionManagerPath/log \

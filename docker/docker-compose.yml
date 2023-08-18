@@ -15,8 +15,8 @@ services:
 
   carla-vulkan:
     container_name: carla-vulkan
-    image: carlasim/carla:0.9.10.1
-    command: /bin/bash ./CarlaUE4.sh -vulkan -quality-level=Low
+    image: carlasim/carla:0.9.10
+    command: /bin/bash ./CarlaUE4.sh -vulkan #-quality-level=Low
     privileged: true
     environment:
       - DISPLAY=$DISPLAY
@@ -45,10 +45,15 @@ services:
       - SDL_VIDEODRIVER=x11
       # - QT_DEBUG_PLUGINS=1
       - XAUTHORITY=~/.Xauthroity
+      - VOICES_CARLA_CONTAINER=carla-vulkan
       - VOICES_SITE_CONFIG=andrew_docker.config
+      - VOICES_START_EM=true
+      - VOICES_START_CONSOLE=true
+      - VOICES_START_SCENARIO_PUBLISHER=true
+      - VOICES_START_TENA_CARLA_ADAPTER=true
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /home/andrew/voices-poc:/home/voices-poc
+      - /home/carma/voices-poc:/home/voices-poc
     deploy:
       resources:
         reservations:
