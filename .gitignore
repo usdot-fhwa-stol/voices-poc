@@ -15,5 +15,6 @@ config/node_info.config
 .idea/
 
 # ignore docker lib files
-docker/lib
-
+docker/lib/BUILD
+docker/lib/COPY/INSTALL
+docker/lib/COPY/CARLA*

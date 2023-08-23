@@ -50,7 +50,12 @@ fi
 
 localadapterPath=$localInstallPath/$carlaAdapterVersion
 
-carlaHost=$carlaAddress
+
+if [[ $VOICES_CARLA_CONTAINER ]] ; then
+   carlaHost=$VOICES_CARLA_CONTAINER
+else
+   carlaHost=$carlaAddress
+fi
 
 adapterVerbosity='4'
 

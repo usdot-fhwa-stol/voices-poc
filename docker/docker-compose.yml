@@ -1,20 +1,6 @@
 services:
-  # carla-opengl:
-  #   container_name: carla-opengl
-  #   image: carlasim/carla:0.9.10.1
-  #   command: /bin/bash CarlaUE4.sh -opengl
-  #   envionrment:
-    
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
-
-  carla-vulkan:
-    container_name: carla-vulkan
+  carla:
+    container_name: carla
     image: carlasim/carla:0.9.10
     command: /bin/bash ./CarlaUE4.sh -vulkan #-quality-level=Low
     privileged: true
@@ -34,18 +20,18 @@ services:
 
   voices:
     container_name: voices
-    image: test-01
+    image: usdotfhwastoldev/voices:0.0.1
     # command: /home/start_scripts/setup-docker.sh | tail -f /dev/null
     # privileged: true
     tty: true 
     depends_on:
-      - carla-vulkan
+      - carla
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
       # - QT_DEBUG_PLUGINS=1
       - XAUTHORITY=~/.Xauthroity
-      - VOICES_CARLA_CONTAINER=carla-vulkan
+      - VOICES_CARLA_CONTAINER=carla
       - VOICES_SITE_CONFIG=andrew_docker.config
       - VOICES_START_EM=true
       - VOICES_START_CONSOLE=true
