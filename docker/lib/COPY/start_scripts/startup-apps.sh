@@ -14,7 +14,7 @@ sleep 5s
 
 if [[ $VOICES_START_CONSOLE == true ]]; then
    echo "STARTING TENA CONSOLE"
-   /opt/TENA/Console-v2.0.1/start.sh &
+   /opt/TENA/Console-v2.0.1/start.sh -emEndpoints $emAddress:$emPort -autoConnect &
 fi
 
 sleep 5s
@@ -27,6 +27,29 @@ then
 	
 else
   echo "NO CARLA CONTAINER FOUND"
+fi
+
+
+sleep 5s
+
+if [[ $VOICES_START_CANARY == true ]]; then
+   echo "STARTING TENA CANARY"
+   /home/TENA/tenaCanary-v1.0.12/start.sh -emEndpoints $emAddress:$emPort -auto &
+fi
+
+sleep 5s
+
+if [[ $VOICES_START_TDCS == true ]]; then
+   echo "STARTING TENA DATA COLLECTION SYSTEM"
+   mkdir $voicesPocPath/logs
+   $tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -dbFolder $voicesPocPath/logs &
+fi
+
+sleep 5s
+
+if [[ $VOICES_START_DATAVIEW == true ]]; then
+   echo "STARTING TENA DATAVIEW"
+   /opt/TENA/DataView-v1.5.4/start.sh &
 fi
 
 sleep 5s

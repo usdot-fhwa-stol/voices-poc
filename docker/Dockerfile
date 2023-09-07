@@ -1,3 +1,7 @@
+#
+# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t voices:0.0.1 . --progress=plain
+#
+
 FROM ubuntu:20.04
 
 LABEL version="0.0.1"
@@ -12,23 +16,11 @@ ARG USER="root"
 
 WORKDIR /home
 
-# COPY TENA MW Combined OMs
-
-# COPY ./lib /home
-        
-# COPY ./lib/VUG-VOICES-Combined-DataCollectionDistribution-v0.14.3@Product@u2004-gcc9-64-*.deb .
-
-# COPY DataView
-
-# COPY ./lib/TDCS-DataView-v1.5.4@Product@u2004-gcc9-64*.deb .
-
 # INSTALL TENA bin
 
 RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
-    # chmod -R a+x /home/BUILD/*.bin && \
     /home/BUILD/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
-    /home/BUILD/VUG-VOICES-Combined-Distribution-v0.14.3@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
-    # rm -rf /home/BUILD/*.bin /tmp/*
+    # /home/BUILD/VUG-VOICES-Combined-Distribution-v0.14.4@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
     rm -rf /tmp/*
 
 # INSTALL TDCS
@@ -39,8 +31,9 @@ RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
 
 RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
     apt install -o DPkg::options::=--force-overwrite \
-    /home/BUILD/TENA-Console-v2.0.1@Product@u2004-gcc9-64*.deb && \
-    # rm /home/BUILD/TENA-Console-v2.0.1@Product@u2004-gcc9-64*.deb && \
+    /home/BUILD/TENA-Console-v2.0.1@Product@u2004-gcc9-64-*.deb \
+    # /home/BUILD/VUG-VOICES-Combined-DataCollectionDistribution-v0.14.4@Product@u2004-gcc9-64-*.deb \
+    /home/BUILD/TDCS-DataView-v1.5.4@Product@u2004-gcc9-64-*.deb && \
     # Fix permissions for installed TENA apps
     chmod -R a+rw /opt/TENA
 
@@ -64,6 +57,7 @@ RUN apt-get update && apt install -y \
 
 RUN pip install numpy pandas pygame pycrate && \
     rm -rf /root/.cache
+RUN ls -l
 
 COPY ./lib/COPY /home
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/.voices-config
+source ~/.voices_config
 
 username=$(whoami)
 

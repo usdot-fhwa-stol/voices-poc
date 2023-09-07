@@ -1,6 +1,6 @@
 services:
   carla:
-    container_name: carla
+    container_name: voices-carla
     image: carlasim/carla:0.9.10
     command: /bin/bash ./CarlaUE4.sh -vulkan #-quality-level=Low
     privileged: true
@@ -9,7 +9,7 @@ services:
       - SDL_VIDEODRIVER=x11
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /home/andrew/voices-poc:/home/voices-poc
+      - /home/carma/voices-poc:/home/voices-poc
     deploy:
       resources:
         reservations:
@@ -20,7 +20,7 @@ services:
 
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:0.0.1
+    image: usdotfhwastoldev/voices:0.0.2
     # command: /home/start_scripts/setup-docker.sh | tail -f /dev/null
     # privileged: true
     tty: true 
@@ -35,8 +35,11 @@ services:
       - VOICES_SITE_CONFIG=andrew_docker.config
       - VOICES_START_EM=true
       - VOICES_START_CONSOLE=true
-      - VOICES_START_SCENARIO_PUBLISHER=true
-      - VOICES_START_TENA_CARLA_ADAPTER=true
+      - VOICES_START_CANARY=false
+      - VOICES_START_TDCS=false
+      - VOICES_START_DATAVIEW=false
+      - VOICES_START_SCENARIO_PUBLISHER=false
+      - VOICES_START_TENA_CARLA_ADAPTER=false
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /home/carma/voices-poc:/home/voices-poc
