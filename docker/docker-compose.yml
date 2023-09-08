@@ -1,31 +1,34 @@
 services:
-  carla:
-    container_name: voices-carla
-    image: carlasim/carla:0.9.10
-    command: /bin/bash ./CarlaUE4.sh -vulkan #-quality-level=Low
-    privileged: true
-    environment:
-      - DISPLAY=$DISPLAY
-      - SDL_VIDEODRIVER=x11
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /home/carma/voices-poc:/home/voices-poc
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # carla:
+  #   container_name: voices-carla
+  #   image: carlasim/carla:0.9.10
+  #   command: /bin/bash ./CarlaUE4.sh -vulkan #-quality-level=Low
+  #   privileged: true
+  #   environment:
+  #     - DISPLAY=$DISPLAY
+  #     - SDL_VIDEODRIVER=x11
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #     - /home/carma/voices-poc:/home/voices-poc
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:0.0.2
+    image: usdotfhwastoldev/voices:net-test-0.0.1
     # command: /home/start_scripts/setup-docker.sh | tail -f /dev/null
     # privileged: true
     tty: true 
-    depends_on:
-      - carla
+    # depends_on:
+    #   - carla
+    network_mode: "host"
+    # ports:
+    #   - 55100:55100
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
@@ -35,7 +38,7 @@ services:
       - VOICES_SITE_CONFIG=andrew_docker.config
       - VOICES_START_EM=true
       - VOICES_START_CONSOLE=true
-      - VOICES_START_CANARY=false
+      - VOICES_START_CANARY=true
       - VOICES_START_TDCS=false
       - VOICES_START_DATAVIEW=false
       - VOICES_START_SCENARIO_PUBLISHER=false

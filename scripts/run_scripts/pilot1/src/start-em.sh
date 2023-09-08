@@ -27,7 +27,7 @@ else
 fi
 
 $tenaExecutionManagerPath/bin/executionManager \
-    -listenendpoints $localAddress:55100 \
+    -listenendpoints $emAddress:$emPort \
     -logDir $tenaExecutionManagerPath/log \
     -recoveryDir $tenaExecutionManagerPath/save \
     -connectionTimeoutInMilliseconds 10000 -twowayTimeoutInMilliseconds 20000 \
