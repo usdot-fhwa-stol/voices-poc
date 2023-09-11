@@ -72,11 +72,11 @@ if [[ $VOICES_START_MANUAL_CARLA_VEHICLE == true ]]; then
 
    if [[ -z "${vehicleX}" ]] && [[ -z "${vehicleY}" ]] && [[ -z "${vehicleZ}" ]]; then
 
-      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --x $vehicleX --y $vehicleY --z $vehicleZ --rolename $vehicleID &
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --x $vehicleX --y $vehicleY --z $vehicleZ --rolename $VOICES_CARLA_CONTAINER --host $localAddress &
 
    else
 
-      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --rolename $vehicleID &
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --rolename $vehicleID --host $VOICES_CARLA_CONTAINER &
 
    fi
 

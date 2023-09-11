@@ -34,3 +34,7 @@ else
    exit 1
 fi
 
+# overwrite VOI_CARLA_EGG_DIR as this is within the container
+
+export VOI_CARLA_EGG_DIR=$HOME/CARLA_0.9.10/PythonAPI/carla/dist/
+
