@@ -67,4 +67,20 @@ if [[ $VOICES_START_TENA_CARLA_ADAPTER == true ]]; then
    sleep 5s
 fi
 
+if [[ $VOICES_START_MANUAL_CARLA_VEHICLE == true ]]; then
+   echo "STARTING MANUAL CARLA VEHICLE"
+
+   if [[ -z "${vehicleX}" ]] && [[ -z "${vehicleY}" ]] && [[ -z "${vehicleZ}" ]]; then
+
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --x $vehicleX --y $vehicleY --z $vehicleZ --rolename $vehicleID &
+
+   else
+
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --rolename $vehicleID &
+
+   fi
+
+   sleep 5s
+fi
+
 tail -f /dev/null
