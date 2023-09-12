@@ -1,7 +1,7 @@
 services:
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:pilot2-event0-0.0.2
+    image: usdotfhwastoldev/voices:pilot2-event0-0.0.3
     tty: true 
     network_mode: "host"
     environment:

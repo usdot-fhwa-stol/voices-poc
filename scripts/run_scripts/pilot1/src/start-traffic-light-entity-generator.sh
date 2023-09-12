@@ -51,7 +51,7 @@ fi
 
 localadapterPath=$localInstallPath/$trafficLightEntityGeneratorVersion
 
-adapterVerbosity='4'
+adapterVerbosity='1'
 
 mkdir -p $localAdapterLogPath
 

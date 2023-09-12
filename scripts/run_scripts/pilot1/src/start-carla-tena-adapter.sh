@@ -57,7 +57,7 @@ else
    carlaHost=$carlaAddress
 fi
 
-adapterVerbosity='4'
+adapterVerbosity='1'
 
 mkdir -p $localAdapterLogPath
 

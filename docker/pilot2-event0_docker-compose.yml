@@ -2,7 +2,7 @@ services:
   carla:
     container_name: voices-carla
     image: carlasim/carla:0.9.10
-    command: /bin/bash ./CarlaUE4.sh -vulkan #-quality-level=Low
+    command: /bin/bash ./CarlaUE4.sh -vulkan -nosound #-quality-level=Low
     privileged: true
     environment:
       - DISPLAY=$DISPLAY

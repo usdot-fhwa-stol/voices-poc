@@ -51,7 +51,7 @@ fi
 
 localadapterPath=$localInstallPath/$scenarioPublisherVersion
 
-adapterVerbosity='4'
+adapterVerbosity='1'
 
 mkdir -p $localAdapterLogPath
 

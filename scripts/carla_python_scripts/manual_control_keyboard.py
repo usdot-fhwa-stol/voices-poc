@@ -215,6 +215,7 @@ class World(object):
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.player is None:
             if args.x and args.y and args.z:
+                print("spawning in custom loc")
                 spawn_point = carla.Transform(carla.Location(x=args.x,y=args.y,z=args.z),carla.Rotation(yaw=90))
             else:
                 if not self.map.get_spawn_points():
@@ -1119,15 +1120,12 @@ def main():
         help='Gamma correction of the camera (default: 2.2)')
     argparser.add_argument(
         '--x', type=float, 
-        default=255, 
         help='x coordinate of the spawn point')
     argparser.add_argument(
         '--y', type=float, 
-        default=-230, 
         help='y coordinate of the spawn point')
     argparser.add_argument(
         '--z', type=float, 
-        default=0.25, 
         help='z coordinate of the spawn point')
     args = argparser.parse_args()
 
