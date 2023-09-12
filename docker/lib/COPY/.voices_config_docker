@@ -1,0 +1,10 @@
+# SPECIAL DOCKER VOICES_CONFIG TO OVERWRITE DOCKER DIRECTORIES
+
+source $HOME/.voices_config_link
+
+localTenadevDir=$HOME
+localInstallPath=$HOME/VOICES_Adapters
+localTenaPath=$HOME/TENA
+tdcsInstallPath=/opt/TENA
+voicesPocPath=$HOME/voices-poc
+localCarlaPath=$HOME/CARLA_0.9.10

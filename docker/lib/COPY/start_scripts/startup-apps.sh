@@ -70,13 +70,14 @@ fi
 if [[ $VOICES_START_MANUAL_CARLA_VEHICLE == true ]]; then
    echo "STARTING MANUAL CARLA VEHICLE"
 
-   if [[ -z "${vehicleX}" ]] && [[ -z "${vehicleY}" ]] && [[ -z "${vehicleZ}" ]]; then
-
-      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --x $vehicleX --y $vehicleY --z $vehicleZ --rolename $VOICES_CARLA_CONTAINER --host $localAddress &
+   # if we are starting the carla adapter and a manual vehicle, we almost certainly are trying to use a vehicle from the scenario which should already be spawined
+   if [[ $VOICES_START_TENA_CARLA_ADAPTER == true ]]; then
+      echo "   CONNECTING TO SCENARIO MANUAL VEHICLE"
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard_virtual.py --follow_vehicle $vehicleID --host $localAddress &
 
    else
-
-      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --rolename $vehicleID --host $VOICES_CARLA_CONTAINER &
+      echo "   SPAWNING NEW MANUAL VEHICLE"
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --rolename $vehicleID --host $localAddress &
 
    fi
 

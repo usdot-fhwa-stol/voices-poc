@@ -4,13 +4,30 @@ export HOME=/home
 
 env_set_site_config_path=$HOME/voices-poc/config/site_config/$VOICES_SITE_CONFIG
 
+# the .voices_config setup is as follows in order to make existing scripts work within docker container: 
+# 
+# $HOME/.voices_config_link = actual site config link
+# 
+# 
+# .voices_config_docker = source $HOME/.voices_config_link + overwrite vars pertaining to locations within docker container
+# 
+# therefore:
+# 
+# $HOME/.voices_config --> $HOME/.voices_config_docker = source $HOME/.voices_config_link + overwrites
+# 
+# $HOME/.voices_config_docker exists because $HOME/.voices_config must be a sym link for run_scripts
+# 
+
+
 if [ ! -f $env_set_site_config_path ]; then
         echo "    [!!!] Site Config file not found: $VOICES_SITE_CONFIG"
+        exit 1
 else
-        ln -sf $env_set_site_config_path $HOME/.voices_config
+        ln -sf $env_set_site_config_path $HOME/.voices_config_link
+        ln -sf $HOME/.voices_config_docker $HOME/.voices_config
 fi
 
-voices_config=$HOME/.voices_config
+voices_config=$HOME/.voices_config_link
 
 if [ -L ${voices_config} ] ; then
    if [ -e ${voices_config} ] ; then
@@ -33,8 +50,4 @@ else
    echo "[!!!] .voices_config link is is missing"
    exit 1
 fi
-
-# overwrite VOI_CARLA_EGG_DIR as this is within the container
-
-export VOI_CARLA_EGG_DIR=$HOME/CARLA_0.9.10/PythonAPI/carla/dist/
 

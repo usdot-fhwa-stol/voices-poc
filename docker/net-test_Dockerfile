@@ -53,7 +53,6 @@ RUN apt-get update && apt install -y \
 
 RUN pip install numpy pandas pygame pycrate && \
     rm -rf /root/.cache
-RUN ls -l
 
 COPY ./lib/COPY /home
 

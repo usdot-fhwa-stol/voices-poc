@@ -16,8 +16,9 @@ config/node_info.config
 
 # ignore docker lib files
 docker/lib/BUILD
-docker/lib/COPY/INSTALL
+docker/lib/COPY/VOICES_Adapters
 docker/lib/COPY/CARLA*
+docker/lib/MAPS
 
 # ignore SUMO pycache
 scripts/carla_python_scripts/Sumo/sumo_integration/__pycache__
