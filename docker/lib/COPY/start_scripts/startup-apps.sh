@@ -20,7 +20,7 @@ if [[ $VOICES_START_CONSOLE == true ]]; then
 fi
 
 # change carla map if carla_
-if ping -c 1 $VOICES_CARLA_CONTAINER &> /dev/null
+if ping -c 1 $carlaAddress &> /dev/null
 then
     echo "CHANGING CARLA MAP TO: $carlaMapName"
 	python3 $HOME/voices-poc/scripts/carla_python_scripts/config.py -m $carlaMapName --weather ClearNoon --host $VOICES_CARLA_CONTAINER
