@@ -27,7 +27,7 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$TENATrafficLightEntityGeneratorVersion
+localadapterPath=$localInstallPath/$trafficLightEntityGeneratorVersion
 
 adapterVerbosity='4'
 
