@@ -131,8 +131,8 @@ elif [[ $tenaAppIndex == 5 ]]; then
 	noBuildVersion=false
 
 elif [[ $tenaAppIndex == 6 ]]; then
-	tenaApp=tena-j3244-adapter
-	gitCloneUrl="git@github.com:usdot-fhwa-stol/tena-j3244-adapter.git"
+	tenaApp=tena-j3224-adapter
+	gitCloneUrl="git@github.com:usdot-fhwa-stol/tena-J3224-adapter.git"
 	dockerContainer=tena:general
 	remoteAppDir=/home/$tenaApp 			#DO NOT CHANGE: internal docker directory mapped to localAppDir
 	isV2xhubPlugin=false
@@ -141,6 +141,16 @@ elif [[ $tenaAppIndex == 6 ]]; then
 	noBuildVersion=false
 
 elif [[ $tenaAppIndex == 7 ]]; then
+	tenaApp=tena-v2x-adapter
+	gitCloneUrl="git@github.com:usdot-fhwa-stol/tena-v2x-adapter.git"
+	dockerContainer=tena:general
+	remoteAppDir=/home/$tenaApp 			#DO NOT CHANGE: internal docker directory mapped to localAppDir
+	isV2xhubPlugin=false
+	requiresProtocolio=false
+	useMasterDefaultBranch=false
+	noBuildVersion=false
+
+elif [[ $tenaAppIndex == 8 ]]; then
 	tenaApp=tena-entity-generator
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/tena-entity-generator.git"
 	dockerContainer=tena:general
@@ -150,7 +160,7 @@ elif [[ $tenaAppIndex == 7 ]]; then
 	useMasterDefaultBranch=false
 	noBuildVersion=false
 
-elif [[ $tenaAppIndex == 8 ]]; then
+elif [[ $tenaAppIndex == 9 ]]; then
 	tenaApp=tena-traffic-light-entity-generator
 	gitCloneUrl="git@github.com:usdot-fhwa-stol/tena-traffic-light-entity-generator.git"
 	dockerContainer=tena:general
@@ -160,7 +170,7 @@ elif [[ $tenaAppIndex == 8 ]]; then
 	useMasterDefaultBranch=false
 	noBuildVersion=false
 
-elif [[ $tenaAppIndex == 9 ]]; then
+elif [[ $tenaAppIndex == 10 ]]; then
 	tenaApp=carma-platform-tena-adapter
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/carma-platform-tena-adapter.git"
 	dockerContainer=tena:general
@@ -170,7 +180,7 @@ elif [[ $tenaAppIndex == 9 ]]; then
 	useMasterDefaultBranch=false
 	noBuildVersion=false
 
-elif [[ $tenaAppIndex == 10 ]]; then
+elif [[ $tenaAppIndex == 11 ]]; then
 	tenaApp=v2xhub-tena-bsm-plugin
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/v2xhub-tena-bsm-plugin.git"
 	dockerContainer=usdotfhwaops/v2xhubamd:7.3.1
@@ -180,7 +190,7 @@ elif [[ $tenaAppIndex == 10 ]]; then
 	useMasterDefaultBranch=false
 	noBuildVersion=false
 
-elif [[ $tenaAppIndex == 11 ]]; then
+elif [[ $tenaAppIndex == 12 ]]; then
 	tenaApp=v2xhub-tena-spat-plugin
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/v2xhub-tena-spat-plugin.git"
 	dockerContainer=usdotfhwaops/v2xhubamd:7.3.1
@@ -190,7 +200,7 @@ elif [[ $tenaAppIndex == 11 ]]; then
 	useMasterDefaultBranch=false
 	noBuildVersion=false
 	
-elif [[ $tenaAppIndex == 12 ]]; then
+elif [[ $tenaAppIndex == 13 ]]; then
 	tenaApp=v2xhub-tena-mobility-plugin
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/v2xhub-tena-mobility-plugin.git"
 	dockerContainer=usdotfhwaops/v2xhubamd:7.3.1
@@ -200,7 +210,7 @@ elif [[ $tenaAppIndex == 12 ]]; then
 	useMasterDefaultBranch=false
 	noBuildVersion=false
 	
-elif [[ $tenaAppIndex == 13 ]]; then
+elif [[ $tenaAppIndex == 14 ]]; then
 	tenaApp=v2xhub-tena-traffic-control-plugin
 	gitCloneUrl="https://www.trmc.osd.mil/bitbucket/scm/vug/v2xhub-tena-traffic-control-plugin.git"
 	dockerContainer=usdotfhwaops/v2xhubamd:7.3.1
