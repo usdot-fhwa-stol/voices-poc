@@ -1,10 +1,10 @@
 #
-# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t usdotfhwastoldev/voices:pilot2-event0-0.0.2 . --progress=plain
+# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t usdotfhwastoldev/voices:pilot2-event0-0.0.4 . --progress=plain -f pilot2-event0_Dockerfile
 #
 
 FROM ubuntu:20.04
 
-LABEL version="0.0.3"
+LABEL version="0.0.4"
 LABEL description="VOICES Docker image for Pilot 2 Event 0"
 
 SHELL ["/bin/bash", "-ec"]
@@ -35,9 +35,12 @@ RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
 
 # INSTALL apt packages 
 
-    # add sumo repo
-RUN echo "deb http://ppa.launchpad.net/sumo/stable/ubuntu focal main" >> /etc/apt/sources.list && \
-    apt-get update && apt install -y \
+    
+RUN apt-get update && \
+    # add sumo repo 
+    apt install -y software-properties-common && \
+    add-apt-repository ppa:sumo/stable && apt-get update && \
+    apt install -y \
     # install apt utils for installing packages (mostly for TENA console)
     apt-utils \
     # install boost

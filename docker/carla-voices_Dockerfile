@@ -1,5 +1,5 @@
 #
-# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t usdotfhwastoldev/voices:net-test-#-#-# . --progress=plain
+# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t usdotfhwastoldev/voices:net-test-0.0.1 . --progress=plain -f carla-voices_Dockerfile
 #
 
 FROM carlasim/carla:0.9.10
@@ -12,11 +12,8 @@ SHELL ["/bin/bash", "-ec"]
 ARG DEBIAN_FRONTEND="noninteractive" 
 ARG TZ="America/New_York"
 
-# WORKDIR /home
-
-COPY ./lib/MAPS ./Import
-
-RUN ./ImportAssets.sh
-
+RUN --mount=type=bind,target=./Import,readonly,source=lib/MAPS \
+    sed -i 's/--keep-newer-files/--skip-old-files/' ImportAssets.sh && \
+    ./ImportAssets.sh 
 
 CMD ["/bin/bash","./CarlaUE4.sh","-vulkan"]

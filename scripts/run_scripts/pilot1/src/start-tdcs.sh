@@ -68,7 +68,13 @@ BASH_XTRACEFD=4
 
 set -x
 
-mkdir -p $voicesPocPath/logs/tdcs_data
+if [ -d "$voicesPocPath/logs/tdcs_data" ]; then
+   echo "TDCS Log directory exists"
+else
+   echo "Creating TDCS Log directory"
+   mkdir -p $voicesPocPath/logs/tdcs_data
+fi
+
 cd $voicesPocPath/logs/tdcs_data
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
