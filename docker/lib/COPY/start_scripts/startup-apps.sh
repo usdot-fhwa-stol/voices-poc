@@ -22,15 +22,17 @@ fi
 # try to change carla map 
 {
    echo "CHANGING CARLA MAP TO: $carlaMapName"
-	python3 $HOME/voices-poc/scripts/carla_python_scripts/config.py -m $carlaMapName --weather ClearNoon --host $carlaAddress
+	python3 $HOME/voices-poc/scripts/carla_python_scripts/config.py -m $carlaMapName --weather ClearNoon --host $carlaAddress &
 
    sleep 5s
 
    # blank signals
-   python3 $HOME/voices-poc/scripts/carla_python_scripts/blank_traffic_signals.py
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/blank_traffic_signals.py & 
 
    # set spectator view
-   python3 $HOME/voices-poc/scripts/carla_python_scripts/spectator_view_mcity.py
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/spectator_view_mcity.py &
+
+   sleep 5s
 
 
 } || {

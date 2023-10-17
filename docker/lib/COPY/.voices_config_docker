@@ -1,9 +1,9 @@
-# SPECIAL DOCKER VOICES_CONFIG TO OVERWRITE DOCKER DIRECTORIES
+# SPECIAL DOCKER VUG_CONFIG TO OVERWRITE DOCKER DIRECTORIES
 
 source $HOME/.voices_config_link
 
 localTenadevDir=$HOME
-localInstallPath=$HOME/VOICES_Adapters
+localInstallPath=$HOME/VUG_Adapters
 localTenaPath=$HOME/TENA
 tdcsInstallPath=/opt/TENA
 voicesPocPath=$HOME/voices-poc
