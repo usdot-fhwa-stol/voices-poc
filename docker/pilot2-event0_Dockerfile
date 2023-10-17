@@ -35,7 +35,9 @@ RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
 
 # INSTALL apt packages 
 
-RUN apt-get update && apt install -y \
+    # add sumo repo
+RUN echo "deb http://ppa.launchpad.net/sumo/stable/ubuntu focal main" >> /etc/apt/sources.list && \
+    apt-get update && apt install -y \
     # install apt utils for installing packages (mostly for TENA console)
     apt-utils \
     # install boost
@@ -46,12 +48,14 @@ RUN apt-get update && apt install -y \
     python3-pip \
     # install debug tools
     iputils-ping nano \
+    # install sumo tools
+    sumo=1.18.0-1~focal sumo-tools=1.18.0-1~focal sumo-doc=1.18.0-1~focal \
     # cleanup apt lists
     && rm -rf /var/lib/apt/lists/*
 
 # INSTALL python packages
 
-RUN pip install numpy pandas pygame pycrate && \
+RUN pip install numpy pandas pygame pycrate traci lxml && \
     rm -rf /root/.cache
 
 COPY ./lib/COPY /home

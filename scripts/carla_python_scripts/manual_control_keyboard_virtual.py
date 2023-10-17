@@ -66,6 +66,7 @@ carla_egg_file = find_carla_egg()
 
 sys.path.append(carla_egg_file)
 
+
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
@@ -181,7 +182,7 @@ class World(object):
         self.recording_start = 0
         self.constant_velocity_enabled = False
 
-    def restart(self, args):
+    def restart(self,args):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -272,7 +273,7 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, client, world, clock):
+    def parse_events(self, client, world, clock, args):
         if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
         for event in pygame.event.get():
@@ -284,10 +285,10 @@ class KeyboardControl(object):
                 elif event.key == K_BACKSPACE:
                     if self._autopilot_enabled:
                         world.player.set_autopilot(False)
-                        world.restart()
+                        world.restart(args)
                         world.player.set_autopilot(True)
                     else:
-                        world.restart()
+                        world.restart(args)
                 elif event.key == K_F1:
                     world.hud.toggle_info()
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
@@ -527,7 +528,7 @@ class HUD(object):
             u'Compass:% 17.0f\N{DEGREE SIGN} % 2s' % (compass, heading),
             'Accelero: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.accelerometer),
             'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
-            'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
+            'Location:% 20s' % ('(% 5.6f, % 5.6f)' % (t.location.x, t.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
             'Height:  % 18.0f m' % t.location.z,
             '']
@@ -1022,7 +1023,7 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
+            if controller.parse_events(client, world, clock,args):
                 return
             world.tick(clock)
             world.render(display)

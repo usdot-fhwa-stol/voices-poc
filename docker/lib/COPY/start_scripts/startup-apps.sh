@@ -19,16 +19,24 @@ if [[ $VOICES_START_CONSOLE == true ]]; then
    sleep 5s
 fi
 
-# change carla map if carla_
-if ping -c 1 $carlaAddress &> /dev/null
-then
-    echo "CHANGING CARLA MAP TO: $carlaMapName"
-	python3 $HOME/voices-poc/scripts/carla_python_scripts/config.py -m $carlaMapName --weather ClearNoon --host $VOICES_CARLA_CONTAINER
+# try to change carla map 
+{
+   echo "CHANGING CARLA MAP TO: $carlaMapName"
+	python3 $HOME/voices-poc/scripts/carla_python_scripts/config.py -m $carlaMapName --weather ClearNoon --host $carlaAddress
 
    sleep 5s
-else
-  echo "NO CARLA CONTAINER FOUND"
-fi
+
+   # blank signals
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/blank_traffic_signals.py
+
+   # set spectator view
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/spectator_view_mcity.py
+
+
+} || {
+   echo "NO CARLA CONTAINER FOUND"
+
+}
 
 if [[ $VOICES_START_CANARY == true ]]; then
    echo "STARTING TENA CANARY"

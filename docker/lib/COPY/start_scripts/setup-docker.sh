@@ -18,6 +18,7 @@ env_set_site_config_path=$HOME/voices-poc/config/site_config/$VOICES_SITE_CONFIG
 # $HOME/.voices_config_docker exists because $HOME/.voices_config must be a sym link for run_scripts
 # 
 
+export SUMO_HOME=/usr/share/sumo
 
 if [ ! -f $env_set_site_config_path ]; then
         echo "    [!!!] Site Config file not found: $VOICES_SITE_CONFIG"
