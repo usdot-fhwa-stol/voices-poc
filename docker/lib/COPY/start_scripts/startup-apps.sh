@@ -84,6 +84,20 @@ if [[ $VUG_START_TENA_CARLA_ADAPTER == true ]]; then
    sleep 5s
 fi
 
+if [[ $VUG_START_TJ2735_ADAPTER == true ]]; then
+   echo "STARTING TENA J2735 ADAPTER"
+   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-tj2735-message-adapter.sh &
+
+   sleep 5s
+fi
+
+if [[ $VUG_START_TRAFFIC_LIGHT_EG == true ]]; then
+   echo "STARTING TENA TRAFFIC LIGHT ENTITY GENERATOR"
+   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-traffic-light-entity-generator.sh &
+
+   sleep 5s
+fi
+
 if [[ $VUG_START_MANUAL_CARLA_VEHICLE == true ]]; then
    echo "STARTING MANUAL CARLA VEHICLE"
 
