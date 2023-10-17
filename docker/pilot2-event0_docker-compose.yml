@@ -30,17 +30,18 @@ services:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
       - XAUTHORITY=~/.Xauthroity
-      - VOICES_SITE_CONFIG=lambda.config
-      - VOICES_START_EM=true
-      - VOICES_START_CONSOLE=true
-      - VOICES_START_CANARY=false
-      - VOICES_START_TDCS=false
-      - VOICES_START_DATAVIEW=false
-      - VOICES_START_SCENARIO_PUBLISHER=true
-      - VOICES_START_TENA_CARLA_ADAPTER=true
-      - VOICES_START_MANUAL_CARLA_VEHICLE=true
-      - VOICES_START_SUMO=true
-      - VOICES_SUMO_CONFIG=mcity_sumo/mcity_map_v2.sumocfg
+      - VUG_SITE_CONFIG=lambda.config
+      - VUG_START_EM=true
+      - VUG_START_CONSOLE=true
+      - VUG_START_CANARY=false
+      - VUG_START_TDCS=false
+      - VUG_START_DATAVIEW=false
+      - VUG_START_SCENARIO_PUBLISHER=true
+      - VUG_START_TENA_CARLA_ADAPTER=true
+      - VUG_START_MANUAL_CARLA_VEHICLE=true
+      - VUG_MANUAL_CARLA_VEHICLE_IS_NEW=false
+      - VUG_START_SUMO=true
+      - VUG_SUMO_CONFIG=mcity_sumo/mcity_map_v2.sumocfg
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /home/carma/voices-poc:/home/voices-poc

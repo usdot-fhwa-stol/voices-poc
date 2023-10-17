@@ -5,14 +5,14 @@ source /home/start_scripts/setup-docker.sh
 
 sleep 5s
 
-if [[ $VOICES_START_EM == true ]]; then
+if [[ $VUG_START_EM == true ]]; then
    echo "STARTING TENA EXECUTION MANAGER"
    $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-em-bg.sh
 
    sleep 5s
 fi
 
-if [[ $VOICES_START_CONSOLE == true ]]; then
+if [[ $VUG_START_CONSOLE == true ]]; then
    echo "STARTING TENA CONSOLE"
    /opt/TENA/Console-v2.0.1/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -autoConnect &
 
@@ -38,21 +38,22 @@ fi
 
 }
 
-if [[ $VOICES_START_SUMO == true ]]; then
+if [[ $VUG_START_SUMO == true ]]; then
    echo "STARTING SUMO"
-   python3 $HOME/voices-poc/scripts/carla_python_scripts/Sumo/run_synchronization.py $HOME/voices-poc/scripts/$VOICES_SUMO_CONFIG --sumo-gui --tls-manager carla
-
+   cd $HOME/voices-poc/scripts/carla_python_scripts/Sumo/
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/Sumo/run_synchronization.py $HOME/voices-poc/scripts/carla_python_scripts/Sumo/$VUG_SUMO_CONFIG --sumo-gui --tls-manager carla &
+   cd $HOME
    sleep 5s
 fi
 
-if [[ $VOICES_START_CANARY == true ]]; then
+if [[ $VUG_START_CANARY == true ]]; then
    echo "STARTING TENA CANARY"
    /home/TENA/tenaCanary-v1.0.12/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -auto &
 
    sleep 5s
 fi
 
-if [[ $VOICES_START_TDCS == true ]]; then
+if [[ $VUG_START_TDCS == true ]]; then
    echo "STARTING TENA DATA COLLECTION SYSTEM"
    $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-tdcs.sh &
    
@@ -60,38 +61,38 @@ if [[ $VOICES_START_TDCS == true ]]; then
 fi
 
 
-if [[ $VOICES_START_DATAVIEW == true ]]; then
+if [[ $VUG_START_DATAVIEW == true ]]; then
    echo "STARTING TENA DATAVIEW"
    /opt/TENA/DataView-v1.5.4/start.sh &
 
    sleep 5s
 fi
 
-if [[ $VOICES_START_SCENARIO_PUBLISHER == true ]]; then
+if [[ $VUG_START_SCENARIO_PUBLISHER == true ]]; then
    echo "STARTING SCENARIO PUBLISHER"
    $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-scenario-publisher.sh &
 
    sleep 5s
 fi
 
-if [[ $VOICES_START_TENA_CARLA_ADAPTER == true ]]; then
+if [[ $VUG_START_TENA_CARLA_ADAPTER == true ]]; then
    echo "STARTING TENA CARLA ADAPTER"
    $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-carla-tena-adapter.sh &
 
    sleep 5s
 fi
 
-if [[ $VOICES_START_MANUAL_CARLA_VEHICLE == true ]]; then
+if [[ $VUG_START_MANUAL_CARLA_VEHICLE == true ]]; then
    echo "STARTING MANUAL CARLA VEHICLE"
 
    # if we are starting the carla adapter and a manual vehicle, we almost certainly are trying to use a vehicle from the scenario which should already be spawined
-   if [[ $VOICES_START_TENA_CARLA_ADAPTER == true ]]; then
-      echo "   CONNECTING TO SCENARIO MANUAL VEHICLE"
-      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard_virtual.py --follow_vehicle $vehicleID --host $localAddress &
-
-   else
+   if [[ $VUG_MANUAL_CARLA_VEHICLE_IS_NEW == true ]]; then
       echo "   SPAWNING NEW MANUAL VEHICLE"
       python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard.py --rolename $vehicleID --host $localAddress &
+
+   else
+      echo "   CONNECTING TO SCENARIO MANUAL VEHICLE"
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/manual_control_keyboard_virtual.py --follow_vehicle $vehicleID --host $localAddress &
 
    fi
 
