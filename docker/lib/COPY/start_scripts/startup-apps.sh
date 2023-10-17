@@ -38,6 +38,13 @@ fi
 
 }
 
+if [[ $VOICES_START_SUMO == true ]]; then
+   echo "STARTING SUMO"
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/Sumo/run_synchronization.py $HOME/voices-poc/scripts/$VOICES_SUMO_CONFIG --sumo-gui --tls-manager carla
+
+   sleep 5s
+fi
+
 if [[ $VOICES_START_CANARY == true ]]; then
    echo "STARTING TENA CANARY"
    /home/TENA/tenaCanary-v1.0.12/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -auto &
@@ -47,9 +54,8 @@ fi
 
 if [[ $VOICES_START_TDCS == true ]]; then
    echo "STARTING TENA DATA COLLECTION SYSTEM"
-   mkdir $voicesPocPath/logs
-   $tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -dbFolder $voicesPocPath/logs &
-
+   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-tdcs.sh &
+   
    sleep 5s
 fi
 

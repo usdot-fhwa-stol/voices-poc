@@ -1,7 +1,7 @@
 services:
   carla-voices:
     container_name: carla-voices
-    image: usdotfhwastoldev/carla-voices:pilot2-event0-0.0.2
+    image: usdotfhwastoldev/carla-voices:pilot2-event0-0.0.4
     command: /bin/bash ./CarlaUE4.sh -vulkan -nosound #-quality-level=Low
     privileged: true
     network_mode: "host"
@@ -21,7 +21,7 @@ services:
 
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:pilot2-event0-0.0.3
+    image: usdotfhwastoldev/voices:pilot2-event0-0.0.4
     tty: true 
     depends_on:
       - carla-voices
@@ -39,6 +39,8 @@ services:
       - VOICES_START_SCENARIO_PUBLISHER=true
       - VOICES_START_TENA_CARLA_ADAPTER=true
       - VOICES_START_MANUAL_CARLA_VEHICLE=true
+      - VOICES_START_SUMO=true
+      - VOICES_SUMO_CONFIG=mcity_sumo/mcity_map_v2.sumocfg
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /home/carma/voices-poc:/home/voices-poc
