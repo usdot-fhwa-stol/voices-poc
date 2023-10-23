@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/.voices-config
+source ~/.voices_config
 
 username=$(whoami)
 
@@ -9,7 +9,7 @@ localTenaDir=$localTenaPath
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
 localTenadevDir=$localTenadevDir			#location of local tenadev
 localInstallDir=$localInstallPath		#location to install/build TENA adapters
-localVoicesPocDir=voicesPocPath
+localVoicesPocDir=$voicesPocPath
 numBuildJobs=4    # number of build jobs to speed up compilation
 #---------------------------------------------------------#
 
@@ -32,7 +32,7 @@ middlewareVersion="MiddlewareSDK-v6.0.8"
 boostVersion="TENA_boost_1.77.0.1_Library"
 vugCombinedVersion="VUG-VOICES-Combined-v0.14.2"
 
-vugThreadsVersion="vug-threads"
+vugThreadsVersion="vug-threads-2.2.0"
 vugUdbProtocolioVersion="vug-udp-protocolio-2.2.1"
 
 
@@ -349,7 +349,7 @@ else
 fi
 
 #look for VUG Threads
-set -x
+# set -x
 if [ $tenaApp == "vug-threads" ] || [ -d $localInstallDir/$vugThreadsVersion ]; then
 	echo "vug-threads found..."
 else

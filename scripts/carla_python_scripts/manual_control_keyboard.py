@@ -215,6 +215,7 @@ class World(object):
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.player is None:
             if args.x and args.y and args.z:
+                print("spawning in custom loc")
                 spawn_point = carla.Transform(carla.Location(x=args.x,y=args.y,z=args.z),carla.Rotation(yaw=90))
             else:
                 if not self.map.get_spawn_points():
@@ -508,6 +509,8 @@ class HUD(object):
         font_name = 'courier' if os.name == 'nt' else 'mono'
         fonts = [x for x in pygame.font.get_fonts() if font_name in x]
         default_font = 'ubuntumono'
+        if len(fonts) == 0:
+            fonts = [pygame.font.get_fonts()]
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
@@ -555,7 +558,7 @@ class HUD(object):
             u'Compass:% 17.0f\N{DEGREE SIGN} % 2s' % (compass, heading),
             'Accelero: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.accelerometer),
             'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
-            'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
+            'Location:% 20s' % ('(% 5.6f, % 5.6f)' % (t.location.x, t.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
             'Height:  % 18.0f m' % t.location.z,
             '']
@@ -1117,15 +1120,12 @@ def main():
         help='Gamma correction of the camera (default: 2.2)')
     argparser.add_argument(
         '--x', type=float, 
-        default=255, 
         help='x coordinate of the spawn point')
     argparser.add_argument(
         '--y', type=float, 
-        default=-230, 
         help='y coordinate of the spawn point')
     argparser.add_argument(
         '--z', type=float, 
-        default=0.25, 
         help='z coordinate of the spawn point')
     args = argparser.parse_args()
 

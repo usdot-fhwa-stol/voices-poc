@@ -1,0 +1,29 @@
+services:
+  voices:
+    container_name: voices
+    image: usdotfhwastoldev/voices:net-test-0.0.2
+    tty: true 
+    network_mode: "host"
+    environment:
+      - DISPLAY=$DISPLAY
+      - SDL_VIDEODRIVER=x11
+      - XAUTHORITY=~/.Xauthroity
+      - VUG_CARLA_CONTAINER=carla
+      - VUG_SITE_CONFIG=andrew_docker.config
+      - VUG_START_EM=true
+      - VUG_START_CONSOLE=true
+      - VUG_START_CANARY=true
+      - VUG_START_TDCS=false
+      - VUG_START_DATAVIEW=false
+      - VUG_START_SCENARIO_PUBLISHER=false
+      - VUG_START_TENA_CARLA_ADAPTER=false
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /home/carma/voices-poc:/home/voices-poc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

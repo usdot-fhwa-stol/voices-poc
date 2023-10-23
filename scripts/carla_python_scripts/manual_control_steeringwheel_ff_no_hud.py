@@ -567,6 +567,8 @@ class HUD(object):
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
         fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
         default_font = 'ubuntumono'
+        if len(fonts) == 0:
+            fonts = [pygame.font.get_fonts()]
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 20)
