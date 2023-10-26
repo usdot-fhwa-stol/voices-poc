@@ -46,7 +46,7 @@
         </initialTSPI>
     </vehicle>
 
-    <vehicle name="VM-MAN-1" bsmid="f03ad622" type="vehicle.audi.a2" owner="CARLA-VW" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="VW-MAN-1" bsmid="f03ad622" type="vehicle.audi.a2" owner="CARLA-VW" material="Aluminum" lvcIndicator="Live">
         <userData>
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>

@@ -115,4 +115,7 @@ if [[ $VUG_START_MANUAL_CARLA_VEHICLE == true ]]; then
    sleep 5s
 fi
 
+echo
+echo "STARTUP COMLPETE"
+
 tail -f /dev/null
