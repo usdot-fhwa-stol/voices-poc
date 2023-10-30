@@ -1,14 +1,13 @@
 services:
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:pilot2-event0-0.0.3
+    image: usdotfhwastoldev/voices:pilot2-event0-0.0.4
     tty: true 
     network_mode: "host"
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
       - XAUTHORITY=~/.Xauthroity
-      - VUG_CARLA_CONTAINER=carla
       - VUG_SITE_CONFIG=andrew_docker.config
       - VUG_START_EM=true
       - VUG_START_CONSOLE=true
@@ -17,6 +16,12 @@ services:
       - VUG_START_DATAVIEW=false
       - VUG_START_SCENARIO_PUBLISHER=false
       - VUG_START_TENA_CARLA_ADAPTER=false
+      - VUG_START_TJ2735_ADAPTER=true
+      - VUG_START_TRAFFIC_LIGHT_EG=true
+      - VUG_START_MANUAL_CARLA_VEHICLE=false
+      - VUG_MANUAL_CARLA_VEHICLE_IS_NEW=false
+      - VUG_START_SUMO=false
+      - VUG_SUMO_CONFIG=mcity_sumo/mcity_map_v2.sumocfg
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /home/carma/voices-poc:/home/voices-poc
+      - ${HOME}/voices-poc/voices-poc:/home/voices-poc
