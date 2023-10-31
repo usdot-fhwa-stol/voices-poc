@@ -116,6 +116,6 @@ if [[ $VUG_START_MANUAL_CARLA_VEHICLE == true ]]; then
 fi
 
 echo
-echo "STARTUP COMLPETE"
+echo "VUG STARTUP COMLPETE"
 
 tail -f /dev/null

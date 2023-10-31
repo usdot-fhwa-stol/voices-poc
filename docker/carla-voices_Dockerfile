@@ -16,4 +16,15 @@ RUN --mount=type=bind,target=./Import,readonly,source=lib/MAPS \
     sed -i 's/--keep-newer-files/--skip-old-files/' ImportAssets.sh && \
     ./ImportAssets.sh 
 
-CMD ["/bin/bash","./CarlaUE4.sh","-vulkan"]
+COPY ./lib/COPY/start_scripts /home/carla/start_scripts
+
+USER root
+
+RUN chmod a+x -R /home/carla/start_scripts/*
+
+RUN echo 'source /home/carla/start_scripts/setup-carla-docker.sh' >> /home/carla/.bashrc
+RUN echo 'source /home/carla/start_scripts/setup-carla-docker.sh' >> /root/.bashrc
+
+USER carla
+
+CMD ["/bin/bash","-l","-c","/home/carla/start_scripts/startup-carla.sh"]

@@ -1,16 +1,18 @@
 services:
   carla-voices:
     container_name: carla-voices
-    image: usdotfhwastoldev/carla-voices:pilot2-event0-0.0.4
-    command: /bin/bash ./CarlaUE4.sh -vulkan -nosound #-quality-level=Low
+    image: usdotfhwastoldev/carla-voices:pilot2-event0-latest
+    # command: /bin/bash -l ./CarlaUE4.sh -vulkan -nosound #-quality-level=Low
     privileged: true
     network_mode: "host"
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
+      - XAUTHORITY=~/.Xauthority
+      - VUG_SITE_CONFIG=andrew_docker.config
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${HOME}/voices-poc:/home/voices-poc
+      - ${HOME}/voices-poc:/home/carla/voices-poc
     deploy:
       resources:
         reservations:
@@ -21,7 +23,7 @@ services:
 
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:pilot2-event0-0.0.4
+    image: usdotfhwastoldev/voices:pilot2-event0-latest
     tty: true 
     depends_on:
       - carla-voices
@@ -29,7 +31,7 @@ services:
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
-      - XAUTHORITY=~/.Xauthroity
+      - XAUTHORITY=~/.Xauthority
       - VUG_SITE_CONFIG=andrew_docker.config
       - VUG_START_EM=false
       - VUG_START_CONSOLE=true
