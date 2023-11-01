@@ -8,3 +8,4 @@ localTenaPath=$HOME/TENA
 tdcsInstallPath=/opt/TENA
 voicesPocPath=$HOME/voices-poc
 localCarlaPath=$HOME/CARLA_0.9.10
+export VOI_CARLA_EGG_DIR=$localCarlaPath/PythonAPI/carla/dist/

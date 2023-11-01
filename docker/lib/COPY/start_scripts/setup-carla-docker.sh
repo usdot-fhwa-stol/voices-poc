@@ -25,13 +25,14 @@ else
 fi
 
 voices_config=$HOME/.voices_config_link
+voices_config_base=$HOME/.voices_config
 
 if [ -L ${voices_config} ] ; then
    if [ -e ${voices_config} ] ; then
       config_link_dest=$(readlink -f $voices_config)
       link_base_name=$(basename ${config_link_dest})
 
-      source $voices_config
+      source $voices_config_base
 
 
       echo "Site Config: "$link_base_name

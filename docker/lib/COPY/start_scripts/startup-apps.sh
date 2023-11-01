@@ -7,7 +7,7 @@ sleep 5s
 
 if [[ $VUG_START_EM == true ]]; then
    echo "STARTING TENA EXECUTION MANAGER"
-   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-em-bg.sh
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-em-bg.sh
 
    sleep 5s
 fi
@@ -57,7 +57,7 @@ fi
 
 if [[ $VUG_START_TDCS == true ]]; then
    echo "STARTING TENA DATA COLLECTION SYSTEM"
-   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-tdcs.sh &
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-tdcs.sh &
    
    sleep 5s
 fi
@@ -72,28 +72,28 @@ fi
 
 if [[ $VUG_START_SCENARIO_PUBLISHER == true ]]; then
    echo "STARTING SCENARIO PUBLISHER"
-   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-scenario-publisher.sh &
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-scenario-publisher.sh &
 
    sleep 5s
 fi
 
 if [[ $VUG_START_TENA_CARLA_ADAPTER == true ]]; then
    echo "STARTING TENA CARLA ADAPTER"
-   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-carla-tena-adapter.sh &
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-carla-tena-adapter.sh &
 
    sleep 5s
 fi
 
 if [[ $VUG_START_TJ2735_ADAPTER == true ]]; then
    echo "STARTING TENA J2735 ADAPTER"
-   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-tj2735-message-adapter.sh &
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-tj2735-message-adapter.sh &
 
    sleep 5s
 fi
 
 if [[ $VUG_START_TRAFFIC_LIGHT_EG == true ]]; then
    echo "STARTING TENA TRAFFIC LIGHT ENTITY GENERATOR"
-   $HOME/voices-poc/scripts/run_scripts/pilot1/src/start-traffic-light-entity-generator.sh &
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-traffic-light-entity-generator.sh &
 
    sleep 5s
 fi
