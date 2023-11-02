@@ -74,4 +74,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $carlaHost -VUG_SIM_ID $VUG_SIM_ID -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
+$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $carlaHost -simId $VUG_SIM_ID -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile

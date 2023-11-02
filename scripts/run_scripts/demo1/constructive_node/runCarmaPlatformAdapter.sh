@@ -52,5 +52,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -VUG_CARMA_VEHICLE_ID $VUG_CARMA_VEHICLE_ID -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $VUG_CARMA_VEHICLE_ID -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

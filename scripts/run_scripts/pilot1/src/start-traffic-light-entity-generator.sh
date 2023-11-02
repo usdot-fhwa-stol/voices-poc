@@ -68,5 +68,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -VUG_INTERSECTION_ID $VUG_INTERSECTION_ID -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -intersectionID $VUG_INTERSECTION_ID -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

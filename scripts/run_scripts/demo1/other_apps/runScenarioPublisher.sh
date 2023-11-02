@@ -46,4 +46,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/scenario-publisher -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -verbosity $adapterVerbosity -VUG_SCENARIO_FILE $VUG_SCENARIO_FILE | tee -a $adapterLogFile
+$localCarlaAdapterPath/bin/scenario-publisher -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -verbosity $adapterVerbosity -scenarioFile $VUG_SCENARIO_FILE | tee -a $adapterLogFile

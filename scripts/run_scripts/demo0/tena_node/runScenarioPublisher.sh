@@ -28,4 +28,4 @@ VUG_LOCAL_ADDRESS='192.168.55.230'
 
 adapterVerbosity='4'
 
-$tenadevDir/scenario-publisher/build/src/scenario-publisher -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -VUG_SCENARIO_FILE $VUG_SCENARIO_FILE -verbosity $adapterVerbosity
+$tenadevDir/scenario-publisher/build/src/scenario-publisher -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -scenarioFile $VUG_SCENARIO_FILE -verbosity $adapterVerbosity
