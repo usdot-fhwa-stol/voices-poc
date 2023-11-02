@@ -98,7 +98,7 @@ if [[ ! $is_live_vehicle =~ ^[yY]$ ]]; then
     if [[ $save_tdcs_data =~ ^[yY]$ ]]; then
         echo
         echo "Starting TDCS" 
-        tdcs_command="$tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -databaseName $logs_folder_name.sqlite -dbFolder ."
+        tdcs_command="$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $logs_folder_name.sqlite -dbFolder ."
         echo $tdcs_command
         $tdcs_command &
     fi
@@ -125,10 +125,10 @@ copyCarmaLogs()
         if [[ ! $is_live_vehicle =~ ^[yY]$ ]]; then
     
             echo "Copying adapter logs"
-            mv $localAdapterLogPath/*.log .
+            mv $VUG_ADAPTER_LOG_PATH/*.log .
 
             echo "Copying carma simulation logs"    
-            mv $localCarmaSimLogPath/*.log .
+            mv $VUG_CARMA_SIM_LOG_PATH/*.log .
         
         fi
 

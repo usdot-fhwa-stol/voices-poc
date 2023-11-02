@@ -5,18 +5,18 @@ source ~/.voices_config
 username=$(whoami)
 
 #-------------------| LOCAL VARIABLES |-------------------#
-localTenaDir=$localTenaPath
+localTenaDir=$VUG_LOCAL_TENA_PATH
 localTenaPackageDownloadDir=/home/$username/Downloads/TENA	#location of the TENA dependency packages
-localTenadevDir=$localTenadevDir			#location of local tenadev
-localInstallDir=$localInstallPath		#location to install/build TENA adapters
-localVoicesPocDir=$voicesPocPath
+VUG_LOCAL_TENADEV_DIR=$VUG_LOCAL_TENADEV_DIR			#location of local tenadev
+localInstallDir=$VUG_LOCAL_INSTALL_PATH		#location to install/build TENA adapters
+localVoicesPocDir=$VUG_LOCAL_VOICES_POC_PATH
 numBuildJobs=4    # number of build jobs to speed up compilation
 #---------------------------------------------------------#
 
 #-------------------| TENA VARIABLES |-------------------#
 tenaVersion=6.0.8
 tenaBuildVersion=u2004-gcc9-64
-tenaSourceScript=$tenaSourceScript
+VUG_TENA_SOURCE_SCRIPT_FILE=$VUG_TENA_SOURCE_SCRIPT_FILE
 #--------------------------------------------------------#
 
 
@@ -44,8 +44,8 @@ skipMake=false
 
 
 
-if [[ -f $tenaSourceScript ]]; then
-	source $tenaSourceScript
+if [[ -f $VUG_TENA_SOURCE_SCRIPT_FILE ]]; then
+	source $VUG_TENA_SOURCE_SCRIPT_FILE
 else
 	echo
 	echo "TENA Source script not found..."
@@ -222,7 +222,7 @@ else
 	exit
 fi
 
-localAppDir=$localTenadevDir/$tenaApp	#location of git directory of application to be built
+localAppDir=$VUG_LOCAL_TENADEV_DIR/$tenaApp	#location of git directory of application to be built
 			
 downloadedSource=false
 
@@ -430,14 +430,14 @@ if [[ "$skipDocker" == true ]]
 		#if we are vug-threads or protocolio
 		elif [ $dockerContainer == "tena:carla" ]; then
 			
-			if [ ! -d $localTenadevDir/$vug_carla_adapter_name ]; then
+			if [ ! -d $VUG_LOCAL_TENADEV_DIR/$vug_carla_adapter_name ]; then
 				echo "This application uses the tena:carla build container from the $vug_carla_adapter_name. Cloning $vug_carla_adapter_name repository to use dockerfile"
 			
-				git clone $carlaTenaAdapterGitUrl -b develop $localTenadevDir/$vug_carla_adapter_name || exit
+				git clone $carlaTenaAdapterGitUrl -b develop $VUG_LOCAL_TENADEV_DIR/$vug_carla_adapter_name || exit
 
 			fi
 
-			dockerfileToUse=$localTenadevDir/$vug_carla_adapter_name/docker/Dockerfile
+			dockerfileToUse=$VUG_LOCAL_TENADEV_DIR/$vug_carla_adapter_name/docker/Dockerfile
 
 		elif [ $dockerContainer == "tena:general" ]; then
 

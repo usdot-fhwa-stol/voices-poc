@@ -29,7 +29,7 @@ if [ -L ${voices_config} ] ; then
 
 
       echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
+      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
    else
       echo "[!!!] .voices_config link is broken"
       exit 1
@@ -49,13 +49,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$trafficLightEntityGeneratorVersion
+localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_TRAFFIC_LIGHT_ENTITY_GENERATOR_VERSION
 
 adapterVerbosity='1'
 
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/traffic_light_entity_generator_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/traffic_light_entity_generator_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -68,5 +68,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -intersectionID $intersectionID -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/tena-traffic-light-entity-generator -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -VUG_INTERSECTION_ID $VUG_INTERSECTION_ID -verbosity $adapterVerbosity | tee -a $adapterLogFile
 
