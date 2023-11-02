@@ -2,17 +2,18 @@ services:
   carla-voices:
     container_name: carla-voices
     image: usdotfhwastoldev/carla-voices:pilot2-event0-latest
-    # command: /bin/bash -l ./CarlaUE4.sh -vulkan -nosound #-quality-level=Low
     privileged: true
     network_mode: "host"
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
       - XAUTHORITY=~/.Xauthority
-      - VUG_SITE_CONFIG=andrew_docker.config
+      - VUG_SITE_CONFIG=${site_config_name}
+      - VUG_CARLA_GRAPHICS_API=${carla_render_api} # vulkan or opengl  
+      - VUG_CARLA_QUALITY_LEVEL=${carla_quality}  # Epic or Low
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${HOME}/voices-poc:/home/carla/voices-poc
+      - ${voicesPocPath}:/home/carla/voices-poc
     deploy:
       resources:
         reservations:
@@ -32,13 +33,13 @@ services:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
       - XAUTHORITY=~/.Xauthority
-      - VUG_SITE_CONFIG=andrew_docker.config
-      - VUG_START_EM=false
+      - VUG_SITE_CONFIG=${site_config_name}
+      - VUG_START_EM=true
       - VUG_START_CONSOLE=true
       - VUG_START_CANARY=false
-      - VUG_START_TDCS=false
+      - VUG_START_TDCS=true
       - VUG_START_DATAVIEW=false
-      - VUG_START_SCENARIO_PUBLISHER=false
+      - VUG_START_SCENARIO_PUBLISHER=true
       - VUG_START_TENA_CARLA_ADAPTER=true
       - VUG_START_TJ2735_ADAPTER=false
       - VUG_START_TRAFFIC_LIGHT_EG=false
@@ -48,7 +49,7 @@ services:
       - VUG_SUMO_CONFIG=mcity_sumo/mcity_map_v2.sumocfg
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${HOME}/voices-poc:/home/voices-poc
+      - ${voicesPocPath}:/home/voices-poc
     deploy:
       resources:
         reservations:

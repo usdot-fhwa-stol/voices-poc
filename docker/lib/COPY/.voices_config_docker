@@ -5,7 +5,7 @@ source $HOME/.voices_config_link
 localTenadevDir=$HOME
 localInstallPath=$HOME/VUG_Adapters
 localTenaPath=$HOME/TENA
-tdcsInstallPath=/opt/TENA
+tdcsInstallPath=$HOME/TENA
 voicesPocPath=$HOME/voices-poc
 localCarlaPath=$HOME/CARLA_0.9.10
 export VOI_CARLA_EGG_DIR=$localCarlaPath/PythonAPI/carla/dist/

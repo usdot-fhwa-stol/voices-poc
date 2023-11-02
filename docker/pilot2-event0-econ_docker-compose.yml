@@ -1,0 +1,59 @@
+services:
+  carla-voices:
+    container_name: carla-voices
+    image: usdotfhwastoldev/carla-voices:pilot2-event0-latest
+    privileged: true
+    network_mode: "host"
+    environment:
+      - DISPLAY=$DISPLAY
+      - SDL_VIDEODRIVER=x11
+      - XAUTHORITY=~/.Xauthority
+      - VUG_SITE_CONFIG=${site_config_name}
+      - VUG_CARLA_GRAPHICS_API=${carla_render_api} # vulkan or opengl  
+      - VUG_CARLA_QUALITY_LEVEL=${carla_quality}  # Epic or Low
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${voicesPocPath}:/home/carla/voices-poc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  voices:
+    container_name: voices
+    image: usdotfhwastoldev/voices:pilot2-event0-latest
+    tty: true 
+    depends_on:
+      - carla-voices
+    network_mode: "host"
+    environment:
+      - DISPLAY=$DISPLAY
+      - SDL_VIDEODRIVER=x11
+      - XAUTHORITY=~/.Xauthority
+      - VUG_SITE_CONFIG=${site_config_name}
+      - VUG_START_EM=false
+      - VUG_START_CONSOLE=true
+      - VUG_START_CANARY=false
+      - VUG_START_TDCS=true
+      - VUG_START_DATAVIEW=false
+      - VUG_START_SCENARIO_PUBLISHER=false
+      - VUG_START_TENA_CARLA_ADAPTER=true
+      - VUG_START_TJ2735_ADAPTER=true
+      - VUG_START_TRAFFIC_LIGHT_EG=true
+      - VUG_START_MANUAL_CARLA_VEHICLE=true
+      - VUG_MANUAL_CARLA_VEHICLE_IS_NEW=false
+      - VUG_START_SUMO=false
+      - VUG_SUMO_CONFIG=mcity_sumo/mcity_map_v2.sumocfg
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${voicesPocPath}:/home/voices-poc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
