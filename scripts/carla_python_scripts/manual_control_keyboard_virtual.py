@@ -59,6 +59,7 @@ from __future__ import print_function
 import glob
 import os
 import sys
+import time
 
 from find_carla_egg import find_carla_egg
 
@@ -176,13 +177,31 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart(args)
+        
+        max_reset_attempts = 10
+        reset_attempts = 0
+        reset_wait_time = 5
+
+        while reset_attempts < max_reset_attempts:
+            try:
+                self.restart(args)
+            except Exception as errMsg:
+                reset_attempts += 1
+                print("ERROR: Unable to spawn vehicle, attempt # " + str(reset_attempts))
+                time.sleep(reset_wait_time)
+            else:
+                break
+
+
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
         self.constant_velocity_enabled = False
 
     def restart(self,args):
+        
+        
+        
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -194,9 +213,8 @@ class World(object):
             currentAttributes = vehicle.attributes
             if currentAttributes["role_name"] == args.follow_vehicle:
             	self.player = vehicle
-            else:
-                print("ERROR: Unable to find vehicle with rolename: " + args.follow_vehicle)
-                sys.exit(1)
+        if not self.player:
+            print("ERROR: Unable to find vehicle with rolename: " + args.follow_vehicle)
         #self.player = carlaVehicles[0]
         
         # Set up the sensors.
