@@ -193,7 +193,10 @@ class World(object):
         for vehicle in carlaVehicles:
             currentAttributes = vehicle.attributes
             if currentAttributes["role_name"] == args.follow_vehicle:
-            	    self.player = vehicle
+            	self.player = vehicle
+            else:
+                print("ERROR: Unable to find vehicle with rolename: " + args.follow_vehicle)
+                sys.exit(1)
         #self.player = carlaVehicles[0]
         
         # Set up the sensors.
