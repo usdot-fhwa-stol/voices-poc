@@ -24,16 +24,37 @@ while true; do
 	fi
 done
 
-ln -sf $site_config_path $HOME/.voices_config
+ln -sf $site_config_path $HOME/.voices_site_config
 
+source $HOME/.voices_site_config
+
+if [ ! -f $VUG_SCENARIO_CONFIG_PATH/$VUG_SCENARIO_CONFIG_FILE ]; then
+	echo "    Scenario config file not found: $VUG_SCENARIO_CONFIG_PATH/$VUG_SCENARIO_CONFIG_FILE"
+	exit
+else
+	scenario_config_path=$(readlink -f $VUG_SCENARIO_CONFIG_PATH/$VUG_SCENARIO_CONFIG_FILE)
+fi
+
+ln -sf $scenario_config_path $HOME/.voices_scenario_config
+
+# remove old config architecture
+rm -f $HOME/.voices_config
 
 # add to bash rc
-if grep -qx "source ~/.voices_config" ~/.bashrc
+if grep -qx "source ~/.voices_site_config" ~/.bashrc
 then
-	echo "Source command already exists in .bashrc"
+	echo "Source site config command already exists in .bashrc"
 else
-    echo "Adding config source command to .bashrc"
-	echo "source ~/.voices_config" >> ~/.bashrc
+    echo "Adding site config source command to .bashrc"
+	echo "source ~/.voices_site_config" >> ~/.bashrc
+fi
+
+if grep -qx "source ~/.voices_scenario_config" ~/.bashrc
+then
+	echo "Source scenario config command already exists in .bashrc"
+else
+    echo "Adding scenario config source command to .bashrc"
+	echo "source ~/.voices_scenario_config" >> ~/.bashrc
 fi
 
 echo
