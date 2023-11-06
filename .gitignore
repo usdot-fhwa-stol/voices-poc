@@ -19,6 +19,8 @@ docker/lib/BUILD
 docker/lib/COPY/VUG_Adapters
 docker/lib/COPY/CARLA*
 docker/lib/MAPS
+docker/lib/OLD
+
 
 # ignore SUMO pycache
 scripts/carla_python_scripts/Sumo/sumo_integration/__pycache__
