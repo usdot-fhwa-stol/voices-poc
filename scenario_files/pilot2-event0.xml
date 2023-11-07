@@ -35,7 +35,7 @@
         </initialTSPI>
     </vehicle>
 
-    <vehicle name="MITRE-OPENCDA" bsmid="f03ad626" type="vehicle.mustang.mustang" owner="CARLA-UCLA-1" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="UCLA-OPENCDA" bsmid="f03ad626" type="vehicle.mustang.mustang" owner="CARLA-UCLA-1" material="Aluminum" lvcIndicator="Live">
         <userData>
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
@@ -73,9 +73,9 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.617157" longitudeInDegrees="-83.697429" heightAboveEllipsoidInMeters="240"/>
-            <!-- x=152.617157 y=18.474329 yaw=3 -->
-            <Heading>3</Heading>
+            <GeodeticPosition latitudeInDegrees="42.300380" longitudeInDegrees="-83.698888" heightAboveEllipsoidInMeters="240"/>
+            <!-- x=31.862022 y=23.706839 yaw=93 -->
+            <Heading>93</Heading>
         </initialTSPI>
     </vehicle>
 
