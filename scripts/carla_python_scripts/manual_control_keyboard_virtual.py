@@ -210,6 +210,7 @@ class World(object):
         # Get a random blueprint.
         carlaVehicles = self.world.get_actors().filter('vehicle.*')
         for vehicle in carlaVehicles:
+            print("Checking vehicle: " + str(currentAttributes["role_name"]))
             currentAttributes = vehicle.attributes
             if currentAttributes["role_name"] == args.follow_vehicle:
             	self.player = vehicle
