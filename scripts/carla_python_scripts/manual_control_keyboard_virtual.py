@@ -188,6 +188,7 @@ class World(object):
             except Exception as errMsg:
                 reset_attempts += 1
                 print("ERROR: Unable to spawn vehicle, attempt # " + str(reset_attempts))
+                print("    --> " + str(errMsg))
                 time.sleep(reset_wait_time)
             else:
                 break
@@ -201,7 +202,6 @@ class World(object):
     def restart(self,args):
         
         
-        
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -210,8 +210,8 @@ class World(object):
         # Get a random blueprint.
         carlaVehicles = self.world.get_actors().filter('vehicle.*')
         for vehicle in carlaVehicles:
-            print("Checking vehicle: " + str(currentAttributes["role_name"]))
             currentAttributes = vehicle.attributes
+            print("Checking vehicle: " + str(currentAttributes["role_name"]))
             if currentAttributes["role_name"] == args.follow_vehicle:
             	self.player = vehicle
         if not self.player:
