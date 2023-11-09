@@ -10,7 +10,8 @@ services:
       - XAUTHORITY=~/.Xauthority
       - VUG_SITE_CONFIG_FILE=${VUG_SITE_CONFIG_FILE}
     env_file:
-      - ${HOME}/.voices_config
+      - ${HOME}/.voices_site_config
+      - ${HOME}/.voices_scenario_config
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${HOME}/voices-poc/voices-poc:/home/voices-poc
