@@ -15,4 +15,4 @@ services:
       - ${HOME}/.voices_scenario_config
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${VUG_LOCAL_VOICES_POC_PATH}:/home/carla/voices-poc
+      - ${VUG_LOCAL_VOICES_POC_PATH}:/home/voices-poc
