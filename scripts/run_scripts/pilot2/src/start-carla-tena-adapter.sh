@@ -50,13 +50,6 @@ fi
 
 localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARLA_ADAPTER_VERSION
 
-
-if [[ $VOICES_CARLA_CONTAINER ]] ; then
-   carlaHost=$VOICES_CARLA_CONTAINER
-else
-   carlaHost=$VUG_CARLA_ADDRESS
-fi
-
 adapterVerbosity='1'
 
 mkdir -p $VUG_ADAPTER_LOG_PATH
@@ -73,5 +66,7 @@ exec 4>> $adapterLogFile
 BASH_XTRACEFD=4
 
 set -x
+
+echo VUG_CARLA_ADDRESS: $VUG_CARLA_ADDRESS
 
 $localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $VUG_CARLA_ADDRESS -simId $VUG_SIM_ID -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
