@@ -50,7 +50,7 @@ fi
 
 localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARLA_ADAPTER_VERSION
 
-adapterVerbosity='1'
+adapterVerbosity='2'
 
 mkdir -p $VUG_ADAPTER_LOG_PATH
 
@@ -73,4 +73,4 @@ echo LOCAL TENA DIR:
 ls $VUG_LOCAL_TENA_PATH
 
 
-$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $VUG_CARLA_ADDRESS -simId $VUG_SIM_ID -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
+$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $VUG_CARLA_ADDRESS -simId $VUG_SIM_ID -verbosity $adapterVerbosity -vehiclePublishRate 10 2>&1 | tee -a $adapterLogFile

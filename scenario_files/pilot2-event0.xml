@@ -18,7 +18,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300399" longitudeInDegrees="-83.698250" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.300399" longitudeInDegrees="-83.698250" heightAboveEllipsoidInMeters="250"/>
             <!-- x=86.123024 y=21.699108 yaw=272 -->
             <Heading>272</Heading>
         </initialTSPI>
@@ -29,7 +29,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.301177" longitudeInDegrees="-83.698684" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.301177" longitudeInDegrees="-83.698684" heightAboveEllipsoidInMeters="250"/>
             <!-- x=49.363831 y=-65.975754 yaw=179 -->
             <Heading>179</Heading>
         </initialTSPI>
@@ -40,7 +40,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.299214" longitudeInDegrees="-83.698111" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.299214" longitudeInDegrees="-83.698111" heightAboveEllipsoidInMeters="250"/>
             <!-- x=95.615692 y=153.602356 yaw=84 -->
             <Heading>84</Heading>
         </initialTSPI>
@@ -51,7 +51,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300600" longitudeInDegrees="-83.698597" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.300600" longitudeInDegrees="-83.698597" heightAboveEllipsoidInMeters="250"/>
             <!-- x=56.409115 y=0.293474 yaw=2 -->
             <Heading>2</Heading>
         </initialTSPI>
@@ -62,7 +62,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.299832" longitudeInDegrees="-83.698467" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.299832" longitudeInDegrees="-83.698467" heightAboveEllipsoidInMeters="250"/>
             <!-- x=67.368866 y=85.656593 yaw=351 -->
             <Heading>351</Heading>
         </initialTSPI>
@@ -73,7 +73,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300380" longitudeInDegrees="-83.698888" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.300380" longitudeInDegrees="-83.698888" heightAboveEllipsoidInMeters="250"/>
             <!-- x=31.862022 y=23.706839 yaw=93 -->
             <Heading>93</Heading>
         </initialTSPI>
@@ -84,7 +84,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.301508" longitudeInDegrees="-83.697503" heightAboveEllipsoidInMeters="242"/>
+            <GeodeticPosition latitudeInDegrees="42.301508" longitudeInDegrees="-83.697503" heightAboveEllipsoidInMeters="250"/>
             <!-- x=146.690292 y=-102.884079 yaw=181 -->
             <Heading>181</Heading>
         </initialTSPI>
@@ -95,7 +95,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300670" longitudeInDegrees="-83.697974" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.300670" longitudeInDegrees="-83.697974" heightAboveEllipsoidInMeters="250"/>
             <!-- x=107.847633 y=-9.522910 yaw=182 -->
             <Heading>182</Heading>
         </initialTSPI>
@@ -106,7 +106,7 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.299775" longitudeInDegrees="-83.697315" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.299775" longitudeInDegrees="-83.697315" heightAboveEllipsoidInMeters="250"/>
             <!-- x=162.127304 y=91.973389 yaw=356 -->
             <Heading>356</Heading>
         </initialTSPI>
@@ -115,10 +115,10 @@
 
     <vehicle name="TFHRC-SUMO-01" bsmid="f03ad628" type="vehicle.volkswagen.t2" owner="CARLA-TFHRC-L" material="Aluminum" lvcIndicator="Live">
         <userData>
-                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-L" roleName="TFHRC-SUMO-01" generate_bsms="true"/>
+                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-L" roleName="TFHRC-SUMO-1" generate_bsms="true"/>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.301407" longitudeInDegrees="-83.699016" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.301407" longitudeInDegrees="-83.699016" heightAboveEllipsoidInMeters="250"/>
             <!-- x=22.569023 y=-91.464149 yaw=221 -->
             <Heading>221</Heading>
         </initialTSPI>
@@ -129,7 +129,7 @@
                 <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-L" roleName="TFHRC-SUMO-02" generate_bsms="true"/>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.301152" longitudeInDegrees="-83.697944" heightAboveEllipsoidInMeters="240"/>
+            <GeodeticPosition latitudeInDegrees="42.301152" longitudeInDegrees="-83.697944" heightAboveEllipsoidInMeters="250"/>
             <!-- x=110.320763 y=-63.196728 yaw=183 -->
             <Heading>183</Heading>
         </initialTSPI>
