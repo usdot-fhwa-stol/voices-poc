@@ -68,6 +68,17 @@
         </initialTSPI>
     </vehicle>
 
+    <vehicle name="VW-MAN-2" bsmid="f03ad622" type="vehicle.audi.tt" owner="CARLA-VW-2" material="Aluminum" lvcIndicator="Live">
+        <userData>
+            <CARLA manual="true" generate_bsms="true"></CARLA>
+        </userData>
+        <initialTSPI>
+            <GeodeticPosition latitudeInDegrees="42.300767" longitudeInDegrees="-83.699084" heightAboveEllipsoidInMeters="250"/>
+            <!-- x=67.16.294300 y=-18/424419 yaw=8 -->
+            <Heading>8</Heading>
+        </initialTSPI>
+    </vehicle>
+
     <vehicle name="ANL-MAN-1" bsmid="f03ad623" type="vehicle.nissan.micra" owner="CARLA-ANL-1" material="Aluminum" lvcIndicator="Live">
         <userData>
             <CARLA manual="true" generate_bsms="true"></CARLA>
@@ -115,7 +126,7 @@
 
     <vehicle name="TFHRC-SUMO-01" bsmid="f03ad628" type="vehicle.volkswagen.t2" owner="CARLA-TFHRC-L" material="Aluminum" lvcIndicator="Live">
         <userData>
-                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-L" roleName="TFHRC-SUMO-1" generate_bsms="true"/>
+                <CARMA CARLAcosimulationIdentifier="CARLA-TFHRC-L" roleName="TFHRC-SUMO-01" generate_bsms="true"/>
         </userData>
         <initialTSPI>
             <GeodeticPosition latitudeInDegrees="42.301407" longitudeInDegrees="-83.699016" heightAboveEllipsoidInMeters="250"/>
@@ -189,6 +200,10 @@
     </simulation>
 
     <simulation name="CARLA-VW-1" type="CARLA">
+      <WeatherState>ClearNoon</WeatherState>
+    </simulation>
+
+    <simulation name="CARLA-VW-2" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
 

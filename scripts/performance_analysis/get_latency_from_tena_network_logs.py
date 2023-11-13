@@ -3,7 +3,7 @@ import re
 
 
 
-infile = "canary_tena_console_logs_all-Nodes.txt"
+infile = "test_ping.txt"
 infile_obj = open(infile,'r')
 
 is_inside_desired_dataset = False
@@ -106,9 +106,9 @@ for source_app in results_dataset:
         dest_app_jitter = sum(ping_diff_list)/len(ping_diff_list)
         
         print("    Dest: " + dest_app)
-        print("        Pings: " + str(num_dest_app_datapoints) )
-        print("        Latency: " + str(dest_app_latency_average) )
-        print("        Jitter: " + str(dest_app_jitter) )
+        print("        Pings: " + str(num_dest_app_datapoints))
+        print("        Latency: " + str(dest_app_latency_average)  + " ms")
+        print("        Jitter: " + str(dest_app_jitter)  + " ms")
         
         
         
