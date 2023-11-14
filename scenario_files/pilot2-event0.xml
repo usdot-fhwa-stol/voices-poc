@@ -46,7 +46,7 @@
         </initialTSPI>
     </vehicle>
 
-    <vehicle name="ECO-MAN-1" bsmid="f03ad621" type="vehicle.seat.leon" owner="CARLA-ECO-1" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="ECON-MAN-1" bsmid="f03ad621" type="vehicle.seat.leon" owner="CARLA-ECON-1" material="Aluminum" lvcIndicator="Live">
         <userData>
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
