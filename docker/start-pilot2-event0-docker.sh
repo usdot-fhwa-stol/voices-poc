@@ -38,4 +38,26 @@ fi
 
 xhost +local:docker
 
-docker-compose -f pilot2-event0_docker-compose.yml up
+docker_compose_version=$(docker-compose -v || echo NA)
+
+echo "docker-compose version: "$docker_compose_version
+
+docker_compose_version_new=$(docker compose version || echo NA)
+
+echo "docker compose version: "$docker_compose_version_new
+
+if [ ! "$docker_compose_version_new" == "NA" ]; then
+    docker_compose_cmd="docker compose"
+else
+    docker_compose_cmd="docker-compose"
+fi
+
+$docker_compose_cmd -f pilot2-event0_docker-compose.yml up
+
+trap stopDocker SIGINT
+
+stopDocker()
+{
+
+$docker_compose_cmd -f pilot2-event0_docker-compose.yml down
+}
