@@ -77,5 +77,6 @@ else
 fi
 
 echo
-echo "Config successfully set. If not using docker start scripts, please close and reopen the terminal or source ~/.bashrc to use the new config."
+echo "Config successfully set. Please close and reopen the terminal or source ~/.bashrc to use the new config:"
+echo "			source ~/.bashrc"
 
