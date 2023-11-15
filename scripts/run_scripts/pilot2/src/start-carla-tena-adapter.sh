@@ -50,7 +50,7 @@ fi
 
 localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARLA_ADAPTER_VERSION
 
-adapterVerbosity='2'
+adapterVerbosity='1'
 
 mkdir -p $VUG_ADAPTER_LOG_PATH
 
