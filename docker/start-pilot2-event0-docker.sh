@@ -1,6 +1,13 @@
 #!/bin/bash
 
+stopDocker()
+{
 
+echo
+echo STOPPING AND REMOVING VUG CONTAINERS
+$docker_compose_cmd -f pilot2-event0_docker-compose.yml down
+
+}
 
 voices_site_config=$HOME/.voices_site_config
 voices_scenario_config=$HOME/.voices_scenario_config
@@ -38,11 +45,11 @@ fi
 
 xhost +local:docker
 
-docker_compose_version=$(docker-compose -v || echo NA)
+docker_compose_version="$(docker-compose -v || echo NA)"
 
 echo "docker-compose version: "$docker_compose_version
 
-docker_compose_version_new=$(docker compose version || echo NA)
+docker_compose_version_new="$(docker compose version || echo NA)"
 
 echo "docker compose version: "$docker_compose_version_new
 
@@ -52,12 +59,6 @@ else
     docker_compose_cmd="docker-compose"
 fi
 
-$docker_compose_cmd -f pilot2-event0_docker-compose.yml up
-
 trap stopDocker SIGINT
 
-stopDocker()
-{
-
-$docker_compose_cmd -f pilot2-event0_docker-compose.yml down
-}
+$docker_compose_cmd -f pilot2-event0_docker-compose.yml up
