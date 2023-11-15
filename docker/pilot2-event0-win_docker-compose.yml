@@ -8,6 +8,7 @@ services:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
       - XAUTHORITY=~/.Xauthority
+      - VUG_CONTAINER_IMAGE=voices
       - VUG_SITE_CONFIG_FILE=${VUG_SITE_CONFIG_FILE}
       - VUG_SCENARIO_CONFIG_FILE=${VUG_SCENARIO_CONFIG_FILE}
     env_file:
