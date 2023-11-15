@@ -67,10 +67,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-echo VUG_CARLA_ADDRESS: $VUG_CARLA_ADDRESS
-echo TENA_HOME: $TENA_HOME
-echo LOCAL TENA DIR: 
-ls $VUG_LOCAL_TENA_PATH
-
-
 $localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $VUG_CARLA_ADDRESS -simId $VUG_SIM_ID -verbosity $adapterVerbosity -vehiclePublishRate 10 2>&1 | tee -a $adapterLogFile
