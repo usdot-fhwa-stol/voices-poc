@@ -45,18 +45,26 @@ fi
 
 xhost +local:docker
 
-docker_compose_version="$(docker-compose -v || echo NA)"
+docker_compose_v2_version=$(docker compose version 2> /dev/null)
 
-echo "docker-compose version: "$docker_compose_version
+if [ ! -z "$docker_compose_v2_version" ]; then
 
-docker_compose_version_new="$(docker compose version || echo NA)"
-
-echo "docker compose version: "$docker_compose_version_new
-
-if [ ! "$docker_compose_version_new" == "NA" ]; then
+    echo "docker compose version: "$docker_compose_v2_version
+    
     docker_compose_cmd="docker compose"
 else
-    docker_compose_cmd="docker-compose"
+    docker_compose_v1_version=$(docker-compose -v 2> /dev/null)
+
+    if [ ! -z "$docker_compose_v1_version" ]; then
+        
+        echo "docker-compose version: "$docker_compose_v1_version
+
+        docker_compose_cmd="docker-compose"
+    else
+        echo ERROR: No valid docker compose version found
+        exit
+    fi
+    
 fi
 
 trap stopDocker SIGINT
