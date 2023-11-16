@@ -49,8 +49,6 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_SCENARIO_PUBLISHER_VERSION
-
 adapterVerbosity='4'
 
 mkdir -p $VUG_ADAPTER_LOG_PATH
