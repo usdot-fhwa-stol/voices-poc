@@ -91,7 +91,7 @@ try:
 
                 world.debug.draw_string(
                     vehicle.get_location() + carla.Location(x=0, y=0, z=2), 
-                    str(vehicle.attributes["role_name"]), 
+                    str(vehicle.attributes["role_name"].replace("-MAN-","-")).replace("TFHRC","FHWA"), 
                     draw_shadow=False,color=carla.Color(r=255, g=0, b=0), 
                     life_time=label_duration,
                     persistent_lines=True)
