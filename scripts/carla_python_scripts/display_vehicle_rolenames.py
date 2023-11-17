@@ -17,12 +17,12 @@ argparser = argparse.ArgumentParser(
     description=__doc__)
 argparser.add_argument(
     '--host',
-    metavar='H',
+    metavar='<hostname>',
     default='127.0.0.1',
     help='IP of the host server (default: 127.0.0.1)')
 argparser.add_argument(
     '-p', '--port',
-    metavar='P',
+    metavar='<port>',
     default=2000,
     type=int,
     help='TCP port to listen to (default: 2000)')
@@ -42,18 +42,24 @@ argparser.add_argument(
     help='Synchronous mode execution')
 argparser.add_argument(
     '-d', '--duration',
-    metavar='D',
+    metavar='<duration in s>',
     default=10,
     type=int,
     help='duration to display vehicle rolenames - use 0 for indefinite (default: 10)')
+argparser.add_argument(
+    '-v', '--verbose',
+    default=False,
+    action='store_true',
+    help='display actor details each iteration (default: false)')
 
 args = argparser.parse_args()
 
 
 try:
-    client = carla.Client(args.host, 2000)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(5.0)
     
+    print('\n----- DISPLAYING VEHICLE ROLENAMES -----\n')
 
     while (True):
         world = client.get_world()
@@ -65,22 +71,36 @@ try:
             label_duration = 0.5
         else:
             label_duration = args.duration
+        
+        if args.verbose:
 
-        if len(vehicle_list) == 0:
-            print("NO VEHICLES")
+            if len(vehicle_list) == 0:
+                print("    NO VEHICLES")
+            else:
+                print("\nCARLA VEHICLES: ")
+
+
         else:
             for index, vehicle in enumerate(vehicle_list, start=1):
-                print(str(vehicle.attributes))
-                world.debug.draw_string(vehicle.get_location(), str(vehicle.attributes["role_name"]), draw_shadow=False,
-                                                    color=carla.Color(r=255, g=0, b=0), life_time=label_duration,
-                                                    persistent_lines=True)
-            
-                print(str(vehicle_list) + "  " +  str(vehicle_list[0].attributes))
+                
+                if args.verbose:
+                    print("    " + str(vehicle.attributes))
 
+                world.debug.draw_string(
+                    vehicle.get_location() + carla.Location(x=0, y=0, z=2), 
+                    str(vehicle.attributes["role_name"]), 
+                    draw_shadow=False,color=carla.Color(r=255, g=0, b=0), 
+                    life_time=label_duration,
+                    persistent_lines=True)
+            
         if args.duration != 0:
             sys.exit()
 
         time.sleep(0.5)
+
+except KeyboardInterrupt:
+        print('\nCancelled by user. Bye!')
+
 except Exception as err_msg:
     print(str(err_msg))
     print("\nERROR CONNECTING TO CARLA")

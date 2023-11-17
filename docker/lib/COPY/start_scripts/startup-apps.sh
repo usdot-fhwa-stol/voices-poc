@@ -32,6 +32,9 @@ fi
    # set spectator view
    python3 $HOME/voices-poc/scripts/carla_python_scripts/spectator_view_mcity.py --host $VUG_CARLA_ADDRESS &
 
+   # display vehicle names
+   python3 $HOME/voices-poc/scripts/carla_python_scripts/display_vehicle_rolenames.py -d 0 &
+
    sleep 5s
 
 

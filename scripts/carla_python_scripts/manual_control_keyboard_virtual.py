@@ -552,7 +552,7 @@ class HUD(object):
             'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
             'Location:% 20s' % ('(% 5.6f, % 5.6f)' % (t.location.x, t.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
-            'Height:  % 18.0f m' % t.location.z,
+            'Height:  % 18.2f m' % t.location.z,
             '']
         if isinstance(c, carla.VehicleControl):
             self._info_text += [
