@@ -67,20 +67,23 @@ try:
         vehicle_list = world.get_actors().filter('vehicle.*')
         # Print all index corresponding to all traffic vehicles in scene (CarlaUE4)
 
+        
+
         if args.duration == 0:
             label_duration = 0.5
         else:
             label_duration = args.duration
         
-        if args.verbose:
+        
+        if len(vehicle_list) == 0:
 
-            if len(vehicle_list) == 0:
+            if args.verbose:
                 print("    NO VEHICLES")
-            else:
-                print("\nCARLA VEHICLES: ")
-
 
         else:
+            if args.verbose:
+                print("\nCARLA VEHICLES: ")
+
             for index, vehicle in enumerate(vehicle_list, start=1):
                 
                 if args.verbose:
