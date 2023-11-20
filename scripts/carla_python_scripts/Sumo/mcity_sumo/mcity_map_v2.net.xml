@@ -6,7 +6,7 @@
     <input>
         <sumocfg-file value="/home/carma/Mcity-VOICES/mcity_sumo/mcity_map_v2.sumocfg"/>
         <additional-files value=""/>
-        <route-files value="/home/carma/Mcity-VOICES/mcity_sumo/TFHRC-SUMO-Vehicles.rou.xml"/>
+        <route-files value="/home/carma/Mcity-VOICES/mcity_sumo/TFHRC-pilot2_event0-SUMO-Vehicles.rou.xml"/>
         <sumo-net-file value="/home/carma/Mcity-VOICES/mcity_sumo/mcity_map_v2.net.xml"/>
     </input>
 
