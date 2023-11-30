@@ -374,8 +374,6 @@ if $noBuildVersion; then
 	buildVersionDirArg=""
 	buildVersionCmakeArg=""
 else
-	echo releaseOrDebug: $releaseOrDebug
-	echo arg_release_or_debug: $arg_release_or_debug
 
 	if [ $arg_release_or_debug == false ] ; then
 		echo

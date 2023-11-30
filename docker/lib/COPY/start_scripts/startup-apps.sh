@@ -94,6 +94,13 @@ if [[ $VUG_DOCKER_START_TJ2735_ADAPTER == true ]]; then
    sleep 5s
 fi
 
+if [[ $VUG_DOCKER_START_TJ3224_ADAPTER == true ]]; then
+   echo "STARTING TENA J3224 ADAPTER"
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-tj3224-adapter.sh &
+
+   sleep 5s
+fi
+
 if [[ $VUG_DOCKER_START_TRAFFIC_LIGHT_EG == true ]]; then
    echo "STARTING TENA TRAFFIC LIGHT ENTITY GENERATOR"
    $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-traffic-light-entity-generator.sh &
