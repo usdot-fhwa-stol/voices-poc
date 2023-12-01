@@ -9,9 +9,3 @@ export VUG_LOCAL_TDCS_INSTALL_PATH=$HOME/TENA
 export VUG_LOCAL_VOICES_POC_PATH=$HOME/voices-poc
 export VUG_LOG_FILES_ROOT=$VUG_LOCAL_VOICES_POC_PATH/logs
 export VUG_LOCAL_CARLA_PATH=$HOME/CARLA_0.9.10
-
-source $HOME/.voices_scenario_config_link
-
-if [ $VUG_CONTAINER_IMAGE == "voices" ]; then
-    source $VUG_TENA_SOURCE_SCRIPT_FILE
-fi

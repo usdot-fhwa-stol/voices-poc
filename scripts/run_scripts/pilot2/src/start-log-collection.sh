@@ -1,27 +1,37 @@
 #!/bin/bash
 
-voices_config=~/.voices_config
+voices_site_config=$HOME/.voices_site_config
+voices_scenario_config=$HOME/.voices_scenario_config
 
-if [ -L ${voices_config} ] ; then
-   if [ -e ${voices_config} ] ; then
-      config_link_dest=$(readlink -f $voices_config)
-      link_base_name=$(basename ${config_link_dest})
+if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
+    if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
+        site_config_link_dest=$(readlink -f $voices_site_config)
+        site_link_base_name=$(basename ${site_config_link_dest})
 
-      . $voices_config
+        scenario_config_link_dest=$(readlink -f $voices_scenario_config)
+        scenario_link_base_name=$(basename ${scenario_config_link_dest})
 
+        source $voices_site_config
+        source $voices_scenario_config
 
-      echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
-   else
-      echo "[!!!] .voices_config link is broken"
-      exit 1
+        echo "Site Config: "$VUG_SITE_CONFIG_FILE
+        echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
+    else
+        echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
+        echo "Site Config: "$(readlink -f $voices_site_config)
+        echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+        exit 1
    fi
-elif [ -e ${voices_config} ] ; then
-   echo "[!!!] .voices_config file is not a symbolic link"
-   exit 1
+elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
+    echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
+    echo "Site Config: "$(readlink -f $voices_site_config)
+    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    exit 1
 else
-   echo "[!!!] .voices_config link is is missing"
-   exit 1
+    echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
+    echo "Site Config: "$(readlink -f $voices_site_config)
+    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    exit 1
 fi
 
 echo

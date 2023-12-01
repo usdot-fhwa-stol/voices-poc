@@ -20,7 +20,7 @@ if [[ $VUG_DOCKER_START_CONSOLE == true ]]; then
 fi
 
 # try to change carla map 
-{
+if [[ $VUG_DOCKER_START_CARLA == true ]]; then
    echo "CHANGING CARLA MAP TO: $VUG_CARLA_MAP_NAME"
 	python3 $HOME/voices-poc/scripts/carla_python_scripts/config.py -m $VUG_CARLA_MAP_NAME --weather ClearNoon --host $VUG_CARLA_ADDRESS &
 
@@ -36,12 +36,7 @@ fi
    python3 $HOME/voices-poc/scripts/carla_python_scripts/display_vehicle_rolenames.py -d 0 &
 
    sleep 5s
-
-
-} || {
-   echo "NO CARLA CONTAINER FOUND"
-
-}
+fi
 
 if [[ $VUG_DOCKER_START_SUMO == true ]]; then
    echo "STARTING SUMO"

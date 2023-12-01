@@ -576,6 +576,9 @@ fi
 
 if [[ ! -d $localAppDir/build ]]; then
 	mkdir $localAppDir/build
+else 
+	sudo rm -rf $localAppDir/build
+	mkdir $localAppDir/build
 fi
 
 echo
