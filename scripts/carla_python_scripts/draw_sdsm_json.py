@@ -126,7 +126,7 @@ try:
     # map = world.get_map()
 
     draw_z_height = 237
-    draw_lifetime = 10
+    draw_lifetime = 30
 
     print("\nReading and drawing crossing data from: " + str(args.file))
     import json
@@ -140,38 +140,46 @@ try:
     # all_sdsm_json_data = load_selected_json_file(selected_file)
 
     files_to_load = [
-        # {
-        #     "crossing": 1,
-        #     "filename": "crossing1_sdsm.json"
-        # },
-        # {
-        #     "crossing": 2,
-        #     "filename": "crossing2_sdsm.json"
-        # },
-        # {
-        #     "crossing": 3,
-        #     "filename": "crossing3_sdsm.json"
-        # },
-        # {
-        #     "crossing": 4,
-        #     "filename": "crossing4_sdsm.json"
-        # },
         {
-            "crossing": 5,
-            "filename": "crossing5_sdsm.json"
+            # north crosswalk
+            "crossing": 1,
+            "filename": "crossing1_sdsm.json"
         },
         {
-            "crossing": 6,
-            "filename": "crossing6_sdsm.json"
+            # east crosswalk 
+            "crossing": 2,
+            "filename": "crossing2_sdsm.json"
         },
         {
-            "crossing": 7,
-            "filename": "crossing7_sdsm.json"
+            # south crosswalk 
+            "crossing": 3,
+            "filename": "crossing3_sdsm.json"
         },
         {
-            "crossing": 8,
-            "filename": "crossing8_sdsm.json"
-        },        
+            # west crosswalk 
+            "crossing": 4,
+            "filename": "crossing4_sdsm.json"
+        },
+        # {
+        #     # west crosswalk 
+        #     "crossing": 5,
+        #     "filename": "crossing5_sdsm.json"
+        # },
+        # {
+        #     # south crosswalk 
+        #     "crossing": 6,
+        #     "filename": "crossing6_sdsm.json"
+        # },
+        # {
+        #     # east crosswalk 
+        #     "crossing": 7,
+        #     "filename": "crossing7_sdsm.json"
+        # },
+        # {
+        #     # north crosswalk 
+        #     "crossing": 8,
+        #     "filename": "crossing8_sdsm.json"
+        # },        
     ]
 
     all_sdsm_json_data = []
@@ -192,18 +200,22 @@ try:
         print("\nJSON data loaded successfully")
         # print(all_sdsm_json_data)
 
-        mcity_origin = GeodeticToEcef(42.30059341574939,-83.69928318881136,0)
+        # mcity_origin = GeodeticToEcef(42.30059341574939,-83.69928318881136,0)
+
+        mcity_origin = { 
+                    "x": 518508.658, 
+                    "y": -4696054.02, 
+                    "z": 0
+                }
+        
         print("mcity_origin: " + str(mcity_origin))
 
-        zero_zero = world.get_map().transform_to_geolocation(carla.Location(x=0,y=0,z=0))
-        print("zero_zero: " + str(zero_zero))
-
-        world.debug.draw_string(
-                carla.Location(x=mcity_origin["x"], y=mcity_origin["y"], z=draw_z_height), 
-                "ORIGIN", 
-                draw_shadow=False,
-                color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
-                persistent_lines=True)
+        # world.debug.draw_string(
+        #         carla.Location(x=mcity_origin["x"], y=mcity_origin["y"], z=draw_z_height), 
+        #         "ORIGIN", 
+        #         draw_shadow=False,
+        #         color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
+        #         persistent_lines=True)
         
         world.debug.draw_string(
                 carla.Location(x=0, y=0, z=245), 
@@ -227,30 +239,45 @@ try:
                     continue
 
                 
-                vru_ref_lat = GeodeticToEcef(sdsm_json["refPos"]["lat"],sdsm_json["refPos"]["long"],0)
-                
-                x_fudge = 3
-                y_fudge = -68
-                
-                local_vru_ref_lat = { 
-                    "x": (vru_ref_lat["x"] - mcity_origin["x"] + x_fudge), 
-                    "y": (vru_ref_lat["y"] - mcity_origin["y"] + y_fudge), 
-                    "z": (vru_ref_lat["z"] - mcity_origin["z"])
+                # vru_ref_pos = GeodeticToEcef(sdsm_json["refPos"]["lat"],sdsm_json["refPos"]["long"],0)
+
+                vru_ref_pos = { 
+                    "x": 518558.359, 
+                    "y": -4696023.893, 
+                    "z": 0
                 }
                 
+                x_fudge = 0#4
+                y_fudge = 0#9
+                
+                # local_vru_ref_pos = { 
+                #     "x": (vru_ref_pos["x"] - mcity_origin["x"] + x_fudge), 
+                #     "y": -1*(vru_ref_pos["y"] - mcity_origin["y"] + y_fudge), 
+                #     "z": (vru_ref_pos["z"] - mcity_origin["z"])
+                # }
+
+                local_vru_ref_pos = { 
+                    "x": 54.403637, 
+                    "y": -37.924835, 
+                    "z": 0
+                }
+
+                
+                
                 world.debug.draw_string(
-                    carla.Location(x=local_vru_ref_lat["x"], y=local_vru_ref_lat["y"], z=draw_z_height), 
+                    carla.Location(x=local_vru_ref_pos["x"], y=local_vru_ref_pos["y"], z=draw_z_height), 
                     str(crossing["crossing"]) + "_r", 
                     draw_shadow=False,
                     color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
                     persistent_lines=True)
 
-                vru_x = local_vru_ref_lat["x"] + (sdsm_json["objects"][0]["detObjCommon"]["pos"]["offsetX"]) 
-                vru_y = local_vru_ref_lat["y"] + (sdsm_json["objects"][0]["detObjCommon"]["pos"]["offsetY"])
+
+                vru_x = local_vru_ref_pos["x"] + (sdsm_json["objects"][0]["detObjCommon"]["pos"]["offsetX"])
+                vru_y = local_vru_ref_pos["y"] + (sdsm_json["objects"][0]["detObjCommon"]["pos"]["offsetY"])
 
                 # print("SDSM #: " + str(sdsm_json["msgCnt"]))
-                # print("\tvru_ref_lat: " + str(vru_ref_lat))
-                # print("\tlocal_vru_ref_lat: " + str(local_vru_ref_lat))
+                # print("\tvru_ref_pos: " + str(vru_ref_pos))
+                # print("\tlocal_vru_ref_pos: " + str(local_vru_ref_pos))
                 # print("\tvru_x: " + str(vru_x))
                 # print("\tvru_y: " + str(vru_y))
                 world.debug.draw_string(
