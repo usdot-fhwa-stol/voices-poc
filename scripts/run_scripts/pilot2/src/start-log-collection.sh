@@ -39,11 +39,11 @@ echo
 read -p "Are you hosting a CARMA Platform Vehicle? [y/n]" isCarmaVehicle
 
 
-j2735_tcpdump_out="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_RECEIVE_PORT -w J2735_packet_out.pcap"
-j2735_tcpdump_in="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_SEND_PORT -w J2735_packet_in.pcap"
+j2735_tcpdump_out="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_RECEIVE_PORT -w J2735_packet_in.pcap"
+j2735_tcpdump_in="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_SEND_PORT -w J2735_packet_out.pcap"
 
-j3224_tcpdump_out="sudo tcpdump -i lo port $VUG_J3224_ADAPTER_RECEIVE_PORT -w J3224_packet_out.pcap"
-j3224_tcpdump_in="sudo tcpdump -i lo port $VUG_J3224_ADAPTER_SEND_PORT -w J3224_packet_in.pcap"
+j3224_tcpdump_out="sudo tcpdump -i lo port $VUG_J3224_ADAPTER_RECEIVE_PORT -w J3224_packet_in.pcap"
+j3224_tcpdump_in="sudo tcpdump -i lo port $VUG_J3224_ADAPTER_SEND_PORT -w J3224_packet_out.pcap"
 
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
