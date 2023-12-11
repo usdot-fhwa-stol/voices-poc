@@ -10,16 +10,16 @@ function cleanup {
 
 . ../node_info.config
 
-if [[ $carmaID == "CARMA-TFHRC" ]]
+if [[ $VUG_CARMA_VEHICLE_ID == "CARMA-TFHRC" ]]
 then
        SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
-elif [[ $carmaID == "CARMA-SPR" ]]
+elif [[ $VUG_CARMA_VEHICLE_ID == "CARMA-SPR" ]]
 then
        SPAWN_PT="-189.9, -508.5, 38, 0, 0, 38"
-elif [[ $carmaID == "CARMA-MITRE" ]]
+elif [[ $VUG_CARMA_VEHICLE_ID == "CARMA-MITRE" ]]
 then
        SPAWN_PT="-195.3, -503.3, 38, 0, 0, 55"
-elif [[ $carmaID == "CARMA-AUG" ]]
+elif [[ $VUG_CARMA_VEHICLE_ID == "CARMA-AUG" ]]
 then
        SPAWN_PT="-182.6, -511.5, 38, 0, 0, 18"
 fi
@@ -30,10 +30,10 @@ fi
 #VEH_2="-182.6, -511.5, 38, 0, 0, 18" #38.955761, -77.151152 Constructed #Augusta/voices-1
 #VEH_1="-174.9, -513.0, 38, 0, 0, 10" #Live
 
-mkdir -p $localCarmaSimLogPath
+mkdir -p $VUG_CARMA_SIM_LOG_PATH
 
-CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
-SIM_LOG=$localCarmaSimLogPath/voices_carla_carma_integration.log
+CARLA_LOG=$VUG_CARMA_SIM_LOG_PATH/voices_carla_simulator.log
+SIM_LOG=$VUG_CARMA_SIM_LOG_PATH/voices_carla_carma_integration.log
 
 echo "" >> $CARLA_LOG
 echo "<< ***** New Session **** >>" >> $CARLA_LOG
@@ -43,10 +43,10 @@ echo "<< ***** New Session **** >>" >> $SIM_LOG
 date >> $SIM_LOG
 
 
-$localCarlaPath/CarlaUE4.sh &>> $CARLA_LOG &
+$VUG_LOCAL_CARLA_PATH/CarlaUE4.sh &>> $CARLA_LOG &
 sleep 5
 
-#python3 $voicesPocPath/scripts/carla_python_scripts/set_time_mode.py
+#python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/set_time_mode.py
 
 
 docker run \
@@ -61,7 +61,7 @@ docker exec \
        bash -c \
        "export PYTHONPATH=$PYTHONPATH:/home/PythonAPI/carla-0.9.10-py2.7-linux-x86_64.egg &&
        source /home/carla_carma_ws/devel/setup.bash && 
-       roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$carlaMapName\" vehicle_color_ind:=\"0\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
+       roslaunch carla_carma_agent carla_carma_agent.launch town:=\"$VUG_CARLA_MAP_NAME\" vehicle_color_ind:=\"0\" spawn_point:=\"$SPAWN_PT\"" &>> $SIM_LOG
 
 cleanup
 

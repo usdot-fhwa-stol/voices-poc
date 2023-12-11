@@ -8,6 +8,12 @@ logs/
 #ignore carla script pycache
 scripts/carla_python_scripts/__pycache__/
 
+#ignore scripts working dir
+scripts/carla_python_scripts/misc
+
+#ignore SDSM.py because contains paid ASN1
+scripts/carla_python_scripts/SDSM.py
+
 #ignore node_info.config
 config/node_info.config
 
@@ -16,9 +22,11 @@ config/node_info.config
 
 # ignore docker lib files
 docker/lib/BUILD
-docker/lib/COPY/VOICES_Adapters
+docker/lib/COPY/VUG_Adapters
 docker/lib/COPY/CARLA*
 docker/lib/MAPS
+docker/lib/OLD
+
 
 # ignore SUMO pycache
 scripts/carla_python_scripts/Sumo/sumo_integration/__pycache__

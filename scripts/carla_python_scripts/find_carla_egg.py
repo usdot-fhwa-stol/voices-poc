@@ -16,10 +16,10 @@ def find_file(pattern, path):
 
 def find_carla_egg():
 
-    carla_egg_dir = os.getenv("VOI_CARLA_EGG_DIR")
+    carla_egg_dir = os.getenv("VUG_CARLA_EGG_DIR")
 
     if not carla_egg_dir:
-        print("\n[!!!] VOI_CARLA_EGG_DIR not set, source node_info.config")
+        print("\n[!!!] VUG_CARLA_EGG_DIR not set, source node_info.config")
         sys.exit()
 
     #this looks for the carla python API .egg file

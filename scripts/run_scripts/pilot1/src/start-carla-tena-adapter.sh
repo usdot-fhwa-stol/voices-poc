@@ -28,7 +28,7 @@ if [ -L ${voices_config} ] ; then
 
 
       echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
+      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
    else
       echo "[!!!] .voices_config link is broken"
       exit 1
@@ -48,20 +48,20 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$carlaAdapterVersion
+localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARLA_ADAPTER_VERSION
 
 
 if [[ $VOICES_CARLA_CONTAINER ]] ; then
    carlaHost=$VOICES_CARLA_CONTAINER
 else
-   carlaHost=$carlaAddress
+   carlaHost=$VUG_CARLA_ADDRESS
 fi
 
 adapterVerbosity='1'
 
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/carla_adapter_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/carla_adapter_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -74,4 +74,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
+$localadapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $carlaHost -simId $VUG_SIM_ID -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile

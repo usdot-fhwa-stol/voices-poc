@@ -34,7 +34,7 @@ args = argparser.parse_args()
 
 actor_list=[]
 try:
-    client = carla.Client('localhost', 2000)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(5.0)
     world = client.get_world()
     # map = world.get_map()

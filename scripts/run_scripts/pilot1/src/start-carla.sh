@@ -36,7 +36,7 @@ if [ -L ${voices_config} ] ; then
 
 
       echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
+      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
    else
       echo "[!!!] .voices_config link is broken"
       exit 1
@@ -49,20 +49,20 @@ else
    exit 1
 fi
 
-if [[ -f $localCarlaPath/CarlaUE4.sh ]]; then
+if [[ -f $VUG_LOCAL_CARLA_PATH/CarlaUE4.sh ]]; then
 	echo "Found CARLA Simulator"
 else
 	echo
-	echo "CARLA Simulator not found at $localCarlaPath/CarlaUE4.sh"
+	echo "CARLA Simulator not found at $VUG_LOCAL_CARLA_PATH/CarlaUE4.sh"
 	exit
 fi
 
 
-mkdir -p $localCarmaSimLogPath
+mkdir -p $VUG_CARMA_SIM_LOG_PATH
 
-CARLA_LOG=$localCarmaSimLogPath/voices_carla_simulator.log
-SIM_LOG=$localCarmaSimLogPath/voices_carla_carma_integration.log
-SET_TIME_MODE_LOG=$localCarmaSimLogPath/set_time_mode.log
+CARLA_LOG=$VUG_CARMA_SIM_LOG_PATH/voices_carla_simulator.log
+SIM_LOG=$VUG_CARMA_SIM_LOG_PATH/voices_carla_carma_integration.log
+SET_TIME_MODE_LOG=$VUG_CARMA_SIM_LOG_PATH/set_time_mode.log
 
 echo "" >> $CARLA_LOG
 echo "<< ***** New Session **** >>" >> $CARLA_LOG
@@ -113,7 +113,7 @@ do
 	fi
 done
 
-$localCarlaPath/CarlaUE4.sh $low_quality_flag > $CARLA_LOG 2>&1 &
+$VUG_LOCAL_CARLA_PATH/CarlaUE4.sh $low_quality_flag > $CARLA_LOG 2>&1 &
 
 carla_pid=$!
 echo "CARLA PID: "$carla_pid
@@ -123,15 +123,15 @@ sleep 7s
 if [[ $carla_map == "Town04" ]]; then
 
 	echo "Changing map to: $carla_map"
-	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map
+	python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/config.py -m $carla_map
 	sleep 5s
 
-	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_town_04.py
+	python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/spectator_view_town_04.py
 
-	if [[ $carmaID == "TFHRC-CAR-1" ]]
+	if [[ $VUG_CARMA_VEHICLE_ID == "TFHRC-CAR-1" ]]
 	then
 		SPAWN_PT="255,-230,1,0,0,0" # latitude=0.002066, longitude=0.002291, altitude=1.000000
-	elif [[ $carmaID == "TFHRC_CAR_2" ]]
+	elif [[ $VUG_CARMA_VEHICLE_ID == "TFHRC_CAR_2" ]]
 	then
 		SPAWN_PT="215,-169.4,1,0,0,0" # latitude=0.001522, longitude=0.001931, altitude=1.000000
 	fi
@@ -139,15 +139,15 @@ if [[ $carla_map == "Town04" ]]; then
 elif [[ $carla_map == "smart_intersection" ]]; then
 
 	echo "Changing map to: $carla_map"
-	python3 $voicesPocPath/scripts/carla_python_scripts/config.py -m $carla_map --weather ClearNoon
+	python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/config.py -m $carla_map --weather ClearNoon
 	sleep 5s
 
-	echo "Changing perspective to simulation site: $simId"
+	echo "Changing perspective to simulation site: $VUG_SIM_ID"
 
-    if [[ $simId == "CARLA-TFHRC-1" ]]; then
-    	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 59.992634 195.027710 17.727715 -29.558195 -125.864532 0.002484
-    elif [[ $simId == "CARLA-TFHRC-2" ]]; then
-    	python3 $voicesPocPath/scripts/carla_python_scripts/spectator_view_smart_intersection.py 28.327816 139.781906 16.607105 -25.901394 56.039539 0.000042
+    if [[ $VUG_SIM_ID == "CARLA-TFHRC-1" ]]; then
+    	python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/spectator_view_smart_intersection.py 59.992634 195.027710 17.727715 -29.558195 -125.864532 0.002484
+    elif [[ $VUG_SIM_ID == "CARLA-TFHRC-2" ]]; then
+    	python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/spectator_view_smart_intersection.py 28.327816 139.781906 16.607105 -25.901394 56.039539 0.000042
     fi
 
 elif [[ $carla_map == "" ]]; then
@@ -162,7 +162,7 @@ else
 	
 fi
 
-python3 $voicesPocPath/scripts/carla_python_scripts/blank_traffic_signals.py
+python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/blank_traffic_signals.py
 
 if [ "$no_tick_enabled" = true ]; then
 

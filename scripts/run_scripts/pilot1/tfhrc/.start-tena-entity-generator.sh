@@ -27,13 +27,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$entityGeneratorVersion
+localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_ENTITY_GENERATOR_VERSION
 
 adapterVerbosity='4'
 
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/entity_generator_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/entity_generator_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -46,5 +46,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localadapterPath/bin/tena-entity-generator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localadapterPath/bin/tena-entity-generator -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

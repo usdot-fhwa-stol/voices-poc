@@ -18,44 +18,45 @@
 #  *
 
 
-voices_config=~/.voices_config
+voices_site_config=$HOME/.voices_site_config
+voices_scenario_config=$HOME/.voices_scenario_config
 
-if [ -L ${voices_config} ] ; then
-   if [ -e ${voices_config} ] ; then
-      config_link_dest=$(readlink -f $voices_config)
-      link_base_name=$(basename ${config_link_dest})
+if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
+    if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
+        site_config_link_dest=$(readlink -f $voices_site_config)
+        site_link_base_name=$(basename ${site_config_link_dest})
 
-      . $voices_config
+        scenario_config_link_dest=$(readlink -f $voices_scenario_config)
+        scenario_link_base_name=$(basename ${scenario_config_link_dest})
 
+        source $voices_site_config
+        source $voices_scenario_config
 
-      echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
-   else
-      echo "[!!!] .voices_config link is broken"
-      exit 1
+        echo "Site Config: "$VUG_SITE_CONFIG_FILE
+        echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
+    else
+        echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
+        echo "Site Config: "$(readlink -f $voices_site_config)
+        echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+        exit 1
    fi
-elif [ -e ${voices_config} ] ; then
-   echo "[!!!] .voices_config file is not a symbolic link"
-   exit 1
+elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
+    echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
+    echo "Site Config: "$(readlink -f $voices_site_config)
+    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    exit 1
 else
-   echo "[!!!] .voices_config link is is missing"
-   exit 1
-fi
-
-if [[ $? -ne 0 ]] ; then
-    echo
-    echo "[!!!] .config file not found, please run the start script from its containing folder"
-    echo
+    echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
+    echo "Site Config: "$(readlink -f $voices_site_config)
+    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$scenarioPublisherVersion
-
 adapterVerbosity='4'
 
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/scenario_publisher_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/scenario_publisher_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -68,17 +69,17 @@ BASH_XTRACEFD=4
 
 set -x
 
-if [ -d "$voicesPocPath/logs/tdcs_data" ]; then
+if [ -d "$VUG_LOG_FILES_ROOT/tdcs_data" ]; then
    echo "TDCS Log directory exists"
 else
    echo "Creating TDCS Log directory"
-   mkdir -p $voicesPocPath/logs/tdcs_data
+   mkdir -p $VUG_LOG_FILES_ROOT/tdcs_data
 fi
 
-cd $voicesPocPath/logs/tdcs_data
+cd $VUG_LOG_FILES_ROOT/tdcs_data
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
-tdcs_file_name=$simId'_'$timestamp
+tdcs_file_name=$VUG_SIM_ID'_'$timestamp
 
-$tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -databaseName $tdcs_file_name.sqlite -dbFolder .
+$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $tdcs_file_name.sqlite -dbFolder .

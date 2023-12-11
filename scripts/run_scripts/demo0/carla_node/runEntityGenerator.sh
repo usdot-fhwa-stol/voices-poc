@@ -19,11 +19,11 @@
 
 tenadevDir=$HOME/tenadev/INSTALL
 
-emAddress='192.168.55.230'
-emPort='55100'
+VUG_EM_ADDRESS='192.168.55.230'
+VUG_EM_PORT='55100'
 
-localAddress='192.168.55.231'
+VUG_LOCAL_ADDRESS='192.168.55.231'
 
 adapterVerbosity='1'
 
-$tenadevDir/entitygenerator/build/src/EntityGenerator -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -verbosity $adapterVerbosity
+$tenadevDir/entitygenerator/build/src/EntityGenerator -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -verbosity $adapterVerbosity

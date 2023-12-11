@@ -11,7 +11,7 @@ if [ -L ${voices_config} ] ; then
 
 
       echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
+      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
    else
       echo "[!!!] .voices_config link is broken"
       exit 1
@@ -38,7 +38,7 @@ echo
 read -p "--> " positionIndex
 
 vehicle_type='virtual_vehicle'
-vehicle_name=$carmaID
+vehicle_name=$VUG_CARMA_VEHICLE_ID
 if [[ $positionIndex == 6 ]]; then
     vehicle_type='local_carma_platform_vehicle'
 elif [[ $positionIndex -gt 6 ]]; then
@@ -55,20 +55,20 @@ if [[ $vehicle_type == 'live_vehicle' ]]; then
 
 else
 
-    tcpdump_out="sudo tcpdump -i lo port $j2735AdapterReceivePort -w ip_packet_out.pcap"
-    tcpdump_in="sudo tcpdump -i lo port $j2735AdapterSendPort -w ip_packet_in.pcap"
+    tcpdump_out="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_RECEIVE_PORT -w ip_packet_out.pcap"
+    tcpdump_in="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_SEND_PORT -w ip_packet_in.pcap"
 
 fi
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
-logs_folder_name=$simId'_'$timestamp
+logs_folder_name=$VUG_SIM_ID'_'$timestamp
 
 echo
 echo "Folder Name: "$logs_folder_name
 
-mkdir -p $logFilesRoot/$logs_folder_name
-cd $logFilesRoot/$logs_folder_name
+mkdir -p $VUG_LOG_FILES_ROOT/$logs_folder_name
+cd $VUG_LOG_FILES_ROOT/$logs_folder_name
 
 #if we are not a live vehicle then prompt to collect logs 
 #(live vehicle is not connected to VOICES network)
@@ -81,7 +81,7 @@ if [[ ! $vehicle_type == 'live_vehicle' ]]; then
     if [[ $save_tdcs_data =~ ^[yY]$ ]]; then
         echo
         echo "Starting TDCS" 
-        tdcs_command="$tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -databaseName $logs_folder_name.sqlite -dbFolder ."
+        tdcs_command="$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $logs_folder_name.sqlite -dbFolder ."
         echo $tdcs_command
         $tdcs_command &
     fi
@@ -109,10 +109,10 @@ copyCarmaLogs()
     if [[ ! $vehicle_type == 'live_vehicle' ]]; then
 
         echo "Copying adapter logs"
-        mv $localAdapterLogPath/*.log .
+        mv $VUG_ADAPTER_LOG_PATH/*.log .
 
         echo "Copying carma simulation logs"    
-        mv $localCarmaSimLogPath/*.log .
+        mv $VUG_CARMA_SIM_LOG_PATH/*.log .
     
     fi
 

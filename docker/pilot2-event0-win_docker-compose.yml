@@ -1,22 +1,20 @@
 services:
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:pilot2-event0-0.0.3
-    tty: true 
+    image: usdotfhwastoldev/voices:pilot2-event0-latest
+    tty: true
+    ipc: "host"
     network_mode: "host"
     environment:
       - DISPLAY=$DISPLAY
       - SDL_VIDEODRIVER=x11
-      - XAUTHORITY=~/.Xauthroity
-      - VUG_CARLA_CONTAINER=carla
-      - VUG_SITE_CONFIG=andrew_docker.config
-      - VUG_START_EM=true
-      - VUG_START_CONSOLE=true
-      - VUG_START_CANARY=true
-      - VUG_START_TDCS=false
-      - VUG_START_DATAVIEW=false
-      - VUG_START_SCENARIO_PUBLISHER=false
-      - VUG_START_TENA_CARLA_ADAPTER=false
+      - XAUTHORITY=~/.Xauthority
+      - VUG_CONTAINER_IMAGE=voices
+      - VUG_SITE_CONFIG_FILE=${VUG_SITE_CONFIG_FILE}
+      - VUG_SCENARIO_CONFIG_FILE=${VUG_SCENARIO_CONFIG_FILE}
+    env_file:
+      - ${HOME}/.voices_site_config
+      - ${HOME}/.voices_scenario_config
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /home/carma/voices-poc:/home/voices-poc
+      - ${VUG_LOCAL_VOICES_POC_PATH}:/home/voices-poc

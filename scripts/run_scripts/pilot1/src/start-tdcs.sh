@@ -29,7 +29,7 @@ if [ -L ${voices_config} ] ; then
 
 
       echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
+      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
    else
       echo "[!!!] .voices_config link is broken"
       exit 1
@@ -49,13 +49,13 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$scenarioPublisherVersion
+localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_SCENARIO_PUBLISHER_VERSION
 
 adapterVerbosity='4'
 
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/scenario_publisher_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/scenario_publisher_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -68,17 +68,17 @@ BASH_XTRACEFD=4
 
 set -x
 
-if [ -d "$voicesPocPath/logs/tdcs_data" ]; then
+if [ -d "$VUG_LOG_FILES_ROOT/tdcs_data" ]; then
    echo "TDCS Log directory exists"
 else
    echo "Creating TDCS Log directory"
-   mkdir -p $voicesPocPath/logs/tdcs_data
+   mkdir -p $VUG_LOG_FILES_ROOT/tdcs_data
 fi
 
-cd $voicesPocPath/logs/tdcs_data
+cd $VUG_LOG_FILES_ROOT/tdcs_data
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
-tdcs_file_name=$simId'_'$timestamp
+tdcs_file_name=$VUG_SIM_ID'_'$timestamp
 
-$tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -databaseName $tdcs_file_name.sqlite -dbFolder .
+$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $tdcs_file_name.sqlite -dbFolder .

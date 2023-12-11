@@ -8,7 +8,7 @@
     <input>
         <sumocfg-file value="mcity_map_v2.sumocfg"/>
         <additional-files value=""/>
-        <route-files value="TFHRC-SUMO-Vehicles.rou.xml"/>
+        <route-files value="TFHRC-pilot2_event0-SUMO-Vehicles.rou.xml"/>
         <sumo-net-file value="mcity_map_v2.net.xml"/>
     </input>
 
