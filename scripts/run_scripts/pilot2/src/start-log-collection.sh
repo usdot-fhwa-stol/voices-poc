@@ -34,41 +34,17 @@ else
     exit 1
 fi
 
-echo
-echo "What vehicle position are you? [#]" 
-echo 
-echo "    [1]  	UCLA Vehicle"
-echo "    [2]  	Nissan Vehicle"
-echo "    [3]  	Econolite Traffic Light"
-echo "    [4]  	MCity Observer"
-echo "    [5]  	TFHRC Manual Vehicle"
-echo "    [6]  	TFHRC Local CARMA Platform Vehicle"
 
 echo
-read -p "--> " positionIndex
+read -p "Are you hosting a CARMA Platform Vehicle? [y/n]" isCarmaVehicle
 
-vehicle_type='virtual_vehicle'
-vehicle_name=$VUG_CARMA_VEHICLE_ID
-if [[ $positionIndex == 6 ]]; then
-    vehicle_type='local_carma_platform_vehicle'
-elif [[ $positionIndex -gt 6 ]]; then
-    echo "Invalid selection, try again..."
-    exit
-fi
 
-if [[ $vehicle_type == 'live_vehicle' ]]; then
+j2735_tcpdump_out="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_RECEIVE_PORT -w J2735_packet_in.pcap"
+j2735_tcpdump_in="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_SEND_PORT -w J2735_packet_out.pcap"
 
-    # Live vehicle
-    obu_interface_name=$(ifconfig | grep -B1 "192.168.88.100" | head -n 1 | sed 's/:.*//')
-    tcpdump_out="sudo tcpdump -i $obu_interface_name dst 192.168.88.40 and port 1516 -w carma_platform_out.pcap"
-    tcpdump_in="sudo tcpdump -i $obu_interface_name src 192.168.88.40 and port 5398 -w carma_platform_in.pcap"
+j3224_tcpdump_out="sudo tcpdump -i lo port $VUG_J3224_ADAPTER_RECEIVE_PORT -w J3224_packet_in.pcap"
+j3224_tcpdump_in="sudo tcpdump -i lo port $VUG_J3224_ADAPTER_SEND_PORT -w J3224_packet_out.pcap"
 
-else
-
-    tcpdump_out="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_RECEIVE_PORT -w ip_packet_out.pcap"
-    tcpdump_in="sudo tcpdump -i lo port $VUG_J2735_ADAPTER_SEND_PORT -w ip_packet_in.pcap"
-
-fi
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
@@ -83,21 +59,8 @@ cd $VUG_LOG_FILES_ROOT/$logs_folder_name
 #if we are not a live vehicle then prompt to collect logs 
 #(live vehicle is not connected to VOICES network)
 
-if [[ ! $vehicle_type == 'live_vehicle' ]]; then
 
-    echo
-    read -p "Would you like to collect the TENA SDO data? [y/n] " save_tdcs_data
-
-    if [[ $save_tdcs_data =~ ^[yY]$ ]]; then
-        echo
-        echo "Starting TDCS" 
-        tdcs_command="$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $logs_folder_name.sqlite -dbFolder ."
-        echo $tdcs_command
-        $tdcs_command &
-    fi
-fi
-
-if [[ $vehicle_type == 'local_carma_platform_vehicle' ]]; then
+if [[ $isCarmaVehicle == ^[yY]$ ]]; then
     trap copyCarmaLogs SIGINT
 fi
 
@@ -138,10 +101,13 @@ copyCarmaLogs()
     exit
 }
 
+
+echo
+echo $j2735_tcpdump_out
+echo $j2735_tcpdump_in
+echo $j3224_tcpdump_out
+echo $j3224_tcpdump_in
 echo
 echo "Starting tcpdumps - when finished press [CTRL + C]"
-echo
-echo $tcpdump_out
-echo $tcpdump_in
 echo 
-$tcpdump_out & $tcpdump_in && fg
+$j2735_tcpdump_out &  $j2735_tcpdump_in & $j3224_tcpdump_out & $j3224_tcpdump_in & wait
