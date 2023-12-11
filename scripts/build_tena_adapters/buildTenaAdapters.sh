@@ -548,9 +548,12 @@ else
 
 	if [[ $useDockerfileCache =~ ^[yY]$ ]]; then
 
-		dockerfileCacheArg="--no-cache"
-	else
 		dockerfileCacheArg=""
+
+	else
+	
+		dockerfileCacheArg="--no-cache"
+		
 	fi
 
 	echo
