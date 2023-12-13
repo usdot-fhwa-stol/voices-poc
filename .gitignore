@@ -8,6 +8,12 @@ logs/
 #ignore carla script pycache
 scripts/carla_python_scripts/__pycache__/
 
+#ignore scripts working dir
+scripts/carla_python_scripts/misc
+
+#ignore SDSM.py because contains paid ASN1
+scripts/carla_python_scripts/SDSM.py
+
 #ignore node_info.config
 config/node_info.config
 

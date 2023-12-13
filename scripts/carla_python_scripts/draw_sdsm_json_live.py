@@ -160,12 +160,12 @@ def draw_sdsm(sdsm_json):
 
     
     
-    world.debug.draw_string(
-        carla.Location(x=local_vru_ref_pos["x"], y=local_vru_ref_pos["y"], z=draw_z_height), 
-        "[R]", 
-        draw_shadow=False,
-        color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
-        persistent_lines=True)
+    # world.debug.draw_string(
+    #     carla.Location(x=local_vru_ref_pos["x"], y=local_vru_ref_pos["y"], z=draw_z_height), 
+    #     "[R]", 
+    #     draw_shadow=False,
+    #     color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
+    #     persistent_lines=True)
 
 
     vru_x = local_vru_ref_pos["x"] + (sdsm_json["objects"][0]["detObjCommon"]["pos"]["offsetX"])
@@ -176,8 +176,22 @@ def draw_sdsm(sdsm_json):
     # print("\tlocal_vru_ref_pos: " + str(local_vru_ref_pos))
     # print("\tvru_x: " + str(vru_x))
     # print("\tvru_y: " + str(vru_y))
+
+    box_center = carla.Location(x=vru_x, y=vru_y, z=draw_z_height)
+
+    vru_box = carla.BoundingBox(box_center,carla.Vector3D(1.5,1.5,0))
+
+    world.debug.draw_box(
+        vru_box, 
+        carla.Rotation(0,0,0),
+        0.2,
+        # draw_shadow=False,
+        color=carla.Color(r=255, g=0, b=0), 
+        life_time=draw_lifetime,
+        persistent_lines=True)
+
     world.debug.draw_string(
-        carla.Location(x=vru_x, y=vru_y, z=draw_z_height), 
+        carla.Location(x=vru_x-0.7, y=vru_y-0.2, z=draw_z_height), 
         str("[VRU]"), 
         draw_shadow=False,
         color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
@@ -191,7 +205,7 @@ try:
     world = client.get_world()
     # map = world.get_map()
 
-    draw_z_height = 237
+    draw_z_height = 237.5
     draw_lifetime = 0.2
 
     # mcity_origin = GeodeticToEcef(42.30059341574939,-83.69928318881136,0)
