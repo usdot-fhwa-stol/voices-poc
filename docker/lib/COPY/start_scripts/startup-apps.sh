@@ -60,6 +60,12 @@ if [[ $VUG_DOCKER_START_TDCS == true ]]; then
    sleep 5s
 fi
 
+if [[ $VUG_DOCKER_START_TENA_PLAYBACK == true ]]; then
+   echo "STARTING TENA PLAYBACK SYSTEM"
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-playback-tool.sh &
+   
+   sleep 5s
+fi
 
 if [[ $VUG_DOCKER_START_DATAVIEW == true ]]; then
    echo "STARTING TENA DATAVIEW"
