@@ -18,14 +18,14 @@ WORKDIR /home
 
 # INSTALL TENA bin
 
-RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
+RUN --mount=type=bind,target=/home/BUILD,readonly,source=../lib/BUILD \
     /home/BUILD/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
     # /home/BUILD/VUG-VOICES-Combined-Distribution-v0.14.4@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
     rm -rf /tmp/*
 
 # INSTALL TENA deb
 
-RUN --mount=type=bind,target=/home/BUILD,readonly,source=lib/BUILD \
+RUN --mount=type=bind,target=/home/BUILD,readonly,source=../lib/BUILD \
     apt install -o DPkg::options::=--force-overwrite \
     /home/BUILD/TENA-Console-v2.0.1@Product@u2004-gcc9-64-*.deb \
     # /home/BUILD/VUG-VOICES-Combined-DataCollectionDistribution-v0.14.4@Product@u2004-gcc9-64-*.deb \
@@ -54,7 +54,7 @@ RUN apt-get update && apt install -y \
 RUN pip install numpy pandas pygame pycrate && \
     rm -rf /root/.cache
 
-COPY ./lib/COPY /home
+COPY ../lib/COPY /home
 
 # COPY Start Scripts
 

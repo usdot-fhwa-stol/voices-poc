@@ -12,12 +12,12 @@ SHELL ["/bin/bash", "-ec"]
 ARG DEBIAN_FRONTEND="noninteractive" 
 ARG TZ="America/New_York"
 
-RUN --mount=type=bind,target=./Import,readonly,source=lib/MAPS \
+RUN --mount=type=bind,target=./Import,readonly,source=../lib/MAPS \
     sed -i 's/--keep-newer-files/--skip-old-files/' ImportAssets.sh && \
     ./ImportAssets.sh 
 
-COPY ./lib/COPY/start_scripts /home/carla/start_scripts
-COPY ./lib/COPY/.voices_config_docker /home/carla/.voices_config_docker
+COPY ../lib/COPY/start_scripts /home/carla/start_scripts
+COPY ../lib/COPY/.voices_config_docker /home/carla/.voices_config_docker
 
 USER root
 
