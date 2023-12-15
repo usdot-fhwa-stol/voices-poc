@@ -21,11 +21,11 @@ config/node_info.config
 .idea/
 
 # ignore docker lib files
-docker/lib/BUILD
-docker/lib/COPY/VUG_Adapters
-docker/lib/COPY/CARLA*
-docker/lib/MAPS
-docker/lib/OLD
+docker/build/lib/BUILD
+docker/build/lib/COPY/VUG_Adapters
+docker/build/lib/COPY/CARLA*
+docker/build/lib/MAPS
+docker/build/lib/OLD
 
 
 # ignore SUMO pycache
