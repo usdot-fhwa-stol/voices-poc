@@ -87,6 +87,11 @@ def main():
         type=int,
         help='Random device seed')
     argparser.add_argument(
+        '-e', '--exclude',
+        metavar='VEHICLE_NAME',
+        type=str,
+        help='Exclude these vehicles when deleting (comma separated, Ex: VW-MAN-1,ECON-MAN-1)')
+    argparser.add_argument(
         '--car-lights-on',
         action='store_true',
         default=False,
@@ -114,10 +119,18 @@ def main():
         #client.set_timeout(10.0)
         
         vehicles = world.get_actors().filter('vehicle.*')
+        if args.exclude:
+            vehicles_to_exclude = (args.exclude).split(",")
+        else:
+            vehicles_to_exclude = []
         for vehicle in vehicles:
             print(vehicle)
             print("attributes: " + str(vehicle.attributes))
             print("location: " + str(vehicle.get_location()))
+            
+            if vehicle.attributes["role_name"] in vehicles_to_exclude:
+                print("Skipping: " + str(vehicle.attributes["role_name"]))
+                continue
             # vehicle.attributes["color"] = "255,255,255"
             vehicle.destroy()
 

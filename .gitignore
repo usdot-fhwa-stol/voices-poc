@@ -1,6 +1,7 @@
 #ignore data and pycache for j2735 decoder
-scripts/J2735_pcap_decoder/data/
-scripts/J2735_pcap_decoder/src/__pycache__/
+scripts/encoding_decoding_tools/J2735_pcap_decoder/data/
+scripts/encoding_decoding_tools/decode_single_packet/__pycache__/
+scripts/encoding_decoding_tools/encode_single_packet/__pycache__/
 
 #ignore log directories
 logs/

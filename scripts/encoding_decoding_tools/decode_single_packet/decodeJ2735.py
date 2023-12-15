@@ -18,8 +18,8 @@ def input_with_prefill(prompt, text):
     return result
 
 
-input_filename = input_with_prefill("Captured packet filename: ", "")
-output_filename = input_with_prefill("Captured packet filename: ", "decoded_packet.json")
+input_filename = input_with_prefill("Captured packet hex: ", "")
+output_filename = input_with_prefill("Output json filename: ", "decoded_packet.json")
 
 # f = open(input_filename, 'r')
 
@@ -47,7 +47,7 @@ try:
   with open(output_filename, 'w', encoding='utf-8') as f:
     f.write(decoded_msg_json)
     f.close()
-    print('\nFormatted json saved to decoded_packet.json')
+    print('\nFormatted json saved to ' + str(output_filename))
 except:
   print('\nFailed to format and save json file')
 
