@@ -37,10 +37,12 @@ source_ip="192.168.1.90"
 source_mac="52:54:00:b9:4a:db"
 dest_ip="192.168.1.80"
 dest_mac="04:d4:c4:5b:66:92"
+old_dest_port="5398"
+new_dest_port="5398"
 
 
 echo
 echo "FINAL COMMAND: "
-echo tcprewrite --infile=$pcap_file_to_read --outfile=$pcap_outfile --srcipmap=0.0.0.0/0:$dest_ip --enet-smac=$source_mac --dstipmap=0.0.0.0/0:$dest_ip --enet-dmac=$dest_mac --fixcsum
+echo tcprewrite --infile=$pcap_file_to_read --outfile=$pcap_outfile --srcipmap=0.0.0.0/0:$dest_ip --enet-smac=$source_mac --dstipmap=0.0.0.0/0:$dest_ip --enet-dmac=$dest_mac --portmap=$old_dest_port:$new_dest_port --fixcsum
 
-tcprewrite --infile=$pcap_file_to_read --dlt=enet --outfile=$pcap_outfile --srcipmap=0.0.0.0/0:$source_ip --enet-smac=$source_mac --dstipmap=0.0.0.0/0:$dest_ip --enet-dmac=$dest_mac --fixcsum
+tcprewrite --infile=$pcap_file_to_read --dlt=enet --outfile=$pcap_outfile --srcipmap=0.0.0.0/0:$source_ip --enet-smac=$source_mac --dstipmap=0.0.0.0/0:$dest_ip --enet-dmac=$dest_mac --portmap=$old_dest_port:$new_dest_port --fixcsum

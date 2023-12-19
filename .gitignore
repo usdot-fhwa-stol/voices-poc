@@ -1,6 +1,7 @@
 #ignore data and pycache for j2735 decoder
-scripts/J2735_pcap_decoder/data/
-scripts/J2735_pcap_decoder/src/__pycache__/
+scripts/encoding_decoding_tools/J2735_pcap_decoder/data/
+scripts/encoding_decoding_tools/decode_single_packet/__pycache__/
+scripts/encoding_decoding_tools/encode_single_packet/__pycache__/
 
 #ignore log directories
 logs/
@@ -21,11 +22,11 @@ config/node_info.config
 .idea/
 
 # ignore docker lib files
-docker/lib/BUILD
-docker/lib/COPY/VUG_Adapters
-docker/lib/COPY/CARLA*
-docker/lib/MAPS
-docker/lib/OLD
+docker/build/lib/BUILD
+docker/build/lib/COPY/VUG_Adapters
+docker/build/lib/COPY/CARLA*
+docker/build/lib/MAPS
+docker/build/lib/OLD
 
 
 # ignore SUMO pycache
