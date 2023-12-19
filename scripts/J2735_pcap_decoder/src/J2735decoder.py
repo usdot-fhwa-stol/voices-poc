@@ -19,6 +19,17 @@
 from binascii import unhexlify
 # import J2735_201603_combined
 import J2735_201603_combined_voices_mr_fix as J2735
+
+decode_j3224 = True
+import SDSMDecoder
+
+try:
+    import SDSM as SDSM
+except Exception as errMsg:
+    print("WARNING: Unable to import J3224 python library, skipping all J3224 messages")
+    decode_j3224 = False
+
+
 import json
 import sys
 import csv
@@ -26,6 +37,7 @@ import numpy
 import datetime
 import os
 import shutil
+import time
 
 print("\n----- DECODING J2735 PACKETS -----")
 
@@ -88,50 +100,104 @@ if os.path.exists(decoded_output_folder):
 
 os.makedirs(decoded_output_folder)
 
-bsm_outfile_obj         = open(decoded_output_folder + "/" + outfile.replace(".csv","_BSM.csv"),'w',newline='')
-spat_outfile_obj        = open(decoded_output_folder + "/" + outfile.replace(".csv","_SPAT.csv"),'w',newline='')
-map_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_MAP.csv"),'w',newline='')
-mob_req_outfile_obj     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Request.csv"),'w',newline='')
-mob_resp_outfile_obj    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Response.csv"),'w',newline='')
-mob_path_outfile_obj    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Path.csv"),'w',newline='')
-mob_ops_outfile_obj     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Operations.csv"),'w',newline='')
-platooning_outfile_obj  = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Platooning.csv"),'w',newline='')
-tcr_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Request.csv"),'w',newline='')
-tcm_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Message.csv"),'w',newline='')
-j2735_payload_outfile_obj         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_J2735-Payload.csv"),'w',newline='')
-
-bsm_outfile_writer         = csv.writer(bsm_outfile_obj)
-spat_outfile_writer        = csv.writer(spat_outfile_obj)
-map_outfile_writer         = csv.writer(map_outfile_obj)
-mob_req_outfile_writer     = csv.writer(mob_req_outfile_obj)
-mob_resp_outfile_writer    = csv.writer(mob_resp_outfile_obj)
-mob_path_outfile_writer    = csv.writer(mob_path_outfile_obj)
-mob_ops_outfile_writer     = csv.writer(mob_ops_outfile_obj)
-platooning_outfile_writer  = csv.writer(platooning_outfile_obj)
-tcr_outfile_writer         = csv.writer(tcr_outfile_obj)
-tcm_outfile_writer         = csv.writer(tcm_outfile_obj)
-j2735_payload_outfile_writer         = csv.writer(j2735_payload_outfile_obj)
-
 numSpatPhases = 31 #use one more than desired phases
-
-
-bsm_outfile_writer.writerow(["packetIndex","packetTimestamp","bsm id","secMark","latency","latitude","longitude","speed(m/s)","heading","elevation(m)","accel_long(m/s^2)","hex"])
 
 spatColumnHeaderList=["packetIndex","packetTimestamp","spatTimestamp","intersectionID","intersectionName"]
 for headerPhase in range(1,numSpatPhases):
     spatColumnHeaderList.append("phase" + str(headerPhase) + "_eventState")
-spatColumnHeaderList.append("hex")
-spat_outfile_writer.writerow(spatColumnHeaderList)
 
-map_outfile_writer.writerow(["packetIndex","packetTimestamp","intersectionID","hex"])  
-mob_req_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","planType","urgency","strategyParams","trajectoryStart","trajectory","expiration"])
-mob_resp_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","urgency","isAccepted"])
-mob_path_outfile_writer.writerow(["packetIndex","packetTimestamp","hostStaticId","hostBSMId","planId","location","trajectory"])
-mob_ops_outfile_writer.writerow(["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","operationParams"])
-platooning_outfile_writer.writerow(["platooningPacketType","packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","other_params"])
-tcr_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","scale","bounds"])
-tcm_outfile_writer.writerow(["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","msgtot","msgnum","tcmID_hex","tcmID_dec_list","updated","label","tcID_hex","tcID_dec_list","vclasses","schedule","detail","geometry"])
-j2735_payload_outfile_writer.writerow(["packetIndex","packetTimestamp","payload"])
+# NOTE: all types will have hex payload and JSON appended to end of list
+message_types = {
+    "BSM" : {
+        "name" : "BSM",
+        "message_spec" : "J2735",
+        "message_id_hex" : "0012",
+        "column_headers" : ["packetIndex","packetTimestamp","bsm id","secMark","latency","latitude","longitude","speed(m/s)","heading","elevation(m)","accel_long(m/s^2)"],
+    },
+    "SPAT" : {
+        "name" : "SPAT",
+        "message_spec" : "J2735",
+        "message_id_hex" : "0013",
+        "column_headers" : ["packetIndex","packetTimestamp","spatTimestamp","intersectionID","intersectionName"],
+    },
+    "MAP" : {
+        "name" : "MAP",
+        "message_spec" : "J2735",
+        "message_id_hex" : "0014",
+        "column_headers" : ["packetIndex","packetTimestamp","intersectionID"],
+    },
+    "Mobility-Request" : {
+        "name" : "Mobility-Request",
+        "message_spec" : "J2735",
+        "message_id_hex" : "00f2",
+        "column_headers" : ["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","planType","urgency","strategyParams","trajectoryStart","trajectory","expiration"],
+    },
+    "Mobility-Response" : {
+        "name" : "Mobility-Response",
+        "message_spec" : "J2735",
+        "message_id_hex" : "00f3",
+        "column_headers" : ["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","urgency","isAccepted"],
+    },
+    "Mobility-Path" : {
+        "name" : "Mobility-Path",
+        "message_spec" : "J2735",
+        "message_id_hex" : "00f0",
+        "column_headers" : ["packetIndex","packetTimestamp","hostStaticId","hostBSMId","planId","location","trajectory"],
+    },
+    "Mobility-Operations" : {
+        "name" : "Mobility-Operations",
+        "message_spec" : "J2735",
+        "message_id_hex" : "00f1",
+        "column_headers" : ["packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","operationParams"],
+    },
+    "Platooning" : {
+        "name" : "Platooning",
+        "message_spec" : "J2735",
+        "message_id_hex" : "NA",
+        "column_headers" : ["platooningPacketType","packetIndex","packetTimestamp","headerTimestamp","hostStaticId","hostBSMId","planId","strategy","other_params"],
+    },
+    "Traffic-Control-Request" : {
+        "name" : "Traffic-Control-Request",
+        "message_spec" : "J2735",
+        "message_id_hex" : "00f4",
+        "column_headers" : ["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","scale","bounds"],
+    },
+    "Traffic-Control-Message" : {
+        "name" : "Traffic-Control-Message",
+        "message_spec" : "J2735",
+        "message_id_hex" : "00f5",
+        "column_headers" : ["packetIndex","packetTimestamp","reqid_hex","reqid_dec_list","reqseq","msgtot","msgnum","tcmID_hex","tcmID_dec_list","updated","label","tcID_hex","tcID_dec_list","vclasses","schedule","detail","geometry"],
+    },
+    "J2735-Payload" : {
+        "name" : "J2735-Payload",
+        "message_spec" : "J2735",
+        "message_id_hex" : "NA",
+        "column_headers" : ["packetIndex","packetTimestamp"],
+    },
+    "Sensor-Data-Sharing-Message" : {
+        "name" : "Sensor-Data-Sharing-Message",
+        "message_spec" : "J3224",
+        "message_id_hex" : "0029",
+        "column_headers" : ["packetIndex","packetTimestamp"],
+    },
+    "J3224-Payload" : {
+        "name" : "J3224-Payload",
+        "message_spec" : "J3224",
+        "message_id_hex" : "NA",
+        "column_headers" : ["packetIndex","packetTimestamp"],
+    },
+}
+
+message_id_hex_lookup = {}
+
+for message_type in message_types:
+    message_id_hex_lookup[str(message_types[message_type]["message_id_hex"])] = message_type
+    message_types[message_type]["outfile_name"] = decoded_output_folder + "/" + outfile.replace(".csv","_" + message_types[message_type]["name"] + ".csv")
+    message_types[message_type]["outfile_obj"] = open(message_types[message_type]["outfile_name"],'w',newline='')
+    message_types[message_type]["outfile_writer"] = csv.writer(message_types[message_type]["outfile_obj"])
+    message_types[message_type]["column_headers"] += ["hex_payload","JSON"]
+    message_types[message_type]["outfile_writer"].writerow(message_types[message_type]["column_headers"])
+
 
 
 infile_reader = csv.reader(infile_obj,delimiter=',')
@@ -145,16 +211,35 @@ message_type_id_column = 4
 
 for packet in packet_list:
 
-    msg = J2735.DSRC.MessageFrame
-    #print("hex: " + packet[trimmed_packet_column] + " byte length: " + str(len(packet[trimmed_packet_column])))
-    try:
-        msg.from_uper(unhexlify(packet[trimmed_packet_column]))
-    except Exception as e:
-        print("\n  DECODING ERROR: " + str(e))
-        print("    [" + str(packet[0])+'] ' + str(packet[2]) )
-        continue
+    message_type_obj = message_types[message_id_hex_lookup[packet[message_type_id_column]]]
 
-    j2735_payload_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(packet[trimmed_packet_column])])
+    msg_row = []
+    platoon_row = []
+    j2735_payload_row = []
+    j3224_payload_row = []
+
+    if packet[message_type_id_column] == "0029":
+        try:
+            msg = SDSMDecoder.sdsm_decoder(packet[trimmed_packet_column])
+        except Exception as e:
+            print("\n  DECODING ERROR: " + str(e))
+            print("    [" + str(packet[0])+'] ' + str(packet[2]) )
+            continue
+        
+        j3224_payload_row = [str(packet[0]),str(packet[1]),str(packet[trimmed_packet_column])]
+
+    else:
+
+        msg = J2735.DSRC.MessageFrame
+        #print("hex: " + packet[trimmed_packet_column] + " byte length: " + str(len(packet[trimmed_packet_column])))
+        try:
+            msg.from_uper(unhexlify(packet[trimmed_packet_column]))
+        except Exception as e:
+            print("\n  DECODING ERROR: " + str(e))
+            print("    [" + str(packet[0])+'] ' + str(packet[2]) )
+            continue
+        
+        j2735_payload_row = [str(packet[0]),str(packet[1]),str(packet[trimmed_packet_column])]
 
     if (packet[message_type_id_column] == "0013") :
         # print("Parsing SPAT")
@@ -173,25 +258,22 @@ for packet in packet_list:
                 currentState = str(msg()['value'][1]['intersections'][0]['states'][phase]['state-time-speed'][0]['eventState'])
                 spatPhaseArray[currentPhase] = currentState
             
-            spatRowList = [str(packet[0]),str(packet[1]),str(spatTimestamp),str(intersectionID),intersectionName ]
+            msg_row = [str(packet[0]),str(packet[1]),str(spatTimestamp),str(intersectionID),intersectionName ]
             
             for printPhase in range(1,numSpatPhases):
-                spatRowList.append(spatPhaseArray[printPhase])
-            spatRowList.append(str(packet[trimmed_packet_column]))
+                msg_row.append(spatPhaseArray[printPhase])
+            msg_row.append(str(packet[trimmed_packet_column]))
             
-            spat_outfile_writer.writerow(spatRowList)
         except:
             print("ERROR PARSING DECODED PACKET: " )
             print("[" + str(packet[0])+"] " + str(packet[5]) + " - " + str(msg()['value']))
 
-            spatRowList = [str(packet[0]),str(packet[1]),"","",""]
+            msg_row = [str(packet[0]),str(packet[1]),"","",""]
             
             for printPhase in range(1,numSpatPhases):
-                spatRowList.append("")
+                msg_row.append("")
 
-            spatRowList.append(str(packet[trimmed_packet_column]))
-            
-            spat_outfile_writer.writerow(spatRowList)
+            msg_row.append(str(packet[trimmed_packet_column]))
 
     elif (packet[message_type_id_column] == "0012") :
         # print("Parsing MAP")
@@ -202,12 +284,13 @@ for packet in packet_list:
             longstr = msg()['value'][1]['intersections'][0]['refPoint']['long']
             laneWidth = msg()['value'][1]['intersections'][0]['laneWidth']
 
-            map_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(intersectionID),str(lat/10000000.0),str(longstr/10000000.0),str(laneWidth),str(packet[trimmed_packet_column])])
+            msg_row = [str(packet[0]),str(packet[1]),str(intersectionID),str(lat/10000000.0),str(longstr/10000000.0),str(laneWidth)]
+
         except:
             print("ERROR PARSING DECODED PACKET: " )
             print("[" + str(packet[0])+"] " + str(packet[5]) + " - " + str(msg()['value']))
 
-            map_outfile_writer.writerow([str(packet[0]),str(packet[1]),"","","","",str(packet[trimmed_packet_column])])
+            msg_row = [str(packet[0]),str(packet[1]),"","","",""]
 
     elif (packet[message_type_id_column] == "0014") : # if bsm , look for lat, long, speed along with time
         # print("Parsing BSM")
@@ -235,13 +318,13 @@ for packet in packet_list:
             
             latency_array.append(latency)
             
-            bsm_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(bsmId.hex()),str(secMark),str(latency),str(lat/10000000.0),str(longstr/10000000.0),str(speed_converted),str(heading),str(accel_long_converted), str(elevation),str(packet[trimmed_packet_column])])
+            msg_row = [str(packet[0]),str(packet[1]),str(bsmId.hex()),str(secMark),str(latency),str(lat/10000000.0),str(longstr/10000000.0),str(speed_converted),str(heading),str(accel_long_converted), str(elevation)]
+
         except:
             print("ERROR PARSING DECODED PACKET: " )
             print("[" + str(packet[0])+"] " + str(packet[5]) + " - " + str(msg()['value']) )
 
-            bsm_outfile_writer.writerow([str(packet[0]),str(packet[1]),"","","","","","","","","",str(packet[trimmed_packet_column])])
-
+            msg_row = [str(packet[0]),str(packet[1]),"","","","","","","","","",str(packet[trimmed_packet_column])]
 
     elif (packet[message_type_id_column] == "00f0") :
         # print("Parsing Mobility Request")
@@ -258,8 +341,10 @@ for packet in packet_list:
         trajectory = msg()['value'][1]['body']['trajectory']
         expiration = msg()['value'][1]['body']['expiration']
 
-        mob_req_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
-        platooning_outfile_writer.writerow(["Mobility_Request" , str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)])
+        msg_row = [str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)]
+
+        platoon_row = ["Mobility_Request" , str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(planType),str(urgency),str(strategyParams),str(trajectoryStart),str(trajectory),str(expiration)]
+
 
     elif (packet[message_type_id_column] == "00f1") :
         # print("Parsing Mobility Response")
@@ -271,8 +356,8 @@ for packet in packet_list:
         urgency = msg()['value'][1]['body']['urgency']
         isAccepted = msg()['value'][1]['body']['isAccepted']
 
-        mob_resp_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(urgency),str(isAccepted)])
-        platooning_outfile_writer.writerow(["Mobility_Response",str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(urgency),str(isAccepted)])
+        msg_row = [str(packet[0]),str(packet[1]), str(headerTimestamp),str(hostStaticId),str(hostBSMId),str(planId),str(urgency),str(isAccepted)]
+        platoon_row = ["Mobility_Response",str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(urgency),str(isAccepted)]
 
     elif (packet[message_type_id_column] == "00f2") :
         # print("Parsing Mobility Path")
@@ -283,7 +368,7 @@ for packet in packet_list:
         location = msg()['value'][1]['body']['location']
         trajectory = msg()['value'][1]['body']['trajectory']
 
-        mob_path_outfile_writer.writerow([str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(location),str(trajectory)])
+        msg_row = [str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(location),str(trajectory)]
 
     elif (packet[message_type_id_column] == "00f3") :
         # print("Parsing Mobility Operations")
@@ -295,8 +380,8 @@ for packet in packet_list:
         strategy = msg()['value'][1]['body']['strategy']
         operationParams = msg()['value'][1]['body']['operationParams']
         
-        mob_ops_outfile_writer.writerow([str(packet[0]),str(packet[1]), str(headerTimestamp) ,str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(operationParams)])
-        platooning_outfile_writer.writerow(["Mobility_Operations",str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(operationParams)])
+        msg_row = [str(packet[0]),str(packet[1]), str(headerTimestamp) ,str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(operationParams)]
+        platoon_row = ["Mobility_Operations",str(packet[0]),str(packet[1]),str(hostStaticId),str(hostBSMId),str(planId),str(strategy),str(operationParams)]
 
     elif (packet[message_type_id_column] == "00f4") :
         # print("Parsing Mobility TCR")
@@ -309,8 +394,7 @@ for packet in packet_list:
         newReqId = str(convID(reqid, 8)).replace(",", " ")
         reqid = reqid.hex()
         
-
-        tcr_outfile_writer.writerow([str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(scale),str(bounds),str(packet[trimmed_packet_column])])
+        msg_row = [str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(scale),str(bounds)]
     
     elif (packet[message_type_id_column] == "00f5") :
         # print("Parsing TCM")
@@ -336,56 +420,47 @@ for packet in packet_list:
         tcmId = tcmId.hex()
         tcId = tcId.hex()
         
+        msg_row = [str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(msgtot),str(msgnum),tcmId,newTcmId,str(updated),str(label),tcId,newtcId,str(vclasses),str(schedule),str(detail),str(geometry),]
 
-        tcm_outfile_writer.writerow([str(packet[0]),str(packet[1]),reqid,newReqId,str(reqseq),str(msgtot),str(msgnum),tcmId,newTcmId,str(updated),str(label),tcId,newtcId,str(vclasses),str(schedule),str(detail),str(geometry),str(packet[trimmed_packet_column])])
+    elif (packet[message_type_id_column] == "0029") :
+        # print("Parsing SDSM")
+        # print("Msg: " + str( msg))
+
+        msg_row = [str(packet[0]),str(packet[1])]
+
     else:
         print("\nERROR: NO MATCHING MESSAGE TYPES FOR PAYLOAD: ")
         print("[" + str(packet[0])+'] ' + str(packet[2]) )
 
 
-bsm_outfile_obj.close()
-spat_outfile_obj.close()
-map_outfile_obj.close()
-mob_req_outfile_obj.close()
-mob_resp_outfile_obj.close()
-mob_path_outfile_obj.close()
-mob_ops_outfile_obj.close()
-platooning_outfile_obj.close()
-tcr_outfile_obj.close()
-tcm_outfile_obj.close()
+    # append hex payload and JSON
+    msg_row.append(str(packet[trimmed_packet_column]))
+    msg_row.append(str(msg))
 
-bsm_outfile_obj_read         = open(decoded_output_folder + "/" + outfile.replace(".csv","_BSM.csv"))
-spat_outfile_obj_read        = open(decoded_output_folder + "/" + outfile.replace(".csv","_SPAT.csv"))
-map_outfile_obj_read         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_MAP.csv"))
-mob_req_outfile_obj_read     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Request.csv"))
-mob_resp_outfile_obj_read    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Response.csv"))
-mob_path_outfile_obj_read    = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Path.csv"))
-mob_ops_outfile_obj_read     = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Mobility-Operations.csv"))
-platooning_outfile_obj_read  = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Platooning.csv"))
-tcr_outfile_obj_read         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Request.csv"))
-tcm_outfile_obj_read         = open(decoded_output_folder + "/" +  outfile.replace(".csv","_Traffic-Control-Message.csv"))
+    # print("msg_row: " + str(msg_row))
+    # write row
+    if msg_row:
+        message_type_obj["outfile_writer"].writerow(msg_row)
 
-bsm_outfile_rows         = sum(1 for line in bsm_outfile_obj_read)
-spat_outfile_rows        = sum(1 for line in spat_outfile_obj_read)
-map_outfile_rows         = sum(1 for line in map_outfile_obj_read)
-mob_req_outfile_rows     = sum(1 for line in mob_req_outfile_obj_read)
-mob_resp_outfile_rows    = sum(1 for line in mob_resp_outfile_obj_read)
-mob_path_outfile_rows    = sum(1 for line in mob_path_outfile_obj_read)
-mob_ops_outfile_rows     = sum(1 for line in mob_ops_outfile_obj_read)
-platooning_outfile_rows  = sum(1 for line in platooning_outfile_obj_read)
-tcr_outfile_rows         = sum(1 for line in tcr_outfile_obj_read)
-tcm_outfile_rows         = sum(1 for line in tcm_outfile_obj_read)
+    if platoon_row:
+        message_types["Platooning"]["outfile_writer"].writerow(msg_row)
 
-print("\nBSM: " + str(bsm_outfile_rows -1))
-print("SPAT: " + str(spat_outfile_rows -1))
-print("MAP: " + str(map_outfile_rows-1))
-print("MAP: " + str(mob_req_outfile_rows-1))
-print("MOB RESP: " + str(mob_resp_outfile_rows-1))
-print("MOB PATH: " + str(mob_path_outfile_rows-1))
-print("MOB OPS: " + str(mob_ops_outfile_rows-1))
-print("PLATOONING: " + str(platooning_outfile_rows-1))
-print("TCR: " + str(tcr_outfile_rows-1))
-print("TCM: " + str(tcr_outfile_rows-1))
+    if j2735_payload_row:
+        message_types["J2735-Payload"]["outfile_writer"].writerow(msg_row)
+    
+    if j3224_payload_row:
+        message_types["J3224-Payload"]["outfile_writer"].writerow(msg_row)
+
+
+
+
+print("")
+
+for message_type in message_types:
+    message_types[message_type]["outfile_obj"].close()
+    message_types[message_type]["outfile_obj_read"] = open(message_types[message_type]["outfile_name"])
+    message_types[message_type]["num_outfile_rows"] = sum(1 for line in message_types[message_type]["outfile_obj_read"])
+    print(message_types[message_type]["name"] + ": " + str(message_types[message_type]["num_outfile_rows"] -1))
 
 # if (payload_type_id == "0014") : 
 #     print("")

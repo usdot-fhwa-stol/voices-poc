@@ -64,12 +64,16 @@ message_type_list = [
         'id'    : '00f3'
     },
     {
-        'name'  : 'TraffiC Control Request',
+        'name'  : 'Traffic Control Request',
         'id'    : '00f4'
     },
     {
-        'name'  : 'TraffiC Control Message',
+        'name'  : 'Traffic Control Message',
         'id'    : '00f5'
+    },
+    {
+        'name'  : 'Sensor Data Sharing Message',
+        'id'    : '0029'
     }
 ]
 

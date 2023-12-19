@@ -36,19 +36,6 @@ directory="`dirname \"$0\"`"
 directory="`( cd \"$directory\" && cd ../ && pwd )`"
 cd $directory
 
-# Section propably not needed. I'd like to place files in the data folder before running script and the script will just add to the existing data folder
-#if [ -d data ]; then
-#	printf "\nExisting data folder found, would you like to delete it? [y/n]"
-	
-#	read delete_old_data
-#	if [[ $delete_old_data =~ ^[Yy]$ ]]; then
-#		rm -rf data
-#	else
-#		printf "\nPlease move or rename existing data folder and try again"
-#		exit
-#	fi
-#fi
-
 if [ -d data ]; then
 	printf "\nFiles found in data directory:"
 else
@@ -134,10 +121,6 @@ else
         #searchForMessageTypeIdInFile $directory/data/tsharkOutput/$raw_packet_output_file $message_type_id 10
                 
 fi
-
-# echo
-# echo "----- EARLY EXIT FOR TESTING -----"
-# exit 
 
 }
 
@@ -246,9 +229,8 @@ processing(){
   if [ "$message_type" == "BSM" ]; then
   	generateKml
   fi
-  printf '\n----- DECODING COMPLETE -----\n'
+  echo " "
+  echo "----- DECODING COMPLETE -----"
 }
 
 processing
-
-trap 'ERROR: $LINENOE' ERR
