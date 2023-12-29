@@ -1,10 +1,10 @@
 #
-# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t usdotfhwastoldev/voices:pilot2-event2-0.0.4 . --progress=plain -f pilot2-event2_Dockerfile
+# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build -t usdotfhwastoldev/voices:pilot2-event2-0.0.2 . --progress=plain -f pilot2-event2_Dockerfile
 #
 
 FROM ubuntu:20.04
 
-LABEL version="0.0.1"
+LABEL version="0.0.2"
 LABEL description="VOICES Docker image for Pilot 2 Event 2"
 
 SHELL ["/bin/bash", "-ec"]
@@ -59,7 +59,9 @@ RUN apt-get update && \
 
 # INSTALL python packages
 
-RUN pip install numpy pandas pygame pycrate traci lxml && \
+RUN pip install numpy pygame pycrate traci lxml networkx pynput && \
+    # have to install pandas separately because it requires a specific version of numpy
+    pip install pandas && \
     rm -rf /root/.cache
 
 COPY ./lib/COPY /home

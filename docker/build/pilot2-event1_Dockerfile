@@ -59,7 +59,9 @@ RUN apt-get update && \
 
 # INSTALL python packages
 
-RUN pip install numpy pandas pygame pycrate traci lxml && \
+RUN pip install numpy pygame pycrate traci lxml networkx pynput && \
+    # have to install pandas separately because it requires a specific version of numpy
+    pip install pandas && \
     rm -rf /root/.cache
 
 COPY ../lib/COPY /home

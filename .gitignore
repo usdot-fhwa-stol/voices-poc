@@ -1,13 +1,11 @@
 #ignore data and pycache for j2735 decoder
 scripts/encoding_decoding_tools/J2735_pcap_decoder/data/
-scripts/encoding_decoding_tools/decode_single_packet/__pycache__/
-scripts/encoding_decoding_tools/encode_single_packet/__pycache__/
 
 #ignore log directories
 logs/
 
-#ignore carla script pycache
-scripts/carla_python_scripts/__pycache__/
+#ignore all pycache
+**/__pycache__/
 
 #ignore scripts working dir
 scripts/carla_python_scripts/misc
@@ -30,4 +28,3 @@ docker/build/lib/OLD
 
 
 # ignore SUMO pycache
-scripts/carla_python_scripts/Sumo/sumo_integration/__pycache__
