@@ -103,9 +103,20 @@ def main():
         spawn_points = world.get_map().get_spawn_points()
 
 
-        for this_spawn_point in spawn_points:
+        for i_s,this_spawn_point in enumerate(spawn_points):
             print(str(this_spawn_point.location))
-            world.debug.draw_point( carla.Location(this_spawn_point.location.x,this_spawn_point.location.y,this_spawn_point.location.z), size=.1, color=carla.Color(r=255,g=0,b=0), life_time=100)
+            this_location = carla.Location(this_spawn_point.location.x,
+                                                   this_spawn_point.location.y,this_spawn_point.location.z)
+            world.debug.draw_point( this_location,
+            size=.1,
+            color=carla.Color(r=255,g=0,b=0),
+            life_time=100)
+
+            world.debug.draw_string(this_location,
+                                    str(i_s),
+                                    draw_shadow=False,color=carla.Color(r=255,g=0, b=0),
+                                    life_time=100,
+                                    persistent_lines=True)
         
     except Exception as err_msg:
         print(str(err_msg))
