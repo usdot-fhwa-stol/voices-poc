@@ -9,13 +9,15 @@ env_set_scenario_config_path=$HOME/voices-poc/config/scenario_config/$VUG_SCENAR
 # $HOME/.voices_scenario_config_link = actual scenario config link
 # 
 # 
-# .voices_config_docker = source $HOME/.voices_site_config_link + $HOME/.voices_scenario_config_link + overwrite vars pertaining to locations within docker container
+# .voices_site_config_docker = source $HOME/.voices_site_config_link + overwrite vars pertaining to locations within docker container
+# .voices_scenario_config_docker = source $HOME/.voices_scenario_config_link + overwrite vars pertaining to locations within docker container
 # 
 # therefore:
 # 
-# $HOME/.voices_config --> $HOME/.voices_config_docker = source $HOME/.voices_site_config_link + $HOME/.voices_scenario_config_link + overwrites
+# $HOME/.voices_site_config --> $HOME/.voices_site_config_docker = source $HOME/.voices_site_config_link + overwrites
+# $HOME/.voices_scenario_config --> $HOME/.voices_scenario_config_docker = source $HOME/.voices_scenario_config_link + overwrites
 # 
-# $HOME/.voices_config_docker exists because $HOME/.voices_config must be a sym link for run_scripts
+# $HOME/.voices_site_config_docker and $HOME/.voices_site_config_docker exist because $HOME/.voices_site_config and $HOME/.voices_scenario_config must be a sym link for run_scripts
 # 
 
 if [ ! -f $env_set_site_config_path ]; then
