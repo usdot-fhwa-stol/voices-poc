@@ -2,7 +2,7 @@
 
 source /home/carla/start_scripts/setup-carla-docker.sh
 
-if [[ ! $VUG_START_CARLA == true ]]; then
+if [[ ! $VUG_DOCKER_START_CARLA == true ]]; then
    echo "CARLA CONFIGURED NOT TO START"
    exit 1
 fi
