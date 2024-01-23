@@ -5,7 +5,7 @@ stopDocker()
 
 echo
 echo STOPPING AND REMOVING VUG CONTAINERS
-$docker_compose_cmd -f pilot2-event2_docker-compose.yml down
+$docker_compose_cmd -f pilot2-event2-no_carla_docker-compose.yml down
 
 }
 
@@ -69,4 +69,4 @@ fi
 
 trap stopDocker SIGINT
 
-$docker_compose_cmd -f pilot2-event2-win_docker-compose.yml up
+$docker_compose_cmd -f pilot2-event2-no_carla_docker-compose.yml up
