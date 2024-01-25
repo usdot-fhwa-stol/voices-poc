@@ -29,8 +29,8 @@
             <CARLA manual="true" generate_bsms="true"></CARLA>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300910" longitudeInDegrees="-83.699016" heightAboveEllipsoidInMeters="237.1"/>
-            <!-- x=27.005527 y=-35.417625 yaw=90 -->
+            <GeodeticPosition latitudeInDegrees="42.30024832362088" longitudeInDegrees="-83.69862420972059" heightAboveEllipsoidInMeters="237"/>
+            <!-- x=54.25676727294922 y=-38.415374755859375 yaw=90 -->
             <Heading>90</Heading>
         </initialTSPI>
     </vehicle>
@@ -141,7 +141,7 @@
 
   <simulations>
 
-    <simulation name="CARLA-FHWA-L" type="CARLA">
+    <simulation name="CARLA-FHWA-3" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
     
