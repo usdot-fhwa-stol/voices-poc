@@ -186,7 +186,7 @@ try:
     # ]
 
     event2_spawn = {
-            "veh_in_order" : ["FHWA", "ORNL", "ANL", "UCLA"],
+            "veh_in_order" : ["MCITY","FHWA", "ORNL", "ANL", "UCLA"],
             "wp_btwn_veh" : 5,
             "start_point" : carla.Location(x=59.296265, y=67.242165, z=235.812256),
             "end_point" : carla.Location(x=99.357674, y=-83.244278, z=242.828964),

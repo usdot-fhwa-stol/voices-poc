@@ -1105,7 +1105,7 @@ def performance_post_processing(results_file):
     
     if args.results_summary_prefix:
 
-        results_summary_outfile_obj = open("results/" + args.results_summary_prefix + "_results_summary.csv",'a')
+        results_summary_outfile_obj = open(results_base_dir + "/" + args.results_summary_prefix + "_results_summary.csv",'a')
         results_summary_outfile_writer = csv.writer(results_summary_outfile_obj)
 
         
@@ -2458,19 +2458,21 @@ if args.outfile == None:
 else:
     outfile = str(clean_name(args.outfile))
 
+results_base_dir = "results/" + args.results_summary_prefix + "_results" 
+
 try:
-    os.mkdir("results")
+    os.makedirs(results_base_dir)
 except:
     pass
 
-results_outfile_obj = open("results/" + outfile + ".csv",'w',newline='')
+results_outfile_obj = open(results_base_dir + "/" + outfile + ".csv",'w',newline='')
 results_outfile_writer = csv.writer(results_outfile_obj)
 
 calculate_performance_metrics()
 
 results_outfile_obj.close()
 
-performance_post_processing("results/" + outfile + ".csv")
+performance_post_processing(results_base_dir + "/" + outfile + ".csv")
 
 
 

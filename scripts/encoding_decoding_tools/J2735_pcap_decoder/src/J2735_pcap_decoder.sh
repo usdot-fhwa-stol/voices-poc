@@ -30,11 +30,58 @@
 set -e
 # set -x
 
+function print_help {
+	echo
+	echo "usage: J2735_pcap_decoder.sh [-f <pcap file>]"
+	echo
+	echo "Decode J2735 pcap data"
+	echo
+	echo "optional arguments:"
+	echo "    -f <pcap file> , --file <pcap file>   	input pcap file to be decoded"
+	echo "    --help             						show help"
+	echo
+}
+
+
+
 #this takes the location of the executed script as opposed to the current location
 #this allows it to be run anywhere
 directory="`dirname \"$0\"`"
 directory="`( cd \"$directory\" && cd ../ && pwd )`"
 cd $directory
+
+no_tick_enabled=false
+timeSyncEnabled=false
+low_quality_flag=""
+next_flag_is_input_file=false
+input_file=""
+
+
+for arg in "$@"
+do
+	if [ "$next_flag_is_input_file" = true ]; then
+
+		input_file=$arg
+		next_flag_is_input_file=false
+
+	elif [[ $arg == "-f" ]] || [[ $arg == "--file" ]]; then
+		
+		next_flag_is_input_file=true
+
+	elif [[ $arg == "--help" ]]; then
+		
+		print_help
+		exit
+
+	elif [[ $arg != "" ]]; then
+		
+		echo
+		echo "Invalid argument: $arg"
+		print_help
+		exit
+
+	fi
+done
 
 if [ -d data ]; then
 	printf "\nFiles found in data directory:"
@@ -54,28 +101,7 @@ payloadType="hex"
 messageTypeIdFound=false
 
 extractPackets(){ 
-echo
-cd $directory/data
-echo 
-{ 
-	ls *.pcap
-} || { 
-	echo
-	echo "No pcaps found in data directory" 
-	exit 
-}
 
-while true; do
-	echo
-	read -rep "Input filename from list: " pcap_file_to_read
-	if [ ! -f $pcap_file_to_read ]; then
-		echo "    [!!!] File not found!"
-	else
-		break
-	fi
-done
-
-input_pcap_base_name=${pcap_file_to_read%".pcap"}
 #echo $input_pcap_base_name
 
 #tshark -r $pcap_file_to_read --disable-protocol wsmp -Tfields -Eseparator=, -e frame.time_epoch -e data.data > $directory/data/tsharkOutput/$file_to_write
@@ -155,10 +181,10 @@ decodePackets(){
 
 
 generateKml(){ 
-echo 
-echo "Generating KML from CSV"
-	
-mkdir -p $directory/data/kmlOutput
+	echo 
+	echo "Generating KML from CSV"
+		
+	mkdir -p $directory/data/kmlOutput
 
 cat << EOF > $directory/data/kmlOutput/kmlOutput.kml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -223,14 +249,43 @@ EOF
 
 
 processing(){
-  extractPackets
-  getPayload
-  decodePackets
-  if [ "$message_type" == "BSM" ]; then
-  	generateKml
-  fi
-  echo " "
-  echo "----- DECODING COMPLETE -----"
+	
+	echo
+	cd $directory/data
+	if [[ $input_file == "" ]]; then
+		
+		
+		echo 
+		{ 
+			ls *.pcap
+		} || { 
+			echo
+			echo "No pcaps found in data directory" 
+			exit 
+		}
+
+		while true; do
+			echo
+			read -rep "Input filename from list: " pcap_file_to_read
+			if [ ! -f $pcap_file_to_read ]; then
+				echo "    [!!!] File not found!"
+			else
+				break
+			fi
+		done
+
+		input_pcap_base_name=${pcap_file_to_read%".pcap"}	
+
+	fi
+
+	extractPackets
+  	getPayload
+  	decodePackets
+	if [ "$message_type" == "BSM" ]; then
+		generateKml
+	fi
+	echo " "
+	echo "----- DECODING COMPLETE -----"
 }
 
 processing
