@@ -35,10 +35,7 @@
         </initialTSPI>
     </vehicle>
 
-    <vehicle name="ANL-DYNO-1" bsmid="f03ad623" type="vehicle.nissan.micra" owner="CARLA-ANL-1" material="Aluminum" lvcIndicator="Live">
-        <userData>
-            <CARLA manual="true" generate_bsms="true"></CARLA>
-        </userData>
+    <vehicle name="ANL-DYNO-1" bsmid="f03ad623" type="vehicle.nissan.micra" owner="CARLA-ANL-2" material="Aluminum" lvcIndicator="Live">
         <initialTSPI>
             <GeodeticPosition latitudeInDegrees="42.300508" longitudeInDegrees="-83.699182" heightAboveEllipsoidInMeters="250"/>
             <!-- x=8.472660 y=8.384986 yaw=187 -->
@@ -162,6 +159,10 @@
     </simulation>
 
     <simulation name="CARLA-ANL-1" type="CARLA">
+      <WeatherState>ClearNoon</WeatherState>
+    </simulation>
+
+    <simulation name="CARLA-ANL-2" type="CARLA">
       <WeatherState>ClearNoon</WeatherState>
     </simulation>
 
