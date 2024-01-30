@@ -40,16 +40,21 @@ import argparse
 #   start:  2023-11-17 20:38:36
 #   end:    2023-11-17 20:40:09
 
+# even1 take 2: 
+
+#   start:  2023-12-08 17:35:10
+#   end:    2023-12-08 17:43:05
+
 
 data_types = {
     "J2735-SPAT": {
         "pcap_file_pattern" : "J2735-Payload",
         "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
     },
-    "J2735-BSM": {
-        "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
-    },
+    # "J2735-BSM": {
+    #     "pcap_file_pattern" : "J2735-Payload",
+    #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
+    # },
     # "J2735-MAP": {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]

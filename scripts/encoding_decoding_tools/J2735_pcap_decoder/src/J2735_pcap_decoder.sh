@@ -46,29 +46,45 @@ function print_help {
 
 #this takes the location of the executed script as opposed to the current location
 #this allows it to be run anywhere
-directory="`dirname \"$0\"`"
-directory="`( cd \"$directory\" && cd ../ && pwd )`"
+executed_directory="`dirname \"$0\"`"
+directory="`( cd \"$executed_directory\" && cd ../ && pwd )`"
+
 cd $directory
 
 no_tick_enabled=false
 timeSyncEnabled=false
 low_quality_flag=""
 next_flag_is_input_file=false
-input_file=""
+pcap_file_to_read_arg=""
+decoded_files_dest_dir_arg=""
+keep_old_files_arg=false
 
 
 for arg in "$@"
 do
 	if [ "$next_flag_is_input_file" = true ]; then
 
-		input_file=$arg
+		pcap_file_to_read_arg=$arg
 		next_flag_is_input_file=false
+	
+	elif [ "$next_flag_is_output_file" = true ]; then
 
-	elif [[ $arg == "-f" ]] || [[ $arg == "--file" ]]; then
+		decoded_files_dest_dir_arg=$arg
+		next_flag_is_output_file=false
+
+	elif [[ $arg == "-i" ]] || [[ $arg == "--infile" ]]; then
 		
 		next_flag_is_input_file=true
 
-	elif [[ $arg == "--help" ]]; then
+	elif [[ $arg == "-o" ]] || [[ $arg == "--outfile" ]]; then
+		
+		next_flag_is_output_file=true
+
+	elif [[ $arg == "--keep-old-files" ]]; then
+		
+		keep_old_files_arg=true
+		
+	elif [[ $arg == "-h" ]] || [[ $arg == "--help" ]]; then
 		
 		print_help
 		exit
@@ -161,21 +177,31 @@ getPayload(){
 
 
 decodePackets(){
-	cd $directory/data/payloadOutput
 
-	decoded_file=$input_pcap_base_name"_decoded_packets.csv"
-	python3 $directory/src/J2735decoder.py $parsed_tshark_file $decoded_file
+	if [ $decoded_files_dest_dir_arg == "" ]; then
 
-	decoded_output_file_pattern=$input_pcap_base_name"_decoded_packets"
-
-
-
-	if [ -d $directory/data/decodedOutput/$decoded_output_file_pattern ]; then
-		printf "\nResult files from previous decoding found, removing them"
-		rm -rf $directory/data/decodedOutput/$decoded_output_file_pattern
+		output_dest=$directory/data/decodedOutput/$input_pcap_base_name"_decoded_packets"
+	else
+		output_dest=$decoded_files_dest_dir_arg
 	fi
 
-	mv $decoded_output_file_pattern $directory/data/decodedOutput
+	cd $directory/data/payloadOutput
+
+	if [ -d $output_dest ] && [[ $keep_old_files_arg != true ]]; then
+		printf "\nResult files from previous decoding found, removing them"
+		rm -rf $output_dest
+	fi
+
+	decoded_file=$input_pcap_base_name"_decoded_packets.csv"
+	python3 $directory/src/J2735decoder.py $directory/data/payloadOutput/$parsed_tshark_file $decoded_file $output_dest
+
+	# decoded_output_file_pattern=$input_pcap_base_name"_decoded_packets"
+
+
+
+	
+
+	# mv $decoded_output_file_pattern $output_dest
 	
 }
 
@@ -251,8 +277,9 @@ EOF
 processing(){
 	
 	echo
-	cd $directory/data
-	if [[ $input_file == "" ]]; then
+	echo pcap_file_to_read_arg: $pcap_file_to_read_arg
+	if [[ $pcap_file_to_read_arg == "" ]]; then
+		cd $directory/data
 		
 		
 		echo 
@@ -270,13 +297,22 @@ processing(){
 			if [ ! -f $pcap_file_to_read ]; then
 				echo "    [!!!] File not found!"
 			else
+				
+				pcap_file_to_read=$directory/data/$pcap_file_to_read
 				break
 			fi
 		done
 
-		input_pcap_base_name=${pcap_file_to_read%".pcap"}	
+	else
+
+		pcap_file_to_read=$pcap_file_to_read_arg
 
 	fi
+
+	input_pcap_base_name_with_filetype=$(basename $pcap_file_to_read)
+	input_pcap_base_name=${input_pcap_base_name_with_filetype%".pcap"}	
+
+	echo input_pcap_base_name: $input_pcap_base_name
 
 	extractPackets
   	getPayload

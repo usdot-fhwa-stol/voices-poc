@@ -21,10 +21,11 @@ from binascii import unhexlify
 import J2735_201603_combined_voices_mr_fix as J2735
 
 decode_j3224 = True
-import SDSMDecoder
+
 
 try:
-    import SDSM as SDSM
+    import SDSMDecoder
+    # import SDSM as SDSM
 except Exception as errMsg:
     print("WARNING: Unable to import J3224 python library, skipping all J3224 messages")
     decode_j3224 = False
@@ -48,6 +49,9 @@ print("\n----- DECODING J2735 PACKETS -----")
 
 inFile = sys.argv[1]
 outfile = sys.argv[2]
+destination_dir = sys.argv[3]
+
+os.chdir(destination_dir)
 
 def extract_values(obj, key):
     """Pull all values of specified key from nested JSON."""
@@ -92,13 +96,13 @@ def convID(id, length):
 
 infile_obj = open(inFile,'r')
 
-decoded_output_folder = outfile.replace(".csv","")
+# decoded_output_folder = outfile.replace(".csv","")
 
-if os.path.exists(decoded_output_folder):
-    print("\nRemoving leftover files from previous failed run")
-    shutil.rmtree(decoded_output_folder)
+# if os.path.exists(decoded_output_folder):
+#     print("\nRemoving leftover files from previous failed run")
+#     shutil.rmtree(decoded_output_folder)
 
-os.makedirs(decoded_output_folder)
+# os.makedirs(decoded_output_folder)
 
 numSpatPhases = 31 #use one more than desired phases
 
@@ -192,7 +196,7 @@ message_id_hex_lookup = {}
 
 for message_type in message_types:
     message_id_hex_lookup[str(message_types[message_type]["message_id_hex"])] = message_type
-    message_types[message_type]["outfile_name"] = decoded_output_folder + "/" + outfile.replace(".csv","_" + message_types[message_type]["name"] + ".csv")
+    message_types[message_type]["outfile_name"] = outfile.replace(".csv","_" + message_types[message_type]["name"] + ".csv")
     message_types[message_type]["outfile_obj"] = open(message_types[message_type]["outfile_name"],'w',newline='')
     message_types[message_type]["outfile_writer"] = csv.writer(message_types[message_type]["outfile_obj"])
     message_types[message_type]["column_headers"] += ["hex_payload","JSON"]
@@ -435,7 +439,12 @@ for packet in packet_list:
 
     # append hex payload and JSON
     msg_row.append(str(packet[trimmed_packet_column]))
-    msg_row.append(str(msg))
+    try:
+        msg_json = msg()
+    except:
+        msg_json = msg
+
+    msg_row.append(msg_json)
 
     # print("msg_row: " + str(msg_row))
     # write row
@@ -460,7 +469,13 @@ for message_type in message_types:
     message_types[message_type]["outfile_obj"].close()
     message_types[message_type]["outfile_obj_read"] = open(message_types[message_type]["outfile_name"])
     message_types[message_type]["num_outfile_rows"] = sum(1 for line in message_types[message_type]["outfile_obj_read"])
-    print(message_types[message_type]["name"] + ": " + str(message_types[message_type]["num_outfile_rows"] -1))
+    num_messages = int(message_types[message_type]["num_outfile_rows"] -1)
+    print(message_types[message_type]["name"] + ": " + str(num_messages))
+    message_types[message_type]["outfile_obj"].close()
+
+    # if there are no messages we dont need to keep the empty file
+    if num_messages == 0:
+        os.remove(message_types[message_type]["outfile_name"])
 
 # if (payload_type_id == "0014") : 
 #     print("")
