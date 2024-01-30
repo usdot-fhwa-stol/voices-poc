@@ -109,6 +109,13 @@ if [[ $VUG_DOCKER_START_TRAFFIC_LIGHT_EG == true ]]; then
    sleep 5s
 fi
 
+if [[ $VUG_DOCKER_START_ENTITY_GENERATOR == true ]]; then
+   echo "STARTING TENA ENTITY GENERATOR"
+   $HOME/voices-poc/scripts/run_scripts/pilot2/src/start-entity-generator.sh &
+
+   sleep 5s
+fi
+
 if [[ $VUG_DOCKER_START_MANUAL_CARLA_VEHICLE == true ]]; then
    echo "STARTING MANUAL CARLA VEHICLE"
 

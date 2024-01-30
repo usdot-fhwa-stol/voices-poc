@@ -5,7 +5,7 @@ stopDocker()
 
 echo
 echo STOPPING AND REMOVING VUG CONTAINERS
-$docker_compose_cmd -f pilot2-event0_docker-compose.yml down
+$docker_compose_cmd -f start-pilot2-event0-win-docker.sh down
 
 }
 
