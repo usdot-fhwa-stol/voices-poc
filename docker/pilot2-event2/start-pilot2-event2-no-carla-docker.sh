@@ -69,4 +69,6 @@ fi
 
 trap stopDocker SIGINT
 
-$docker_compose_cmd -f pilot2-event2-no_carla_docker-compose.yml up
+$docker_compose_cmd -f pilot2-event2_no-carla_docker-compose.yml pull
+
+$docker_compose_cmd -f pilot2-event2_no-carla_docker-compose.yml up
