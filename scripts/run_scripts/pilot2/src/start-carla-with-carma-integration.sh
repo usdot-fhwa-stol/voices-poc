@@ -220,7 +220,7 @@ docker run \
 	   -it -d --rm \
        --name carma_carla_integration \
        --net=host \
-       usdotfhwastol/carma-carla-integration:K900-test
+       usdotfhwastol/carma-carla-integration:carma-system-4.4.3
 echo "------------------------exec---------------------------------"
 docker exec \
         -it \
