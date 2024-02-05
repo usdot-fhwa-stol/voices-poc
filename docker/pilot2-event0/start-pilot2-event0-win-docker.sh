@@ -69,4 +69,6 @@ fi
 
 trap stopDocker SIGINT
 
+$docker_compose_cmd -f pilot2-event0-win_docker-compose.yml pull
+
 $docker_compose_cmd -f pilot2-event0-win_docker-compose.yml up

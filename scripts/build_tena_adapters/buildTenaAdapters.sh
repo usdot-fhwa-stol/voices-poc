@@ -109,8 +109,10 @@ remoteCarlaDir=/home/carla
 #--------------------------------------------------------#
 
 middlewareVersion="MiddlewareSDK-v6.0.8"
+
 # boostVersion="TENA_boost_1.77.0.1_Library"
-vugCombinedVersion="VUG-VOICES-Combined-v0.14.4"
+# vugCombinedVersion="VUG-Combined-v1.0.0"
+
 
 vugThreadsVersion="vug-threads-2.2.0"
 vugUdbProtocolioVersion="vug-udp-protocolio-2.2.1"
