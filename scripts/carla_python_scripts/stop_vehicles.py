@@ -117,38 +117,52 @@ def main():
         
         #client = carla.Client()
         #client.set_timeout(10.0)
-        
-        vehicles = world.get_actors().filter('vehicle.*')
+        already_stopped_once = []
+
         if args.exclude:
             vehicles_to_exclude = (args.exclude).split(",")
         else:
             vehicles_to_exclude = []
-        for vehicle in vehicles:
-            print(vehicle)
-            print("attributes: " + str(vehicle.attributes))
-            print("location: " + str(vehicle.get_location()))
-            
-            if vehicle.attributes["role_name"] in vehicles_to_exclude:
-                print("Skipping: " + str(vehicle.attributes["role_name"]))
-                continue
-            # vehicle.attributes["color"] = "255,255,255"
-            # vehicle.destroy()
-            veh_control = carla.VehicleControl()
-            veh_control.hand_brake = True
-            vehicle.apply_control(veh_control)
 
-        time.sleep(5)
+        while True:
 
-        for vehicle in vehicles:
-            
-            
-            if vehicle.attributes["role_name"] in vehicles_to_exclude:
-                print("Skipping: " + str(vehicle.attributes["role_name"]))
-                continue
+            vehicles = world.get_actors().filter('vehicle.*')
 
-            veh_control = carla.VehicleControl()
-            veh_control.hand_brake = False
-            vehicle.apply_control(veh_control)
+            stopped_vehicles = []
+
+            print("Checking for new vehicles to stop...")
+
+            for vehicle in vehicles:
+                
+                if vehicle.attributes["role_name"] in vehicles_to_exclude:
+                    print("\tSkipping: " + str(vehicle.attributes["role_name"]))
+                    continue
+                elif vehicle.attributes["role_name"] in already_stopped_once:
+                    print("\tAlready stopped: " + str(vehicle.attributes["role_name"]))
+                    continue
+                
+                print(f'\tStopping vehicle: {vehicle.attributes["role_name"]}')
+                # print("attributes: " + str(vehicle.attributes))
+                # print("location: " + str(vehicle.get_location()))
+                veh_control = carla.VehicleControl()
+                veh_control.hand_brake = True
+                vehicle.apply_control(veh_control)
+
+                stopped_vehicles.append(vehicle)
+                already_stopped_once.append(vehicle.attributes["role_name"])
+
+
+            if len(stopped_vehicles) > 0:
+                time.sleep(5)
+
+                for vehicle in stopped_vehicles:
+
+                    veh_control = carla.VehicleControl()
+                    veh_control.hand_brake = False
+                    vehicle.apply_control(veh_control)
+
+            time.sleep(1)
+                
 
 
         
