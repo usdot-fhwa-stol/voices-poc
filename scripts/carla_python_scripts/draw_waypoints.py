@@ -53,10 +53,12 @@ args = argparser.parse_args()
 
 def draw_waypoints(world,map,waypoints,draw_arrows,veh_name):   
 
-    sampling_resolution = 0.5
+    print("SETTING UP MAP")
+    sampling_resolution = 2
     dao = GlobalRoutePlannerDAO(map, sampling_resolution)
     grp = GlobalRoutePlanner(dao)
     grp.setup()
+    print("FINISHED SETTING UP MAP")
 
     route_waypoints = []
     segment_endpoints = []
@@ -107,6 +109,8 @@ def draw_waypoints(world,map,waypoints,draw_arrows,veh_name):
     car_length = 3
     car_width = 2
 
+    midpoint_count = 0
+
     for i,waypoint in enumerate(route_waypoints):
         if draw_arrows:
             if i == 0:
@@ -155,8 +159,9 @@ def draw_waypoints(world,map,waypoints,draw_arrows,veh_name):
                     color=this_color, 
                     life_time=drawing_lifetime,
                     persistent_lines=True)
-            
-                world.debug.draw_string(mid_box_center,"             " + ' MID', draw_shadow=False,color=this_color, life_time=drawing_lifetime,persistent_lines=True)
+
+                midpoint_count += 1
+                world.debug.draw_string(mid_box_center,"" + 'MID_' + str(midpoint_count), draw_shadow=False,color=this_color, life_time=drawing_lifetime,persistent_lines=True)
             
             elif i % 12 == 0:
                 world.debug.draw_arrow(
@@ -175,7 +180,7 @@ def draw_waypoints(world,map,waypoints,draw_arrows,veh_name):
                     arrow_size=draw_arrow_size, 
                     color=carla.Color(r=0, g=50, b=255), 
                     life_time=drawing_lifetime)
-                # world.debug.draw_string(waypoint[0].transform.location, 'O', draw_shadow=False,color = carla.Color(r=0, g=50, b=255), life_time=drawing_lifetime,persistent_lines=True)
+                # world.debug.draw_string(waypoint[0].transform.location, str(i), draw_shadow=False,color = carla.Color(r=0, g=50, b=255), life_time=drawing_lifetime,persistent_lines=True)
 
         waypoint_data["index"].append(i)
         waypoint_data["x"].append(waypoint[0].transform.location.x)
@@ -203,13 +208,29 @@ try:
     world = client.get_world()
     map = world.get_map()
 
+    # event2_spawn = {
+    #         "veh_in_order" : ["MCITY","FHWA", "ORNL", "ANL", "UCLA"],
+    #         "wp_btwn_veh" : 5,
+    #         "waypoints" : [
+    #             carla.Location(x=26.685774, y=129.308929, z=232.633194), # start
+    #             carla.Location(x=59.296265, y=67.242165, z=235.812256),
+    #             carla.Location(x=99.357674, y=-83.244278, z=242.828964), # end
+    #         ],
+    # }
+
+    #loop
     event2_spawn = {
-            "veh_in_order" : ["MCITY","FHWA", "ORNL", "ANL", "UCLA"],
+            "veh_in_order" : ["MCITY"],#,"FHWA", "ORNL", "ANL", "UCLA"],
             "wp_btwn_veh" : 5,
             "waypoints" : [
-                carla.Location(x=26.685774, y=129.308929, z=232.633194), # start
-                carla.Location(x=59.296265, y=67.242165, z=235.812256),
-                carla.Location(x=99.357674, y=-83.244278, z=242.828964), # end
+                carla.Location(x=109.863434, y=-71.195778, z=242.707138),   # start
+                # carla.Location(x=108.970978, y=-13.807627, z=241.481613),   # mid 1
+                carla.Location(x=104.480377, y=58.634911, z=240.264954),    # mid 2
+                # carla.Location(x=94.442329, y=-31.296970, z=241.605209),  # mid 3
+                carla.Location(x=57.087952, y=-16.097208, z=241.074814),    # mid 4
+                #carla.Location(x=36.699238, y=72.143166, z=238.991302),     # mid 5
+                carla.Location(x=97.170250, y=-130.422379, z=245.237961),   # mid 6
+                carla.Location(x=113.994858, y=-114.580017, z=244.530579),  # end
             ],
     }
 
