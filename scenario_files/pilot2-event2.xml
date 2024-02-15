@@ -15,7 +15,7 @@
 
     <vehicle name="FHWA_CAR_3" bsmid="f03ad619" type="vehicle.audi.etron" owner="CARLA-FHWA-3" material="Aluminum" lvcIndicator="Live">
         <userData>
-            <CARLA generate_bsms="true"></CARLA>
+            <CARLA manual="true" generate_bsms="false"></CARLA>
         </userData>
         <initialTSPI>
             <GeodeticPosition latitudeInDegrees="42.30007647208245" longitudeInDegrees="-83.69859552000251" heightAboveEllipsoidInMeters="250"/>
@@ -54,31 +54,9 @@
         </initialTSPI>
     </vehicle>
 
-    <vehicle name="FHWA-SUMO-01" bsmid="f03ad628" type="vehicle.volkswagen.t2" owner="CARLA-FHWA-3" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="MCITY-TERASIM-01" bsmid="f03ad622" type="vehicle.audi.a2" owner="CARLA-MCITY-2" material="Aluminum" lvcIndicator="Live">
         <userData>
-            <CARMA CARLAcosimulationIdentifier="CARLA-FHWA-3" roleName="FHWA-SUMO-01" generate_bsms="true"/>
-        </userData>
-        <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.301177" longitudeInDegrees="-83.698684" heightAboveEllipsoidInMeters="250"/>
-            <!-- x=49.363831 y=-65.975754 yaw=179 -->
-            <Heading>179</Heading>
-        </initialTSPI>
-    </vehicle>
-
-    <vehicle name="FHWA-SUMO-02" bsmid="f03ad629" type="vehicle.mercedes-benz.coupe" owner="CARLA-FHWA-3" material="Aluminum" lvcIndicator="Live">
-        <userData>
-            <CARMA CARLAcosimulationIdentifier="CARLA-FHWA-3" roleName="FHWA-SUMO-02" generate_bsms="true"/>
-        </userData>
-        <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.301152" longitudeInDegrees="-83.697944" heightAboveEllipsoidInMeters="250"/>
-            <!-- x=110.320763 y=-63.196728 yaw=183 -->
-            <Heading>183</Heading>
-        </initialTSPI>
-    </vehicle>
-
-    <vehicle name="MCITY-TER-01" bsmid="f03ad622" type="vehicle.audi.a2" owner="CARLA-VW-1" material="Aluminum" lvcIndicator="Live">
-        <userData>
-            <CARLA manual="true" generate_bsms="true"></CARLA>
+            <CARMA CARLAcosimulationIdentifier="CARLA-MCITY-2" roleName="MCITY-TERASIM-01" generate_bsms="true"/>
         </userData>
         <initialTSPI>
             <GeodeticPosition latitudeInDegrees="42.299832" longitudeInDegrees="-83.698467" heightAboveEllipsoidInMeters="250"/>
@@ -87,9 +65,9 @@
         </initialTSPI>
     </vehicle>
 
-    <vehicle name="MCITY-TER-02" bsmid="f03ad620" type="vehicle.bmw.isetta" owner="CARLA-UCLA-1" material="Aluminum" lvcIndicator="Live">
+    <vehicle name="MCITY-TERASIM-02" bsmid="f03ad620" type="vehicle.bmw.isetta" owner="CARLA-MCITY-2" material="Aluminum" lvcIndicator="Live">
         <userData>
-            <CARLA manual="true" generate_bsms="true"></CARLA>
+            <CARMA CARLAcosimulationIdentifier="CARLA-MCITY-2" roleName="MCITY-TERASIM-02" generate_bsms="true"/>
         </userData>
         <initialTSPI>
             <GeodeticPosition latitudeInDegrees="42.301407" longitudeInDegrees="-83.699016" heightAboveEllipsoidInMeters="250"/>
