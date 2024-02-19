@@ -32,13 +32,11 @@ import glob
 import os
 import sys
 
-try:
-    sys.path.append(
-        glob.glob('../../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
-                  (sys.version_info.major, sys.version_info.minor,
-                   'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+from find_carla_egg import find_carla_egg
+
+carla_egg_file = find_carla_egg()
+
+sys.path.append(carla_egg_file)
 
 # ==================================================================================================
 # -- find sumo modules -----------------------------------------------------------------------------
