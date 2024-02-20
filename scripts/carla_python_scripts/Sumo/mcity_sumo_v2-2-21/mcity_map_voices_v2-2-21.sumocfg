@@ -7,7 +7,7 @@
 
     <input>
         <net-file value="mcity_map_voices_v2-2-21.net.xml"/>
-        <!-- <route-files value="TFHRC-pilot2_event0-SUMO-Vehicles.rou.xml"/> -->
+        <route-files value="test.rou.xml"/>
     </input>
 
     <time>
