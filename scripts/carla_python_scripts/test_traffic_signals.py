@@ -108,10 +108,11 @@ def main():
         #     [262.5,-175.9,0],
 
         # ]
-
+        tsc_actors_to_set = [96,91,101]
         carla_actors = world.get_actors().filter("traffic.traffic_light")
         print(f'Setting Signals: {carla_actors}')
         for actor in carla_actors:
+            print(f'Setting Signal: {actor}')
             actor_loc = actor.get_location()
             actor_loc_array = [actor_loc.x, actor_loc.y, actor_loc.z]
             
@@ -121,11 +122,17 @@ def main():
                 
                 # dist_from_target_loc = get_dist_3d(actor_loc_array,tl_loc)
                 # if dist_from_target_loc < 5:
-            print(f'Setting Signal: {actor.id}')
-            actor.set_green_time(10)
-            actor.set_yellow_time(3)
-            actor.set_red_time(10)
-            actor.set_state(carla.TrafficLightState.Green)
+            if tsc_actors_to_set == [] or actor.id in tsc_actors_to_set:
+                
+                actor.set_green_time(5)
+                actor.set_yellow_time(2)
+                actor.set_red_time(5)
+                actor.set_state(carla.TrafficLightState.Green)
+            else:
+                actor.set_green_time(99999999999)
+                actor.set_yellow_time(99999999999)
+                actor.set_red_time(99999999999)
+                actor.set_state(carla.TrafficLightState.Off)
             
         
 
