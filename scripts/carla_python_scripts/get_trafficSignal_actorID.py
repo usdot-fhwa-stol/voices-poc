@@ -39,7 +39,8 @@ try:
     # map = world.get_map()
 
     # Get actor information (Traffic Lights)
-    traffic_light_list = world.get_actors().filter('traffic.traffic_light')
+    traffic_light_list = world.get_actors().filter('traffic.*')
+    print(f'Found {len(traffic_light_list)} Traffic Lights')
 
     if args.file:
         print("Reading Actor ID and SignID association from: " + str(args.file))        
@@ -63,7 +64,7 @@ try:
             print(f'{light.id} ({signid_list[str(light.id)]})')
             world.debug.draw_string(
                 light.get_location(), 
-                f'{light.id} ({signid_list[str(light.id)]})', 
+                f'Actor: {light.id}, sign_id: {signid_list[str(light.id)]}', 
                 draw_shadow=False,
                 color=carla.Color(r=255, g=0, b=0), life_time=200,
                 persistent_lines=True)
@@ -76,7 +77,7 @@ try:
             print(f'Drawing TL: {light}')
             world.debug.draw_string(
                 light.get_location(), 
-                str(light.id), 
+                f'Actor: {light.id}', 
                 draw_shadow=False,
                 color=carla.Color(r=255, g=0, b=0), life_time=200,
                 persistent_lines=True)

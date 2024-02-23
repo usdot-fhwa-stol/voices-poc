@@ -36,7 +36,7 @@ try:
     map = world.get_map()
 
     draw_z_height = 237
-    draw_lifetime = 30
+    draw_lifetime = 200
 
     print("All current vehicle locations")
     landmarks = map.get_all_landmarks()
@@ -47,7 +47,7 @@ try:
 
         world.debug.draw_string(
                 landmark.transform.location, 
-                str(landmark.id), 
+                f'Landmark: {landmark.id}', 
                 draw_shadow=False,
                 color=carla.Color(r=255, g=0, b=0), life_time=draw_lifetime,
                 persistent_lines=True)
