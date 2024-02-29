@@ -69,42 +69,44 @@ else
     
 fi
 
-# tunnel_interface_pattern="tun[0-9]"
-tunnel_interface_pattern="enp60s[0-9]"
-tunnel_check=$(ip -br link show | awk '{print $1}' | grep -w "$tunnel_interface_pattern")
+final_vpn_local_address=""
+final_vpn_em_address=""
 
-if [[ ! -z $tunnel_check ]]; then
+vpn_interface_pattern="docker[0-9]"
+vpn_check=$(ip -br link show | awk '{print $1}' | grep -w "$vpn_interface_pattern")
+
+if [[ ! -z $vpn_check ]]; then
     echo
-    echo "VPN tunnel interface found: $tunnel_check"
+    echo "VPN interface found: $vpn_check"
 
-    tunnel_local_ip=$(ip -br a show $tunnel_check | awk '{print $3}')
-    tunnel_local_ip_clean=${tunnel_local_ip%/*}
+    vpn_local_ip=$(ip -br a show $vpn_check | awk '{print $3}')
+    vpn_local_ip_clean=${vpn_local_ip%/*}
     
-    if [[ "$tunnel_local_ip_clean" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
-        echo "    IP $tunnel_local_ip_clean is a valid IP"
+    if [[ "$vpn_local_ip_clean" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
+        echo "    IP $vpn_local_ip_clean is a valid IP"
     else
         echo
-        echo "Unable to automatically get tunnel local address"
-        read -p "Please enter your local IP address for the VPN tunnel (found under the tun interface using the command: 'ip -br a show' ) [###.###.###.###]: " manual_tunnel_local_ip
+        echo "Unable to automatically get VPN local address"
+        read -p "Please enter your local IP address for the VPN (found under the tun interface using the command: 'ip -br a show' ) [###.###.###.###]: " manual_vpn_local_ip
         
-        if [[ "$manual_tunnel_local_ip" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
-            echo "    IP $manual_tunnel_local_ip is a valid IP"
-            tunnel_local_ip_clean=$manual_tunnel_local_ip
+        if [[ "$manual_vpn_local_ip" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
+            echo "    IP $manual_vpn_local_ip is a valid IP"
+            vpn_local_ip_clean=$manual_vpn_local_ip
         else
             echo
-            echo "    IP $manual_tunnel_local_ip is NOT valid, please set VUG_LOCAL_ADDRESS manually in your site config"
-            tunnel_local_ip_clean=""
+            echo "    IP $manual_vpn_local_ip is NOT valid, please set VUG_LOCAL_ADDRESS manually in your site config"
+            vpn_local_ip_clean=""
         fi        
     fi
     
-    if [[ ! -z $tunnel_local_ip_clean ]]; then
+    if [[ ! -z $vpn_local_ip_clean ]]; then
 
         echo
-        read -p "Would you like to use the tunnel IP as VUG_LOCAL_ADDRESS? ($tunnel_local_ip_clean) [y/n] " use_local_tunnel_ip
+        read -p "Would you like to use the VPN IP as VUG_LOCAL_ADDRESS? ($vpn_local_ip_clean) [y/n] " use_local_vpn_ip
     
-        if [[ $use_local_tunnel_ip =~ ^[yY]$ ]]; then
+        if [[ $use_local_vpn_ip =~ ^[yY]$ ]]; then
 
-            export VUG_VPN_LOCAL_ADDRESS=$tunnel_local_ip_clean
+            final_vpn_local_address=$vpn_local_ip_clean
         fi
 
     fi
@@ -117,14 +119,14 @@ if [[ ! -z $tunnel_check ]]; then
     else
         echo
         echo "Unable to automatically get EM address"
-        read -p "Please enter the VPN EM Address (found in the VOICES Portal under Connection Information) [###.###.###.###]: " manual_tunnel_em_address
+        read -p "Please enter the VPN EM Address (found in the VOICES Portal under Connection Information) [###.###.###.###]: " manual_vpn_em_address
         
-        if [[ "$manual_tunnel_em_address" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
-            echo "    IP $manual_tunnel_em_address is a valid IP"
-            em_fqdn_address=$manual_tunnel_em_address
+        if [[ "$manual_vpn_em_address" =~ ^(([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\.){3}([1-9]?[0-9]|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))$ ]]; then
+            echo "    IP $manual_vpn_em_address is a valid IP"
+            em_fqdn_address=$manual_vpn_em_address
         else
             echo
-            echo "    IP $manual_tunnel_em_address is NOT valid, please set VUG_LOCAL_ADDRESS manually in your site config"
+            echo "    IP $manual_vpn_em_address is NOT valid, please set VUG_LOCAL_ADDRESS manually in your site config"
             em_fqdn_address=""
         fi        
     fi
@@ -132,16 +134,19 @@ if [[ ! -z $tunnel_check ]]; then
     if [[ ! -z $em_fqdn_address ]]; then
 
         echo
-        read -p "Would you like to use the tunnel IP as VUG_EM_ADDRESS? ($em_fqdn_address) [y/n] " use_em_tunnel_ip
+        read -p "Would you like to use the vpn IP as VUG_EM_ADDRESS? ($em_fqdn_address) [y/n] " use_em_vpn_ip
     
-        if [[ $use_em_tunnel_ip =~ ^[yY]$ ]]; then
+        if [[ $use_em_vpn_ip =~ ^[yY]$ ]]; then
 
-            export VUG_VPN_EM_ADDRESS=$em_fqdn_address
+            final_vpn_em_address=$em_fqdn_address
         fi
 
     fi
 
 fi
+
+export VUG_VPN_LOCAL_ADDRESS=$final_vpn_local_address
+export VUG_VPN_EM_ADDRESS=$final_vpn_em_address
 
 echo
 
