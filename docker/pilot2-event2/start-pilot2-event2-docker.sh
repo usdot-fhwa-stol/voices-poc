@@ -72,7 +72,7 @@ fi
 final_vpn_local_address=""
 final_vpn_em_address=""
 
-vpn_interface_pattern="docker[0-9]"
+vpn_interface_pattern="tun[0-9]"
 vpn_check=$(ip -br link show | awk '{print $1}' | grep -w "$vpn_interface_pattern")
 
 if [[ ! -z $vpn_check ]]; then
