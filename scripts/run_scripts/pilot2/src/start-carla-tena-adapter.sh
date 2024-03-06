@@ -55,6 +55,11 @@ localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARLA_ADAPTER_VERSION
 
 adapterVerbosity='1'
 
+
+echo "----- STARTING VEHICLE E-BRAKE SCRIPT -----"
+
+$VUG_LOCAL_VOICES_POC_PATH/docker/other_scripts/stop_all_vehicles.sh &> stop_vehicle_log.txt &
+
 mkdir -p $VUG_ADAPTER_LOG_PATH
 
 adapterLogFile=$VUG_ADAPTER_LOG_PATH/carla_adapter_terminal_out.log
