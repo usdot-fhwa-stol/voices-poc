@@ -58,7 +58,7 @@ adapterVerbosity='1'
 
 echo "----- STARTING VEHICLE E-BRAKE SCRIPT -----"
 
-python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/stop_vehicles.sh &
+python3 $VUG_LOCAL_VOICES_POC_PATH/scripts/carla_python_scripts/stop_vehicles.py &
 
 mkdir -p $VUG_ADAPTER_LOG_PATH
 
