@@ -36,7 +36,7 @@ fi
 
 
 echo
-read -p "Are you hosting a CARMA Platform Vehicle? [y/n]" isCarmaVehicle
+read -p "Are you hosting a CARMA Platform Vehicle? [y/n] " isCarmaVehicle
 
 username=$(whoami)
 
@@ -69,18 +69,29 @@ if [[ $VUG_DOCKER_START_TJ3224_ADAPTER == true ]]; then
 fi
 
 echo
+echo "Folder Name: "$logs_folder_name
+
+mkdir -p $VUG_LOG_FILES_ROOT/$logs_folder_name
+cd $VUG_LOG_FILES_ROOT/$logs_folder_name
+
+echo
+read -p "Would you like to collect the TENA SDO data? [y/n] " save_tdcs_data
+
+if [[ $save_tdcs_data =~ ^[yY]$ ]]; then
+    echo
+    echo "Starting TDCS" 
+    tdcs_command="$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $logs_folder_name.sqlite -dbFolder ."
+    echo $tdcs_command
+    $tdcs_command &
+fi
+
+echo
 read -p "Would you like to collect eco data [y/n] " collect_eco
 
 if [[ $collect_eco =~ ^[yY]$ ]]; then
     echo collecting
     collect_eco_cmd="python3 $HOME/voices-poc/scripts/carla_python_scripts/collect_pilot2_vehicle_eco_data.py --vehicle_rolenames $VUG_COLLECT_ECO_DATA_ROLENAMES --host $VUG_CARLA_ADDRESS --output_dir $VUG_LOG_FILES_ROOT/$logs_folder_name"
 fi
-
-echo
-echo "Folder Name: "$logs_folder_name
-
-mkdir -p $VUG_LOG_FILES_ROOT/$logs_folder_name
-cd $VUG_LOG_FILES_ROOT/$logs_folder_name
 
 #if we are not a live vehicle then prompt to collect logs 
 #(live vehicle is not connected to VOICES network)
