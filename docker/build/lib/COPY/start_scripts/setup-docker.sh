@@ -33,8 +33,8 @@ elif [ ! -f $env_set_scenario_config_path ]; then
 else
         ln -sf $env_set_site_config_path $HOME/.voices_site_config_link
         ln -sf $env_set_scenario_config_path $HOME/.voices_scenario_config_link
-        ln -sf $HOME/.voices_site_config_docker $HOME/.voices_site_config
-        ln -sf $HOME/.voices_scenario_config_docker $HOME/.voices_scenario_config
+      #   ln -sf $HOME/.voices_site_config_docker $HOME/.voices_site_config
+      #   ln -sf $HOME/.voices_scenario_config_docker $HOME/.voices_scenario_config
 fi
 
 # voices_site_config=$HOME/.voices_site_config_link

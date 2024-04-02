@@ -29,14 +29,18 @@ elif [ ! -f $env_set_scenario_config_path ]; then
 else
         ln -sf $env_set_site_config_path $HOME/.voices_site_config_link
         ln -sf $env_set_scenario_config_path $HOME/.voices_scenario_config_link
-        ln -sf $HOME/.voices_site_config_docker $HOME/.voices_site_config
-        ln -sf $HOME/.voices_scenario_config_docker $HOME/.voices_scenario_config
+      #   ln -sf $HOME/.voices_site_config_docker $HOME/.voices_site_config
+      #   ln -sf $HOME/.voices_scenario_config_docker $HOME/.voices_scenario_config
 fi
 
-voices_site_config=$HOME/.voices_site_config_link
-voices_scenario_config=$HOME/.voices_scenario_config_link
-voices_site_config_base=$HOME/.voices_site_config
-voices_scenario_config_base=$HOME/.voices_scenario_config
+voices_site_config=$HOME/.voices_site_config
+voices_scenario_config=$HOME/.voices_scenario_config
+
+ln -sf $HOME/.voices_site_config_link $voices_site_config
+ln -sf $HOME/.voices_scenario_config_link $voices_scenario_config
+
+voices_site_config_docker=$HOME/.voices_site_config_docker
+voices_scenario_config_docker=$HOME/.voices_scenario_config_docker
 
 if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
    if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
