@@ -1,7 +1,7 @@
 #! /bin/bash
 
-env_set_site_config_path=$HOME/voices-poc/config/site_config/$VUG_SITE_CONFIG_FILE
-env_set_scenario_config_path=$HOME/voices-poc/config/scenario_config/$VUG_SCENARIO_CONFIG_FILE
+env_set_site_config_path=$HOME/.voices_site_config
+env_set_scenario_config_path=$HOME/.voices_scenario_config
 
 # the .voices_config setup is as follows in order to make existing scripts work within docker container: 
 # 
@@ -21,10 +21,10 @@ env_set_scenario_config_path=$HOME/voices-poc/config/scenario_config/$VUG_SCENAR
 # 
 
 if [ ! -f $env_set_site_config_path ]; then
-        echo "    [!!!] Site Config file not found: $VUG_SITE_CONFIG_FILE"
+        echo "    [!!!] Site Config file not found: $env_set_site_config_path"
         exit 1
 elif [ ! -f $env_set_scenario_config_path ]; then
-        echo "    [!!!] Scenario Config file not found: $VUG_SCENARIO_CONFIG_FILE"
+        echo "    [!!!] Scenario Config file not found: $env_set_scenario_config_path"
         exit 1
 else
         ln -sf $env_set_site_config_path $HOME/.voices_site_config_link
