@@ -61,7 +61,7 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
       source $HOME/.voices_scenario_config
       
       # if voices config docker exists, then source it to overwrite docker specific vars
-      if [ -L ${voices_site_config_docker} ] && [ -L ${voices_scenario_config_docker} ]; then
+      if [ -e ${voices_site_config_docker} ] && [ -e ${voices_scenario_config_docker} ]; then
          source $HOME/.voices_site_config_docker
          source $HOME/.voices_scenario_config_docker
          echo "DEBUG: Docker configs were sourced"
