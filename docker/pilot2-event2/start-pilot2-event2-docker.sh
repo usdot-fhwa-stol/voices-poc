@@ -24,8 +24,8 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
 
         source $voices_site_config
         source $voices_scenario_config
-        export VUG_SITE_CONFIG_FILE=$voices_site_config
-        export VUG_SCENARIO_CONFIG_FILE=$voices_scenario_config
+        export VUG_SITE_CONFIG_FILE=$site_link_base_name
+        export VUG_SCENARIO_CONFIG_FILE=$scenario_link_base_name
         echo "Site Config: "$voices_site_config
         echo "Scenario Config: "$voices_scenario_config
     else
