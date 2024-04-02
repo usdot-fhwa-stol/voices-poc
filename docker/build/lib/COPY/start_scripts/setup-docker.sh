@@ -2,8 +2,8 @@
 
 export HOME=/home
 
-# env_set_site_config_path=$HOME/.voices_site_config
-# env_set_scenario_config_path=$HOME/.voices_scenario_config
+env_set_site_config_path=$HOME/voices-poc/config/site_config/$VUG_SITE_CONFIG_FILE
+env_set_scenario_config_path=$HOME/voices-poc/config/scenario_config/$VUG_SCENARIO_CONFIG_FILE
 
 # the .voices_config setup is as follows in order to make existing scripts work within docker container: 
 # 
@@ -24,18 +24,18 @@ export HOME=/home
 
 export SUMO_HOME=/usr/share/sumo
 
-# if [ ! -f $env_set_site_config_path ]; then
-#         echo "    [!!!] Site Config file not found: $env_set_site_config_path"
-#         exit 1
-# elif [ ! -f $env_set_scenario_config_path ]; then
-#         echo "    [!!!] Scenario Config file not found: $env_set_scenario_config_path"
-#         exit 1
-# else
-#         ln -sf $env_set_site_config_path $HOME/.voices_site_config_link
-#         ln -sf $env_set_scenario_config_path $HOME/.voices_scenario_config_link
-#         ln -sf $HOME/.voices_site_config_docker $HOME/.voices_site_config
-#         ln -sf $HOME/.voices_scenario_config_docker $HOME/.voices_scenario_config
-# fi
+if [ ! -f $env_set_site_config_path ]; then
+        echo "    [!!!] Site Config file not found: $env_set_site_config_path"
+        exit 1
+elif [ ! -f $env_set_scenario_config_path ]; then
+        echo "    [!!!] Scenario Config file not found: $env_set_scenario_config_path"
+        exit 1
+else
+        ln -sf $env_set_site_config_path $HOME/.voices_site_config_link
+        ln -sf $env_set_scenario_config_path $HOME/.voices_scenario_config_link
+        ln -sf $HOME/.voices_site_config_docker $HOME/.voices_site_config
+        ln -sf $HOME/.voices_scenario_config_docker $HOME/.voices_scenario_config
+fi
 
 # voices_site_config=$HOME/.voices_site_config_link
 # voices_scenario_config=$HOME/.voices_scenario_config_link
