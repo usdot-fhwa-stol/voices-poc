@@ -1,7 +1,7 @@
 services:
   carla-voices:
     container_name: carla-voices
-    image: usdotfhwastoldev/carla-voices:pilot2-event2-0.0.12
+    image: usdotfhwastoldev/carla-voices:pilot2-event2-latest
     privileged: true
     network_mode: "host"
     environment:
@@ -26,7 +26,7 @@ services:
 
   voices:
     container_name: voices
-    image: usdotfhwastoldev/voices:pilot2-event2-0.0.12
+    image: usdotfhwastoldev/voices:pilot2-event2-latest
     tty: true 
     depends_on:
       - carla-voices
