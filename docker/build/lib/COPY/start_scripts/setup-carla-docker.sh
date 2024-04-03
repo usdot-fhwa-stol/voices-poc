@@ -53,6 +53,12 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
       source $HOME/.voices_site_config
       source $HOME/.voices_scenario_config
 
+      # if voices config docker exists, then source it to overwrite docker specific vars
+      if [ -e ${voices_site_config_docker} ] && [ -e ${voices_scenario_config_docker} ]; then
+         source $HOME/.voices_site_config_docker
+         source $HOME/.voices_scenario_config_docker
+      fi
+
       echo "Site Config: "$site_link_base_name
       echo "Scenario Config: "$scenario_link_base_name
    else

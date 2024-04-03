@@ -32,8 +32,14 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
         source $voices_site_config
         source $voices_scenario_config
 
-        echo "Site Config: "$voices_site_config
-        echo "Scenario Config: "$voices_scenario_config
+        # if voices config docker exists, then source it to overwrite docker specific vars
+        if [ -e ${voices_site_config_docker} ] && [ -e ${voices_scenario_config_docker} ]; then
+            source $HOME/.voices_site_config_docker
+            source $HOME/.voices_scenario_config_docker
+        fi
+
+        echo "Site Config: "$site_link_base_name
+        echo "Scenario Config: "$site_link_base_name
     else
         echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
         echo "Site Config: "$(readlink -f $voices_site_config)
@@ -56,6 +62,11 @@ localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_SCENARIO_PUBLISHER_VERSION
 
 adapterVerbosity='4'
 
+useBestEffort=''
+if $VUG_USE_BEST_EFFORT; then
+    useBestEffort='-bestEffort'
+fi
+
 mkdir -p $VUG_ADAPTER_LOG_PATH
 
 adapterLogFile=$VUG_ADAPTER_LOG_PATH/scenario_publisher_terminal_out.log
@@ -74,4 +85,4 @@ set -x
 cd $VUG_LOG_FILES_ROOT/tdcs_data
 
 
-$VUG_PLAYBACK_TOOL_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS
+$VUG_PLAYBACK_TOOL_PATH/start.sh $useBestEffort -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS
