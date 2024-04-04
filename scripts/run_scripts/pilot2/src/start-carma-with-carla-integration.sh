@@ -112,7 +112,7 @@ sudo -u carma carma start all -d
 
 echo "----- WAITING FOR CARMA PLATFORM TO STARTUP -----"
 
-sleep 7
+sleep 10
 
 echo "----- STARTING CARLA-CARMA INTEGRATION TOOL -----"
 
