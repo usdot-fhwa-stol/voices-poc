@@ -119,7 +119,12 @@ done
 # SPAWN_PT="109.881569, -65.993828, 240, 0, 0, 270"
 
 # yield test
-# SPAWN_POINT="110.145599, -69.313705, 240, 0, 0, 270"
+# SPAWN_POINT="110.145599, -69.313705, 240, 0, 0, 270" 
+# Main
+#             spawn_point:=\"$VUG_CARMA_SPAWN_POINT\" \
+
+# right before roundabout
+# export VUG_CARMA_SPAWN_POINT="93.649223, 69.763718, 236.5, 0, 0, 232.862701"
 
 echo "----- STARTING CARLA-CARMA INTEGRATION TOOL -----"
 
@@ -127,7 +132,7 @@ docker run \
 	   -it -d --rm \
        --name carma_carla_integration \
        --net=host \
-       usdotfhwastoldev/carma-carla-integration:develop
+       usdotfhwastoldev/carma-carla-integration:vug-fds-fix-logs
 echo "------------------------exec---------------------------------"
 docker exec \
         -it \
@@ -142,13 +147,13 @@ docker exec \
             spawn_point:=\"$VUG_CARMA_SPAWN_POINT\" \
             town:=\"$carla_map\" \
             selected_route:=\"$VUG_CARMA_ROUTE\" \
-            synchronous_mode:='false' \
-            fixed_delta_seconds:=0.0 \
+            synchronous_mode:='true' \
+            fixed_delta_seconds:='0.10' \
             use_sim_time:='true' \
             speed_Kp:=0.4 \
             speed_Ki:=0.03 \
             speed_Kd:=0 \
-            start_delay_in_seconds:='40' \
+            start_delay_in_seconds:='999' \
             role_name:='carma_1'" \
     &> $SIM_LOG
 
