@@ -1,5 +1,15 @@
 #! /bin/bash
 
+cleanup() {
+   pids=$(pgrep -f "VUG_Adapters")
+   for pid in $pids; do
+      echo "Killing PID: "$pid
+      kill $pid
+   done
+}
+
+trap 'cleanup' SIGINT
+
 source /home/start_scripts/setup-docker.sh
 
 
@@ -142,3 +152,5 @@ echo
 echo "VUG STARTUP COMLPETE"
 
 tail -f /dev/null
+
+cleanup
