@@ -3,7 +3,9 @@
 cleanup() {
    pids=$(pgrep -f "VUG_Adapters")
    for pid in $pids; do
-      echo "Killing PID: "$pid
+      process_name=$(ps -p $pid -o comm=)
+      basename=$(basename $process_name)
+      echo "Killing "$basename
       kill $pid
       sleep 3s
    done
