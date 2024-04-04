@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+# Get output from openvpn3 sessions-list
 text="$(sudo openvpn3 sessions-list)"
 vpn_paths=()
 path_regex='Path: (.*)'
@@ -13,10 +14,10 @@ start_time_regex='Created: (.*) PID: .*'
 iterator=0
 while read line; do
     if [[ $line =~ $path_regex ]]
-    then
+    then # Grab VPN path
         vpn_paths+=("${BASH_REMATCH[1]}")
     elif [[ $line =~ $status_regex ]]
-    then
+    then # Grab VPN status
         if [[ ${BASH_REMATCH[1]} = "Connection, Client connected" ]]
         then
             if $has_active_vpn_connection
@@ -30,7 +31,7 @@ while read line; do
             has_stale_vpn_connections=true
         fi
     elif [[ $line =~ $start_time_regex ]]
-    then
+    then # Grab VPN start time and convert to unix timestamp
         vpn_start_times+=("$(date -d "${BASH_REMATCH[1]}" +"%s")")
     fi
 done <<< "$text"
@@ -51,6 +52,8 @@ then
             * );;
         esac
     done
+else
+    echo "No stale VPN connections found."
 fi
 
 
@@ -77,4 +80,9 @@ then
             * );;
         esac
     done
+elif $has_active_vpn_connection
+then
+    echo "One active VPN connection found."
+else
+    echo "No active VPN connections found."
 fi
