@@ -44,22 +44,22 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
 		fi
 
         echo "Site Config: "$site_link_base_name
-        echo "Scenario Config: "$site_link_base_name
+        echo "Scenario Config: "$scenario_link_base_name
     else
         echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
-        echo "Site Config: "$(readlink -f $voices_site_config)
-        echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+        echo "Site Config: "$(readlink -f $site_link_base_name)
+        echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
         exit 1
    fi
 elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
     echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
-    echo "Site Config: "$(readlink -f $voices_site_config)
-    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
     exit 1
 else
     echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
-    echo "Site Config: "$(readlink -f $voices_site_config)
-    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
     exit 1
 fi
 
