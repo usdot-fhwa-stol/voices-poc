@@ -5,6 +5,7 @@ cleanup() {
    for pid in $pids; do
       echo "Killing PID: "$pid
       kill $pid
+      sleep 3s
    done
 }
 
