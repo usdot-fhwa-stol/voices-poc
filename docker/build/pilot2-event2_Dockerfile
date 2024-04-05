@@ -54,6 +54,8 @@ RUN apt-get update && \
     iputils-ping nano tshark git tcpdump \
     # install sumo tools
     sumo=1.19.0-1~focal sumo-tools=1.19.0-1~focal sumo-doc=1.19.0-1~focal \
+    # install dumb init to enable gracefully stopping container processes
+    dumb-init \
     # cleanup apt lists
     && rm -rf /var/lib/apt/lists/*
 
@@ -78,4 +80,4 @@ RUN rm -rf /home/BUILD /tmp/* && \
 RUN echo 'source /home/start_scripts/setup-docker.sh' >> /root/.bashrc
 
 
-CMD ["/bin/bash","-l","-c","/home/start_scripts/startup-apps.sh"]
+CMD ["/usr/bin/dumb-init","-v","--","/bin/bash","-l","-c","/home/start_scripts/startup-apps.sh"]

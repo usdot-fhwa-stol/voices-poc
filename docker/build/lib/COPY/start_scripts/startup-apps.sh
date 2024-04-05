@@ -2,6 +2,7 @@
 
 cleanup() {
    pids=$(pgrep -f "VUG_Adapters")
+   echo "Stopping VUG Adapters Gracefully"
    for pid in $pids; do
       process_name=$(ps -p $pid -o comm=)
       basename=$(basename $process_name)
@@ -11,7 +12,7 @@ cleanup() {
    done
 }
 
-trap 'cleanup' SIGINT
+trap 'cleanup' SIGINT SIGTERM ERR EXIT
 
 source /home/start_scripts/setup-docker.sh
 
@@ -154,6 +155,6 @@ fi
 echo
 echo "VUG STARTUP COMLPETE"
 
-tail -f /dev/null
+read -r -d '' _ </dev/tty
 
 cleanup
