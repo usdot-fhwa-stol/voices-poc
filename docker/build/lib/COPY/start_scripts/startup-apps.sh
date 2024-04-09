@@ -51,8 +51,10 @@ if [[ $VUG_DOCKER_START_CARLA == true ]]; then
    fi
   
 
-   # display vehicle names
-   python3 $HOME/voices-poc/scripts/carla_python_scripts/display_vehicle_rolenames.py --host $VUG_CARLA_ADDRESS -d 0 &
+   if [[ $VUG_DISPLAY_VEHICLE_ROLENAMES == true ]]; then
+      # display vehicle names
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/display_vehicle_rolenames.py --host $VUG_CARLA_ADDRESS -d 0 &
+   fi
 
    sleep 5s
 fi
