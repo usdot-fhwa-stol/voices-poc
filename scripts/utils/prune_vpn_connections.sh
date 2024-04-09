@@ -3,8 +3,14 @@
 # Check if openvpn3 is installed
 if ! command -v openvpn3 &> /dev/null
 then
-    echo "openvpn3 could not be found. Please install openvpn3 and connect to a session to continue"
-    exit 1
+    if [ $VUG_FORCE_VPN = true ]
+    then
+        echo "openvpn3 is not installed but you have set VUG_FORCE_VPN=true in your scenario config."
+        echo "Either install openvpn3 and activate a connection or set VUG_FORCE_VPN=false to continue."
+        exit 1
+    fi
+    echo "openvpn3 could not be found. Skipping VPN checks..."
+    exit 0
 fi
 
 
@@ -92,8 +98,35 @@ then
     done
 elif $has_active_vpn_connection
 then
-    echo "One active VPN connection found."
+    most_recent_start=0
+    for i in $(seq 1 ${#vpn_start_times[@]}); do
+        if [ ${vpn_start_times[i-1]} -gt $most_recent_start ] && [ ${vpn_statuses[i-1]} = 1 ]; then
+            most_recent_start=${vpn_start_times[i-1]}
+            echo "Got: "${vpn_start_times[i-1]} " Most Recent: " $most_recent_start
+        fi
+    done 
+    if [ $VUG_FORCE_VPN = false ]
+    then
+        while true; do
+            echo ''
+            read -p "You have an active VPN session but have set VUG_FORCE_VPN=false. Would you like to terminate the session? [y/N] " yn
+            case $yn in
+                [Yy]*)  for i in $(seq 1 ${#vpn_statuses[@]}); do
+                            if [ ${vpn_statuses[i-1]} = 1 -a ${vpn_start_times[i-1]} = $most_recent_start ]
+                            then
+                                echo "Removing "${vpn_paths[i-1]}
+                                sudo openvpn3 session-manage --session-path ${vpn_paths[i-1]} --disconnect
+                            fi
+                        done; break;;
+                [Nn]* | "") echo ''; break;;
+                * );;
+            esac
+        done
+    fi
 else
-    echo "No active VPN connections found. Please connect to an openvpn session to continue."
-    exit 1
+    if [ $VUG_FORCE_VPN = true ]
+    then
+        echo "No active VPN connections found. Please connect to an openvpn3 session or set VUG_FORCE_VPN=false in your scenario config to continue."
+        exit 1
+    fi
 fi
