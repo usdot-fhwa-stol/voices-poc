@@ -1,5 +1,13 @@
 #!/usr/bin/bash
 
+# Check if openvpn3 is installed
+if ! command -v openvpn3 &> /dev/null
+then
+    echo "openvpn3 could not be found. Please install openvpn3 and connect to a session to continue"
+    exit 1
+fi
+
+
 # Get output from openvpn3 sessions-list
 text="$(sudo openvpn3 sessions-list)"
 vpn_paths=()
@@ -86,5 +94,6 @@ elif $has_active_vpn_connection
 then
     echo "One active VPN connection found."
 else
-    echo "No active VPN connections found."
+    echo "No active VPN connections found. Please connect to an openvpn session to continue."
+    exit 1
 fi

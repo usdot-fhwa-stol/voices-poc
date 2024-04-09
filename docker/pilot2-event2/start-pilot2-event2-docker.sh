@@ -11,7 +11,11 @@ $docker_compose_cmd -f $docker_compose_file down
 source $HOME/voices-poc/scripts/utils/stop_current_vpn_connection.sh
 }
 
-source $HOME/voices-poc/scripts/utils/prune_vpn_connections.sh
+
+if ! $HOME/voices-poc/scripts/utils/prune_vpn_connections.sh; then
+    exit 1
+fi
+ 
 
 voices_site_config=$HOME/.voices_site_config
 voices_scenario_config=$HOME/.voices_scenario_config
