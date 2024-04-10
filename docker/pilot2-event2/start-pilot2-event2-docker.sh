@@ -8,11 +8,11 @@ stopDocker()
 echo
 echo STOPPING AND REMOVING VUG CONTAINERS
 $docker_compose_cmd -f $docker_compose_file down
-source $HOME/voices-poc/scripts/utils/stop_current_vpn_connection.sh
+source $VUG_LOCAL_VOICES_POC_PATH/scripts/utils/stop_current_vpn_connection.sh
 }
 
 
-if ! $HOME/voices-poc/scripts/utils/prune_vpn_connections.sh; then
+if ! $VUG_LOCAL_VOICES_POC_PATH/scripts/utils/prune_vpn_connections.sh; then
     exit 1
 fi
  
