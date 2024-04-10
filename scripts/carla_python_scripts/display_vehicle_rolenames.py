@@ -13,6 +13,12 @@ import carla
 
 import argparse
 
+map_height_dict = { "mcity_map_v2.xodr": [230, 245],
+                    "TFHRC.xodr" : [30, 35],
+                    "Town04.xodr" : [-5, 0.5],
+                    "smart_intersection.xodr" : [-5, 0.5],
+                  }
+
 argparser = argparse.ArgumentParser(
     description=__doc__)
 argparser.add_argument(
@@ -58,7 +64,12 @@ args = argparser.parse_args()
 try:
     client = carla.Client(args.host, args.port)
     client.set_timeout(5.0)
-    
+
+    map_string = client.get_world().get_map().name
+
+    if map_string not in map_height_dict:
+        print("The height limits for map %s are unknown. Drawing all vehicle names as red...")
+
     print('\n----- DISPLAYING VEHICLE ROLENAMES -----\n')
 
     while (True):
@@ -67,14 +78,14 @@ try:
         vehicle_list = world.get_actors().filter('vehicle.*')
         # Print all index corresponding to all traffic vehicles in scene (CarlaUE4)
 
-        
+
 
         if args.duration == 0:
             label_duration = 0.5
         else:
             label_duration = args.duration
-        
-        
+
+
         if len(vehicle_list) == 0:
 
             if args.verbose:
@@ -85,17 +96,31 @@ try:
                 print("\nCARLA VEHICLES: ")
 
             for index, vehicle in enumerate(vehicle_list, start=1):
-                
+
                 if args.verbose:
                     print("    " + str(vehicle.attributes))
+                if map_string in map_height_dict:
+                    if vehicle.bounding_box.location.z < map_height_dict[map_string][0]:
+                        continue
+                    elif vehicle.bounding_box.location.z > map_height_dict[map_string][1]:
+                        color = carla.Color(r=0, g=0, b=255)
+                    else:
+                        color = carla.Color(r=255, g=0, b=0)
 
-                world.debug.draw_string(
-                    vehicle.get_location() + carla.Location(x=0, y=0, z=2), 
-                    str(vehicle.attributes["role_name"].replace("-MAN-","-")).replace("TFHRC","FHWA"), 
-                    draw_shadow=False,color=carla.Color(r=255, g=0, b=0), 
-                    life_time=label_duration,
-                    persistent_lines=True)
-            
+                    world.debug.draw_string(
+                        vehicle.get_location() + carla.Location(x=0, y=0, z=2),
+                        str(vehicle.attributes["role_name"].replace("-MAN-","-")).replace("TFHRC","FHWA"),
+                        draw_shadow=False,color=color,
+                        life_time=label_duration,
+                        persistent_lines=True)
+                else:
+                    world.debug.draw_string(
+                        vehicle.get_location() + carla.Location(x=0, y=0, z=2),
+                        str(vehicle.attributes["role_name"].replace("-MAN-","-")).replace("TFHRC","FHWA"),
+                        draw_shadow=False,color=carla.Color(r=255,g=0,b=0),
+                        life_time=label_duration,
+                        persistent_lines=True)
+
         if args.duration != 0:
             sys.exit()
 
