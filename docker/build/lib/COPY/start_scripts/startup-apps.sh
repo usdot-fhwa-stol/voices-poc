@@ -1,5 +1,19 @@
 #! /bin/bash
 
+cleanup() {
+   pids=$(pgrep -f "VUG_Adapters")
+   echo "Stopping VUG Adapters Gracefully"
+   for pid in $pids; do
+      process_name=$(ps -p $pid -o comm=)
+      basename=$(basename $process_name)
+      echo "Killing "$basename
+      kill $pid
+      sleep 3s
+   done
+}
+
+trap 'cleanup' SIGINT SIGTERM ERR EXIT
+
 source /home/start_scripts/setup-docker.sh
 
 
@@ -37,8 +51,10 @@ if [[ $VUG_DOCKER_START_CARLA == true ]]; then
    fi
   
 
-   # display vehicle names
-   python3 $HOME/voices-poc/scripts/carla_python_scripts/display_vehicle_rolenames.py --host $VUG_CARLA_ADDRESS -d 0 &
+   if [[ $VUG_DISPLAY_VEHICLE_ROLENAMES == true ]]; then
+      # display vehicle names
+      python3 $HOME/voices-poc/scripts/carla_python_scripts/display_vehicle_rolenames.py --host $VUG_CARLA_ADDRESS -d 0 &
+   fi
 
    sleep 5s
 fi
@@ -138,14 +154,9 @@ if [[ $VUG_DOCKER_START_MANUAL_CARLA_VEHICLE == true ]]; then
    sleep 5s
 fi
 
-if [[ $VUG_COLLECT_ECO_DATA == true ]]; then
-   echo "STARTING ECO DATA COLLECTOR"
-   python3 $HOME/voices-poc/scripts/carla_python_scripts/collect_pilot2_vehicle_eco_data.py --vehicle_rolenames $VUG_COLLECT_ECO_DATA_ROLENAMES &
-
-   sleep 5s
-fi
-
 echo
 echo "VUG STARTUP COMLPETE"
 
-tail -f /dev/null
+read -r -d '' _ </dev/tty
+
+cleanup

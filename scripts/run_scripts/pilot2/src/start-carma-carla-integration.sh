@@ -23,6 +23,9 @@ function print_help {
 voices_site_config=$HOME/.voices_site_config
 voices_scenario_config=$HOME/.voices_scenario_config
 
+voices_site_config_docker=$HOME/.voices_site_config_docker
+voices_scenario_config_docker=$HOME/.voices_scenario_config_docker
+
 if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
     if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
         site_config_link_dest=$(readlink -f $voices_site_config)
@@ -31,26 +34,36 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
         scenario_config_link_dest=$(readlink -f $voices_scenario_config)
         scenario_link_base_name=$(basename ${scenario_config_link_dest})
 
-        source $voices_site_config
-        source $voices_scenario_config
+        source $HOME/.voices_site_config
 
-        echo "Site Config: "$VUG_SITE_CONFIG_FILE
-        echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
+		# if voices config docker exists, then source it to overwrite docker specific vars
+		if [ -e ${voices_site_config_docker} ]; then
+			source $HOME/.voices_site_config_docker
+		fi
+
+		source $HOME/.voices_scenario_config
+
+		if [ -e ${voices_scenario_config_docker} ]; then
+			source $HOME/.voices_scenario_config_docker
+		fi
+
+        echo "Site Config: "$site_link_base_name
+        echo "Scenario Config: "$scenario_link_base_name
     else
         echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
-        echo "Site Config: "$(readlink -f $voices_site_config)
-        echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+        echo "Site Config: "$(readlink -f $site_link_base_name)
+        echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
         exit 1
    fi
 elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
     echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
-    echo "Site Config: "$(readlink -f $voices_site_config)
-    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
     exit 1
 else
     echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
-    echo "Site Config: "$(readlink -f $voices_site_config)
-    echo "Scenario Config: "$(readlink -f $voices_scenario_config)
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
     exit 1
 fi
 
@@ -109,19 +122,20 @@ done
 # SPAWN_PT="109.881569, -65.993828, 240, 0, 0, 270"
 
 # yield test
-# SPAWN_POINT="110.145599, -69.313705, 240, 0, 0, 270"
+# SPAWN_POINT="110.145599, -69.313705, 240, 0, 0, 270" 
+# Main
+#             spawn_point:=\"$VUG_CARMA_SPAWN_POINT\" \
+
+# right before roundabout
+# export VUG_CARMA_SPAWN_POINT="93.649223, 69.763718, 236.5, 0, 0, 232.862701"
 
 echo "----- STARTING CARLA-CARMA INTEGRATION TOOL -----"
 
 docker run \
-	   -it -d --rm \
-       --name carma_carla_integration \
-       --net=host \
-       usdotfhwastoldev/carma-carla-integration:develop
-echo "------------------------exec---------------------------------"
-docker exec \
-        -it \
-        carma_carla_integration \
+        -it -d --rm \
+        --name carma_carla_integration \
+        --net=host \
+        usdotfhwastoldev/carma-carla-integration:vug-fds-fix-logs \
         bash -c \
         "export ROS_IP=127.0.0.1 && \
         export ROS_MASTER_URI=http://localhost:11311 && \
@@ -132,16 +146,23 @@ docker exec \
             spawn_point:=\"$VUG_CARMA_SPAWN_POINT\" \
             town:=\"$carla_map\" \
             selected_route:=\"$VUG_CARMA_ROUTE\" \
-            synchronous_mode:='false' \
-            fixed_delta_seconds:=0.0 \
+            synchronous_mode:='true' \
+            fixed_delta_seconds:='0.15' \
             use_sim_time:='true' \
             speed_Kp:=0.4 \
             speed_Ki:=0.03 \
             speed_Kd:=0 \
-            start_delay_in_seconds:='40' \
+            start_delay_in_seconds:='999' \
             role_name:='carma_1'" \
     &> $SIM_LOG
 
-
+while true; do
+        echo ''
+        read -p "Enter q to exit " quit
+        case $quit in
+            q ) break;;
+            * );;
+        esac
+    done
 
 cleanup
