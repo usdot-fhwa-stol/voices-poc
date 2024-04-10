@@ -15,8 +15,10 @@ RUN gdown --id 10RaCptmxrcWPoEgWsPy8I2DrBeVWsnEG
     
 RUN gdown --id 17UovGmLGn7VPo4vUNAw5dh7Po_Y_Ukx-
 
-RUN /home/BUILD/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
-/home/BUILD/VUG-Combined-Distribution-*.bin -i /home/ --auto && \
+RUN chmod a+x ./*.bin
+
+RUN /home/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
+/home/VUG-Combined-Distribution-*.bin -i /home/ --auto && \
 # /home/BUILD/VUG-Combined-DataCollectionDistribution-*.bin -i /home/ --auto && \
 rm -rf /tmp/*
 
@@ -38,8 +40,8 @@ WORKDIR /home
 
 # INSTALL TENA bin
 
-RUN /home/BUILD/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
-    /home/BUILD/VUG-Combined-Distribution-*.bin -i /home/ --auto && \
-    # /home/BUILD/VUG-Combined-DataCollectionDistribution-*.bin -i /home/ --auto && \
-    rm -rf /tmp/*
+# RUN /home/BUILD/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
+#     /home/BUILD/VUG-Combined-Distribution-*.bin -i /home/ --auto && \
+#     # /home/BUILD/VUG-Combined-DataCollectionDistribution-*.bin -i /home/ --auto && \
+#     rm -rf /tmp/*
 
