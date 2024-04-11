@@ -34,12 +34,43 @@ then
         echo "Either install openvpn3 and activate a connection or set VUG_FORMAL_EVENT=false to continue."
         exit 1
     fi
-    echo "openvpn3 could not be found. Skipping VPN checks..."
+    echo "chronyc could not be found. Skipping VPN checks..."
     exit 0
 fi
 
-# Check if code is up to date with most recent
+# Check if chronyc is installed
+if ! command -v chronyc &> /dev/null
+then
+    if [ $VUG_FORMAL_EVENT = true ]
+    then
+        echo "chronyc is not installed but you have set VUG_FORMAL_EVENT=true in your scenario config."
+        echo "Either install chronyc or set VUG_FORMAL_EVENT=false to continue."
+        exit 1
+    fi
+    echo "chronyc could not be found. Skipping VPN checks..."
+    exit 0
+fi
 
+# Check if chronyc sources are present
+if [ $VUG_FORMAL_EVENT = true ]
+then
+    chronyc_sources="$(sudo chronyc sources)"
+    valid_source=false
+    while read -ra line; do
+        if [[ ${line[4]} =~ ^-?[0-9]+$ ]] && [ ${line[4]} != 0 ]
+        then
+            valid_source=true
+            break
+        fi
+    done <<< "$chronyc_sources"
+    if [ $valid_source = false ]
+    then
+        echo 'There are no valid chronyc sources present'
+        exit 1
+    fi
+fi
+
+# Check if code is up to date with remote repository
 if [ $VUG_FORMAL_EVENT = true ]
 then
     git fetch
@@ -50,7 +81,7 @@ then
 fi
 
 # Get output from openvpn3 sessions-list
-text="$(sudo openvpn3 sessions-list)"
+openvpn_sessions="$(sudo openvpn3 sessions-list)"
 vpn_paths=()
 path_regex='Path: (.*)'
 vpn_statuses=()
@@ -83,7 +114,7 @@ while read line; do
     then # Grab VPN start time and convert to unix timestamp
         vpn_start_times+=("$(date -d "${BASH_REMATCH[1]}" +"%s")")
     fi
-done <<< "$text"
+done <<< "$openvpn_sessions"
 
 if $has_stale_vpn_connections
 then
