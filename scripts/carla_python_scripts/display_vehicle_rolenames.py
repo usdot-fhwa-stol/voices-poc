@@ -13,10 +13,8 @@ import carla
 
 import argparse
 
-map_height_dict = { "mcity_map_v2.xodr": [230, 245],
-                    "TFHRC.xodr" : [30, 35],
-                    "Town04.xodr" : [-5, 0.5],
-                    "smart_intersection.xodr" : [-5, 0.5],
+map_height_dict = { "mcity_map_voices_v2-2-21": {"bottom_line" : 230, "spawn_line" : 245}
+
                   }
 
 argparser = argparse.ArgumentParser(
@@ -68,7 +66,7 @@ try:
     map_string = client.get_world().get_map().name
 
     if map_string not in map_height_dict:
-        print("The height limits for map %s are unknown. Drawing all vehicle names as red...")
+        print("The height limits for map %s are unknown. Drawing all vehicle names as red..." % (map_string))
 
     print('\n----- DISPLAYING VEHICLE ROLENAMES -----\n')
 
@@ -100,9 +98,9 @@ try:
                 if args.verbose:
                     print("    " + str(vehicle.attributes))
                 if map_string in map_height_dict:
-                    if vehicle.bounding_box.location.z < map_height_dict[map_string][0]:
+                    if vehicle.get_location().z < map_height_dict[map_string]["bottom_line"]:
                         continue
-                    elif vehicle.bounding_box.location.z > map_height_dict[map_string][1]:
+                    elif vehicle.get_location().z > map_height_dict[map_string]["spawn_line"]:
                         color = carla.Color(r=0, g=0, b=255)
                     else:
                         color = carla.Color(r=255, g=0, b=0)
