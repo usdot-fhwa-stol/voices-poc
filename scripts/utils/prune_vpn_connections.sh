@@ -1,18 +1,53 @@
 #!/usr/bin/bash
 
+# Confirm configs are the desired ones
+voices_site_config=$HOME/.voices_site_config
+voices_scenario_config=$HOME/.voices_scenario_config
+if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
+    if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
+        site_config_link_dest=$(readlink -f $voices_site_config)
+        site_link_base_name=$(basename ${site_config_link_dest})
+
+        scenario_config_link_dest=$(readlink -f $voices_scenario_config)
+        scenario_link_base_name=$(basename ${scenario_config_link_dest})
+    fi
+fi
+
+while true; do
+    echo "Your current configs are:"
+    echo "      $site_link_base_name"
+    echo "      $scenario_link_base_name"
+    read -p "Would you like to continue? [Y/n] " yn
+    case $yn in
+        [Yy]* | "") break;;
+        [Nn]*) exit 1;;
+        * );;
+    esac
+done
+
 # Check if openvpn3 is installed
 if ! command -v openvpn3 &> /dev/null
 then
-    if [ $VUG_FORCE_VPN = true ]
+    if [ $VUG_FORMAL_EVENT = true ]
     then
-        echo "openvpn3 is not installed but you have set VUG_FORCE_VPN=true in your scenario config."
-        echo "Either install openvpn3 and activate a connection or set VUG_FORCE_VPN=false to continue."
+        echo "openvpn3 is not installed but you have set VUG_FORMAL_EVENT=true in your scenario config."
+        echo "Either install openvpn3 and activate a connection or set VUG_FORMAL_EVENT=false to continue."
         exit 1
     fi
     echo "openvpn3 could not be found. Skipping VPN checks..."
     exit 0
 fi
 
+# Check if code is up to date with most recent
+
+if [ $VUG_FORMAL_EVENT = true ]
+then
+    git fetch
+    if git status -uno | grep -q 'Your branch is behind'; then
+        echo "Local repository is behind the remote repository. Please pull the most recent code."
+        exit 1
+    fi
+fi
 
 # Get output from openvpn3 sessions-list
 text="$(sudo openvpn3 sessions-list)"
@@ -105,11 +140,11 @@ then
             echo "Got: "${vpn_start_times[i-1]} " Most Recent: " $most_recent_start
         fi
     done 
-    if [ $VUG_FORCE_VPN = false ]
+    if [ $VUG_FORMAL_EVENT = false ]
     then
         while true; do
             echo ''
-            read -p "You have an active VPN session but have set VUG_FORCE_VPN=false. Would you like to terminate the session? [y/N] " yn
+            read -p "You have an active VPN session but have set VUG_FORMAL_EVENT=false. Would you like to terminate the session? [y/N] " yn
             case $yn in
                 [Yy]*)  for i in $(seq 1 ${#vpn_statuses[@]}); do
                             if [ ${vpn_statuses[i-1]} = 1 -a ${vpn_start_times[i-1]} = $most_recent_start ]
@@ -124,9 +159,9 @@ then
         done
     fi
 else
-    if [ $VUG_FORCE_VPN = true ]
+    if [ $VUG_FORMAL_EVENT = true ]
     then
-        echo "No active VPN connections found. Please connect to an openvpn3 session or set VUG_FORCE_VPN=false in your scenario config to continue."
+        echo "No active VPN connections found. Please connect to an openvpn3 session or set VUG_FORMAL_EVENT=false in your scenario config to continue."
         exit 1
     fi
 fi
