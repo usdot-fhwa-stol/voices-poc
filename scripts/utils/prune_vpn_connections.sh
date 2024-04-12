@@ -144,21 +144,21 @@ then
     for i in $(seq 1 ${#vpn_start_times[@]}); do
         if [ ${vpn_start_times[i-1]} -gt $most_recent_start ] && [ ${vpn_statuses[i-1]} = 1 ]; then
             most_recent_start=${vpn_start_times[i-1]}
-            echo "Got: "${vpn_start_times[i-1]} " Most Recent: " $most_recent_start
         fi
     done 
     while true; do
         echo ''
-        read -p "You have multiple active VPN connections. Would you like to remove all but the most recent? [Y/n] " yn
+        echo 'You have multiple active VPN connections.'
+        read -p "Would you like to remove all but the most recent? [y/N] " yn
         case $yn in
-            [Yy]* | "") for i in $(seq 1 ${#vpn_statuses[@]}); do
+            [Yy]*) for i in $(seq 1 ${#vpn_statuses[@]}); do
                         if [ ${vpn_statuses[i-1]} = 1 -a ${vpn_start_times[i-1]} != $most_recent_start ]
                         then
                             echo "Removing "${vpn_paths[i-1]}
                             sudo openvpn3 session-manage --session-path ${vpn_paths[i-1]} --disconnect
                         fi
                     done; break;;
-            [Nn]* ) echo ''; break;;
+            [Nn]* | "") echo ''; break;;
             * );;
         esac
     done
