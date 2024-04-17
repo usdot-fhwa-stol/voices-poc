@@ -91,7 +91,7 @@ fi
 final_vpn_local_address=""
 final_vpn_em_address=""
 
-vpn_check=$(sudo openvpn3 sessions-list | grep -E tun[0-9])
+vpn_check=$(sudo openvpn3 sessions-list | grep -oE tun[0-9])
 
 interfaces=($(ifconfig -a | grep -o '^[^ ]\+'))
 tun_interfaces=()
