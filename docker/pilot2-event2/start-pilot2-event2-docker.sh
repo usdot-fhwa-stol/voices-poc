@@ -32,20 +32,21 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
         source $voices_scenario_config
         export VUG_SITE_CONFIG_FILE=$site_link_base_name
         export VUG_SCENARIO_CONFIG_FILE=$scenario_link_base_name
-        echo "Site Config: "$site_link_base_name
-        echo "Scenario Config: "$scenario_link_base_name
     else
+        echo
         echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
         echo "Site Config: "$(readlink -f $voices_site_config)
         echo "Scenario Config: "$(readlink -f $voices_scenario_config)
         exit 1
    fi
 elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
+    echo
     echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
     echo "Site Config: "$(readlink -f $voices_site_config)
     echo "Scenario Config: "$(readlink -f $voices_scenario_config)
     exit 1
 else
+    echo
     echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
     echo "Site Config: "$(readlink -f $voices_site_config)
     echo "Scenario Config: "$(readlink -f $voices_scenario_config)
@@ -57,7 +58,7 @@ xhost +local:docker
 docker_compose_v2_version=$(docker compose version 2> /dev/null)
 
 if [ ! -z "$docker_compose_v2_version" ]; then
-
+    echo
     echo "docker compose version: "$docker_compose_v2_version
 
     docker_compose_cmd="docker compose"
@@ -66,10 +67,12 @@ else
 
     if [ ! -z "$docker_compose_v1_version" ]; then
 
+        echo
         echo "docker-compose version: "$docker_compose_v1_version
 
         docker_compose_cmd="docker-compose"
     else
+        echo
         echo ERROR: No valid docker compose version found
         exit
     fi
@@ -83,26 +86,27 @@ vpn_interface_pattern="tun[0-9]"
 vpn_check=$(ip -br link show | awk '{print $1}' | grep -w "$vpn_interface_pattern")
 
 interfaces=($(ifconfig -a | grep -o '^[^ ]\+'))
-ip_addresses=($(ifconfig | grep -E 'inet ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})' | awk '{print $2}'))
 tun_interfaces=()
 tun_ip_addresses=()
 for i in $(seq 1 ${#interfaces[@]}); do
     if [ ${interfaces[i-1]:0:3} = "tun" ]
     then
         tun_interfaces+=(${interfaces[i-1]})
-        tun_ip_addresses+=(${ip_addresses[i-1]})
+        vpn_local_ip=$(ip -br a show ${interfaces[i-1]} | awk '{print $3}')
+        vpn_local_ip_clean=${vpn_local_ip%/*}
+        tun_ip_addresses+=($vpn_local_ip_clean)
     fi
 done
 # Prompt if there are multiple tun interfaces
 if [ "${#tun_interfaces[@]}" -gt 1  ]
 then
-    echo ''
+    echo
     echo "Multiple tunnel interfaces were found."
     for i in $(seq 1 ${#tun_interfaces[@]}); do
         echo "      " ${tun_interfaces[i-1]} ${tun_ip_addresses[i-1]}
     done
     while true; do
-        echo ''
+        echo
         read -p "Which interface would you like to use? [0-9] " tun
         case $tun in
             [0-9])  vpn_check="tun$tun"; break;;
@@ -111,17 +115,17 @@ then
     done
 elif [ "${#tun_interfaces[@]}" = 1  ]
 then
-    echo ''
+    echo
     echo "A single tunnel interface was found."
     for i in $(seq 1 ${#tun_interfaces[@]}); do
         echo "      " ${tun_interfaces[i-1]} ${tun_ip_addresses[i-1]}
     done
     while true; do
-        echo ''
+        echo
         read -p "Is this the correct interface? [Y/n] " yn
         case $yn in
-            [Yy]*)  vpn_check=${tun_interfaces[0]} break;;
-            [Nn]* | "") echo ''; break;;
+            [Yy]* | "")  vpn_check=${tun_interfaces[0]} break;;
+            [Nn]*) exit 1;;
             * );;
         esac
     done
