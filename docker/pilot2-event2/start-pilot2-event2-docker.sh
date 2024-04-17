@@ -11,7 +11,10 @@ $docker_compose_cmd -f $docker_compose_file down
 source $VUG_LOCAL_VOICES_POC_PATH/scripts/utils/stop_current_vpn_connection.sh
 }
 
+# Get local IP Address
+VUG_LOCAL_ADDRESS=$(ip addr show $VUG_LOCAL_NETWORK_INTERFACE | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | head -n 1)
 
+# Conduct VPN connectivity checks
 if ! $VUG_LOCAL_VOICES_POC_PATH/scripts/utils/prune_vpn_connections.sh; then
     exit 1
 fi
