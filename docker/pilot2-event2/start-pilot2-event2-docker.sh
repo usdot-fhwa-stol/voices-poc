@@ -26,6 +26,20 @@ if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
         source $voices_scenario_config
         export VUG_SITE_CONFIG_FILE=$site_link_base_name
         export VUG_SCENARIO_CONFIG_FILE=$scenario_link_base_name
+
+        while true; do
+			echo "Your current configs are:"
+			echo "      Site Config: $site_link_base_name"
+			echo "      Scenario Config:$scenario_link_base_name"
+			echo
+			read -p "Would you like to continue? [Y/n] " yn
+			case $yn in
+				[Yy]* | "") break;;
+				[Nn]*) exit 1;;
+				* );;
+			esac
+		done
+        
     else
         echo
         echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"

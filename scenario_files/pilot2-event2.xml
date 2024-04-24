@@ -61,7 +61,7 @@
             <CARMA CARLAcosimulationIdentifier="CARLA-MCITY-2" roleName="MCITY-TERASIM-01" generate_bsms="true"/>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300766" longitudeInDegrees="-83.699090" heightAboveEllipsoidInMeters="250"/>
+            <GeodeticPosition latitudeInDegrees="42.300766" longitudeInDegrees="-83.699090" heightAboveEllipsoidInMeters="200"/>
             <!-- x=15.871896 y=-19.251431 yaw=277.4 -->
             <Heading>7.4</Heading>
         </initialTSPI>
@@ -72,7 +72,7 @@
             <CARMA CARLAcosimulationIdentifier="CARLA-MCITY-2" roleName="MCITY-TERASIM-02" generate_bsms="true"/>
         </userData>
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="42.300373" longitudeInDegrees="-83.698457" heightAboveEllipsoidInMeters="250"/>
+            <GeodeticPosition latitudeInDegrees="42.300373" longitudeInDegrees="-83.698457" heightAboveEllipsoidInMeters="200"/>
             <!-- x=68.050499 y=24.545536 yaw=2.04 -->
             <Heading>92.04</Heading>
         </initialTSPI>
