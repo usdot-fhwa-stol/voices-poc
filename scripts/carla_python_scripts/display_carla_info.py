@@ -60,6 +60,8 @@ args = argparser.parse_args()
 
 def display_vehicle_rolenames():
 
+    text_offset = carla.Location(x=5, y=0, z=2)
+
     vehicle_list = world.get_actors().filter('vehicle.*')
         # Print all index corresponding to all traffic vehicles in scene (CarlaUE4)
 
@@ -100,14 +102,14 @@ def display_vehicle_rolenames():
                     color = carla.Color(r=255, g=0, b=0)
 
                 world.debug.draw_string(
-                    vehicle.get_location() + carla.Location(x=0, y=0, z=2),
+                    vehicle.get_location() + text_offset,
                     cleaned_veh_name,
                     draw_shadow=False,color=color,
                     life_time=label_duration,
                     persistent_lines=True)
             else:
                 world.debug.draw_string(
-                    vehicle.get_location() + carla.Location(x=0, y=0, z=2),
+                    vehicle.get_location() + text_offset,
                     cleaned_veh_name,
                     draw_shadow=False,color=carla.Color(r=255,g=0,b=0),
                     life_time=label_duration,

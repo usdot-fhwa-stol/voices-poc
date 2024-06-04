@@ -70,6 +70,8 @@ try:
 
     print('\n----- DISPLAYING VEHICLE ROLENAMES -----\n')
 
+    text_offset = carla.Location(x=0, y=10, z=2)
+
     while (True):
         world = client.get_world()
         # Get actor information (Vehicles)
@@ -114,14 +116,14 @@ try:
                         color = carla.Color(r=255, g=0, b=0)
 
                     world.debug.draw_string(
-                        vehicle.get_location() + carla.Location(x=0, y=0, z=2),
+                        vehicle.get_location() + text_offset,
                         cleaned_veh_name,
                         draw_shadow=False,color=color,
                         life_time=label_duration,
                         persistent_lines=True)
                 else:
                     world.debug.draw_string(
-                        vehicle.get_location() + carla.Location(x=0, y=0, z=2),
+                        vehicle.get_location() + text_offset,
                         cleaned_veh_name,
                         draw_shadow=False,color=carla.Color(r=255,g=0,b=0),
                         life_time=label_duration,

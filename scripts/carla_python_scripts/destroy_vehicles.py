@@ -72,16 +72,20 @@ def main():
         #client.set_timeout(10.0)
         
         vehicles = world.get_actors().filter('vehicle.*')
+        print(str(vehicles))
 
         if args.include:
             vehicles_to_include = (args.include).replace(" ","").split(",")
             included_vehicles = []
 
             for vehicle in vehicles:
+                print(vehicle.attributes["role_name"])
                 if vehicle.attributes["role_name"] in vehicles_to_include:
                     included_vehicles.append(vehicle)
             
             vehicles = included_vehicles
+
+            print(f'INCLUDED: {vehicles}')
 
 
         if args.exclude:
