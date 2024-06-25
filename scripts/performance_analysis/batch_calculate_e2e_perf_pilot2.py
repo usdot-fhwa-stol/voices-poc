@@ -47,14 +47,14 @@ import argparse
 
 
 data_types = {
-    "J2735-SPAT": {
-        "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
-    },
-    # "J2735-BSM": {
+    # "J2735-SPAT": {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
     # },
+    "J2735-BSM": {
+        "pcap_file_pattern" : "J2735-Payload",
+        "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
+    },
     # "J2735-MAP": {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
@@ -95,10 +95,10 @@ data_types = {
     #     "pcap_file_pattern" : "MAP",
     #     "sdo_file_pattern"   : ["MAP"]
     # },
-    "TrafficLight": {
-        "pcap_file_pattern" : "SPAT",
-        "sdo_file_pattern"   : ["TJ2735Msg-J2735","Entities-Signals-TrafficLight"]
-    },
+    # "TrafficLight": {
+    #     "pcap_file_pattern" : "SPAT",
+    #     "sdo_file_pattern"   : ["TJ2735Msg-J2735","Entities-Signals-TrafficLight"]
+    # },
 }
 
 ################################################## FUNCTIONS ##################################################
@@ -311,7 +311,7 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
 
             # if there is a pcap out file (meaning this site generated udp messages for this) and it is one of the listed message types,
             # include a pcap out row
-            if all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"] and data_type in ["J2735-SPAT","J2735-MAP","SPAT","TrafficLight"]:
+            if all_data[source_data["site_name"]][data_type]["decoded_pcap_out_file"] and data_type in ["J2735-BSM","J2735-SPAT","J2735-MAP","SPAT","TrafficLight"]:
                 
                 # i dont think this is needed???
                 if data_type == "TrafficLight":
@@ -401,7 +401,7 @@ all_data = {}
 
 for test_site in site_list:
     print("\nFinding data files for " + test_site["site_name"])
-    all_data[test_site["site_name"]] = find_data_files(test_site["tdcs_dir"],test_site["pcap_in_dir"],test_site["pcap_out_dir"])
+    all_data[test_site["site_name"]] = find_data_files(test_site["tdcs_dir"],test_site["pcap_out_dir"],test_site["pcap_in_dir"])
 
 
 

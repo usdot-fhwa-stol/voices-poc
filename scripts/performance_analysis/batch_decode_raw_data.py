@@ -184,7 +184,7 @@ def get_adapter_addresses_by_type(exported_tcs_path,ip_address):
                 # Assuming the CSV file has a column named "const^Metadata,Endpoint"
                 for row in reader:
 
-                    if ip_address in row[endpoint_col]:
+                    if ip_address == row[endpoint_col].split(":")[0]:
                         adapter_addresses_by_type[msg_type] = row[endpoint_col]
                         
         except FileNotFoundError:

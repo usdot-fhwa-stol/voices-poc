@@ -10,6 +10,8 @@ import json
 from pprint import pprint
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 ############################## TODO ##############################
@@ -1246,6 +1248,158 @@ def load_data_from_csv(datasets_infile):
         if str(dataset_line["load_data"]) == "true":
             load_data(dataset_line["dataset_name"],dataset_line["dataset_file_location"],dataset_line["dataset_type"],dataset_line["message_type"],dataset_line["adapter_ip"],dataset_line["start_time"],dataset_line["end_time"])
 
+#################### PLOT DATA ####################
+
+
+def plot_latency(file_path, results_base_dir):
+    # Load the CSV file
+    data = pd.read_csv(file_path)
+    
+    # Identify the columns containing "_incremental_latency" and "_total_latency"
+    incremental_latency_cols = [col for col in data.columns if "_incremental_latency" in col]
+    total_latency_cols = [col for col in data.columns if "_total_latency" in col]
+    timestamp_cols = [col for col in data.columns if "timestamp" in col]
+    print(f'timestamp_cols: {timestamp_cols}')
+    
+    # Find the first and last columns with "_total_latency"
+    first_total_latency_col = total_latency_cols[0]
+    last_total_latency_col = total_latency_cols[-1]
+    
+    first_timestamp_col = timestamp_cols[0]
+    print(f'first_timestamp_col: {first_timestamp_col}')
+    timestamps = pd.to_datetime(data[first_timestamp_col], unit='s',errors='coerce')
+    print(f'timestamps: {timestamps}')
+
+    # Get the base name of the file without extension
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
+    
+    # Combine incremental columns and first total latency column for plotting
+    incremental_col_to_plot = incremental_latency_cols + [first_total_latency_col]
+
+    # Plot the combined plot of all incremental latency columns and the first total latency column
+    plt.figure(figsize=(20, 8))
+    eof_label_added = False
+    dropped_packet_label_added = False
+    no_prev_packet_label_added = False
+
+    incremental_col_to_plot_values = []
+
+    first_timestamp_data = pd.to_numeric(data[first_timestamp_col], errors='coerce')
+
+    for col in incremental_col_to_plot:
+        numeric_data = pd.to_numeric(data[col], errors='coerce')
+        
+        incremental_col_to_plot_values.append(numeric_data)
+
+        plt.plot(timestamps, numeric_data, label=clean_column_name(col))
+        
+        # Check for "EOF" in the column and plot a vertical line if found
+        eof_indices = data[data[col] == 'EOF'].index
+        for idx in eof_indices:
+            plt.axvline(x=timestamps[idx], color='r', linestyle='--', linewidth=1, alpha=0.1, label='EOF' if not eof_label_added else "")
+            eof_label_added = True
+        
+        # Check for "DROPPED PACKET" in the column and plot a vertical line if found
+        dropped_indices = data[data[col] == 'DROPPED PACKET'].index
+        for idx in dropped_indices:
+            plt.axvline(x=timestamps[idx], color='b', linestyle='--', linewidth=1, alpha=0.1, label='DROPPED PACKET' if not dropped_packet_label_added else "")
+            dropped_packet_label_added = True
+        
+        # Check for "NO PREV PACKET" in the column and plot a vertical line if found
+        no_prev_indices = data[data[col] == 'NO PREV PACKET'].index
+        for idx in no_prev_indices:
+            plt.axvline(x=timestamps[idx], color='g', linestyle='--', linewidth=1, alpha=0.1, label='NO PREV PACKET' if not no_prev_packet_label_added else "")
+            no_prev_packet_label_added = True
+    
+    plt.title('Latency of each Segment')
+    plt.xlabel('Index')
+    plt.ylabel('Latency (ms)')
+    plt.legend()
+    plt.grid(True)
+    combined_plot_path = os.path.join(results_base_dir, f'{base_name}_combined_plot.png')
+    plt.savefig(combined_plot_path)
+    plt.close()
+
+    # plot stacked bar chart
+    plt.figure(figsize=(20, 8))
+    x = range(0,len(incremental_col_to_plot_values[0]))
+    plt.bar(x, incremental_col_to_plot_values[0], color='r')
+    if len(incremental_col_to_plot_values) > 1:
+        plt.bar(x, incremental_col_to_plot_values[1], bottom=incremental_col_to_plot_values[0], color='b')
+
+        if len(incremental_col_to_plot_values) > 2:
+            plt.bar(x, incremental_col_to_plot_values[2], bottom=incremental_col_to_plot_values[0]+incremental_col_to_plot_values[1], color='y')
+    
+    plt.ylabel("Latency (ms)")
+    plt.xlabel('Index')
+
+    cleaned_col_names = []
+    for col_name in incremental_col_to_plot:
+        cleaned_col_names.append(clean_column_name(col_name))
+
+    plt.legend(cleaned_col_names)
+    plt.title("Latency in Segments")
+    
+    bar_plot_path = f'{file_path}_stacked_bar_chart.png'
+    plt.savefig(bar_plot_path)
+    plt.close()
+
+    
+    # Plot the last total latency column
+    plt.figure(figsize=(20, 8))
+    last_total_latency_data = pd.to_numeric(data[last_total_latency_col], errors='coerce')
+    plt.plot(data.index, last_total_latency_data, label="End to End Latency", color='red')
+
+    eof_label_added = False
+    dropped_packet_label_added = False
+    no_prev_packet_label_added = False
+    
+    # Check for "EOF" in the last total latency column and plot a vertical line if found
+    eof_indices = data[data[last_total_latency_col] == 'EOF'].index
+    for idx in eof_indices:
+        plt.axvline(x=idx, color='r', linestyle='--', linewidth=1, alpha=0.1, label='EOF' if not eof_label_added else "")
+        eof_label_added = True
+    
+    # Check for "DROPPED PACKET" in the last total latency column and plot a vertical line if found
+    dropped_indices = data[data[last_total_latency_col] == 'DROPPED PACKET'].index
+    for idx in dropped_indices:
+        plt.axvline(x=idx, color='b', linestyle='--', linewidth=1, alpha=0.1, label='DROPPED PACKET' if not dropped_packet_label_added else "")
+        dropped_packet_label_added = True
+    
+    # Check for "NO PREV PACKET" in the last total latency column and plot a vertical line if found
+    no_prev_indices = data[data[last_total_latency_col] == 'NO PREV PACKET'].index
+    for idx in no_prev_indices:
+        plt.axvline(x=idx, color='g', linestyle='--', linewidth=1, alpha=0.1, label='NO PREV PACKET' if not no_prev_packet_label_added else "")
+        no_prev_packet_label_added = True
+
+    plt.title('End to End Latency')
+    plt.xlabel('Index')
+    plt.ylabel('Latency (ms)')
+    plt.legend()
+    plt.grid(True)
+    last_total_plot_path = os.path.join(results_base_dir, f'{base_name}_last_total_latency_plot.png')
+    plt.savefig(last_total_plot_path)
+    plt.close()
+
+    # Plot total histograms
+    last_total_latency_data.hist(bins=50, figsize=(20, 8))
+    plt.title('End to End Latency Histogram')
+    hist_plot_path = f'{file_path}_histograms.png'
+    plt.savefig(hist_plot_path)
+    plt.close()
+
+
+def clean_column_name(column_name):
+
+    if "pcap_in" in column_name:
+        return "SDO to UDP Conversion"
+    elif "sdo_transmit" in column_name:
+        return "SDO Transmit Latency"
+    elif "sdo_commit" in column_name:
+        return "UDP to SDO Conversion"
+    else:
+        return column_name
+    
 
 #################### SELECT SOURCE VEHICLE ####################
 
@@ -1899,7 +2053,7 @@ data_params = {
 
             "match_keys"        : [
                 {
-                    "key"       : "payload",
+                    "key"       : "hex_payload",
                 },
                 {
                     "key"       : None,
@@ -2465,7 +2619,8 @@ try:
 except:
     pass
 
-results_outfile_obj = open(results_base_dir + "/" + outfile + ".csv",'w',newline='')
+results_filename = results_base_dir + "/" + outfile + ".csv"
+results_outfile_obj = open(results_filename,'w',newline='')
 results_outfile_writer = csv.writer(results_outfile_obj)
 
 calculate_performance_metrics()
@@ -2474,6 +2629,8 @@ results_outfile_obj.close()
 
 performance_post_processing(results_base_dir + "/" + outfile + ".csv")
 
+
+plot_latency(results_filename,results_base_dir)
 
 
 
