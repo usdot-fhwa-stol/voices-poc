@@ -5,6 +5,10 @@ import json
 import csv
 import re
 import argparse
+import glob
+import matplotlib.pyplot as plt
+import pandas as pd
+import itertools
 
 ## TODO
 #   - make import files a json object so name doesnt matter
@@ -113,7 +117,8 @@ def find_file_at_path(pattern, path):
     
     if len(result) == 0:
         print("\nERROR: File not found: " + path + " - " + pattern)
-        sys.exit()
+        return None
+        # sys.exit()
     elif len(result) == 1:
         return result[0]
     else:
@@ -327,7 +332,7 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
                 if sdo_type_file_i == 0:
                     if data_type == "TrafficLight":
                         import_data_type = "J2735-SPAT"
-                        import_adapter_ip = source_data["adapter_addresses_by_type"]["TJ2735Msg-J2735"][0]
+                        import_adapter_ip = source_data["adapter_addresses_by_type"]["TJ2735Msg-J2735"]
                     else:
                         import_data_type = data_type
                         import_adapter_ip = adapter_ip
@@ -354,7 +359,287 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
             sys.exit()
     
     return this_import_folder_name
-        
+
+
+
+def bak_plot_performance_data(root_dir, source_site, destination_sites, data_type):
+    
+    # Step 1: Traverse the directories and find CSV files
+    run_dirs = glob.glob(os.path.join(root_dir, f'P2E2-RFR2-R*-{data_type}_results'))
+
+    print(f'run_dirs: {run_dirs}')
+    
+    data_frames = []
+    for run_dir in run_dirs:
+        csv_files = glob.glob(os.path.join(run_dir, '*.csv'))
+        for csv_file in csv_files:
+            if f'{source_site}_' in os.path.basename(csv_file):
+                df = pd.read_csv(csv_file)
+                data_frames.append(df)
+    
+    if not data_frames:
+        print("No data found for the specified source site.")
+        return
+    
+    # Combine data frames
+    combined_df = pd.concat(data_frames)
+
+    # Step 2: Generate plot for a single run (source site to every destination site)
+    single_run_columns = [col for col in combined_df if col.startswith(source_site)]
+    single_run_df = combined_df[single_run_columns]
+    plt.figure(figsize=(10, 6))
+    for results_column in single_run_df:
+        site_df = single_run_df[results_column]
+        last_total_latency_column = [col for col in site_df if "_total_latency" in col][-1]
+        first_timestamp_column = [col for col in site_df if "timestamp" in col][0]
+
+        plt.plot(site_df[first_timestamp_column], site_df[last_total_latency_column], label=f'{source_site} to {results_column}')
+    plt.xlabel('Date')
+    plt.ylabel('Performance Metric')
+    plt.title(f'Performance from {source_site} to each Destination Site for a Single Run')
+    plt.legend()
+    single_run_plot_path = os.path.join(root_dir, f'{source_site}_to_all_destinations_single_run.png')
+    plt.savefig(single_run_plot_path)
+    plt.close()
+    
+    # Step 3: Generate plot for all runs for a set of source and destination sites
+    plt.figure(figsize=(10, 6))
+    for destination_site in destination_sites:
+        site_df = combined_df[combined_df['destination_site'] == destination_site]
+        plt.plot(site_df['date'], site_df['performance_metric'], label=f'{source_site} to {destination_site}')
+    plt.xlabel('Date')
+    plt.ylabel('Performance Metric')
+    plt.title(f'Performance from {source_site} to {destination_sites} for All Runs')
+    plt.legend()
+    all_runs_plot_path = os.path.join(root_dir, f'{source_site}_to_{destination_sites}_all_runs.png')
+    plt.savefig(all_runs_plot_path)
+    plt.close()
+
+def plot_performance_data(root_dir, data_type):
+    # Create the plots directory if it doesn't exist
+    plots_dir = os.path.join(root_dir, 'plots')
+    os.makedirs(plots_dir, exist_ok=True)
+
+    # Step 1: Traverse the directories and find CSV files
+    run_dirs = glob.glob(os.path.join(root_dir, f'P2E2-RFR2-R*-{data_type}_results'))
+    
+    run_data_frames = {}
+    all_source_sites = set()
+    all_destination_sites = set()
+    
+    for run_dir in run_dirs:
+        # Extract run number from directory name
+        run_number = os.path.basename(run_dir).split('-')[2]
+        csv_files = glob.glob(os.path.join(run_dir, '*.csv'))
+        data_frames = {}
+        for csv_file in csv_files:
+            # Ignore files that end with results_summary.csv
+            if csv_file.endswith('results_summary.csv'):
+                continue
+            
+            # Extract source and destination site names from the file name
+            filename_parts = os.path.basename(csv_file).split('_')
+            source_site = filename_parts[0]
+            destination_site = filename_parts[3]
+            
+            # Read the CSV file into a DataFrame
+            df = pd.read_csv(csv_file)
+            # Identify the columns of interest
+            date_col = [col for col in df if "timestamp" in col][0]
+            performance_metric_col = [col for col in df if "_total_latency" in col][-1]
+            # Keep only the relevant columns
+            df = df[[date_col, performance_metric_col]]
+            # Convert the data to numeric
+            df[date_col] = pd.to_numeric(df[date_col], errors='coerce')
+            df[performance_metric_col] = pd.to_numeric(df[performance_metric_col], errors='coerce')
+            df.columns = ['Date', 'PerformanceMetric']  # Rename columns for consistency
+            
+            if source_site not in data_frames:
+                data_frames[source_site] = {}
+            if destination_site not in data_frames[source_site]:
+                data_frames[source_site][destination_site] = []
+            data_frames[source_site][destination_site].append((run_number, df))
+            all_source_sites.add(source_site)
+            all_destination_sites.add(destination_site)
+        if data_frames:
+            # Store data frames for the current run
+            run_data_frames[run_number] = data_frames
+    
+    if not run_data_frames:
+        print("No data found for the specified source site.")
+        return
+    
+    colors_to_use = [
+        'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+        'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'
+    ]
+
+    # Define a color cycle for plotting source-to-destination combinations
+    source_dest_color_cycle = iter(colors_to_use)
+    source_destination_colors = {}
+    
+    # Define a color cycle for plotting runs
+    run_color_cycle = iter(colors_to_use)
+    run_colors = {}
+
+    # Step 2: Generate plot for each run for each source site
+    for run_number, run_data in run_data_frames.items():
+        for source_site, destinations in run_data.items():
+            plt.figure(figsize=(10, 6))
+            for destination_site, dfs in destinations.items():
+                if destination_site not in source_destination_colors:
+                    source_destination_colors[destination_site] = next(source_dest_color_cycle)
+                color = source_destination_colors[destination_site]
+                for _, df in dfs:
+                    plt.plot(df['Date'], df['PerformanceMetric'], label=f'{source_site} to {destination_site}', color=color)
+            plt.xlabel('Date')
+            plt.ylabel('Performance Metric')
+            plt.title(f'Performance from {source_site} for Run {run_number}')
+            plt.legend()
+            # Save the plot as a PNG file in the plots directory
+            single_run_plot_path = os.path.join(plots_dir, f'{source_site}_single_run_{run_number}_{data_type}.png')
+            plt.savefig(single_run_plot_path)
+            plt.close()
+    
+    # Step 3: Generate separate plots for each destination site across all runs
+    for source_site in all_source_sites:
+        for destination_site in all_destination_sites:
+            if source_site != destination_site:  # Skip plots where source and destination are the same
+                plt.figure(figsize=(10, 6))
+                for run_number in sorted(run_data_frames.keys(), key=lambda x: int(x[1:])):  # Sort run numbers in ascending order
+                    run_data = run_data_frames[run_number]
+                    if source_site in run_data and destination_site in run_data[source_site]:
+                        for run_num, df in run_data[source_site][destination_site]:
+                            # Normalize the date values by subtracting the first date value
+                            df['Date'] -= df['Date'].iloc[0]
+                            if run_number not in run_colors:
+                                run_colors[run_number] = next(run_color_cycle)
+                            color = run_colors[run_number]
+                            plt.plot(df['Date'], df['PerformanceMetric'], label=f'Run {run_num}', color=color)
+                plt.xlabel('Time (normalized)')
+                plt.ylabel('Performance Metric')
+                plt.title(f'Performance from {source_site} to {destination_site} for All Runs')
+                plt.legend()
+                # Save the plot as a PNG file in the plots directory
+                all_runs_plot_path = os.path.join(plots_dir, f'{source_site}_to_{destination_site}_all_runs_{data_type}.png')
+                plt.savefig(all_runs_plot_path)
+                plt.close()
+
+def plot_performance_data_log(root_dir, data_type):
+    # Create the plots directory if it doesn't exist
+    plots_dir = os.path.join(root_dir, 'plots')
+    os.makedirs(plots_dir, exist_ok=True)
+
+    # Step 1: Traverse the directories and find CSV files
+    run_dirs = glob.glob(os.path.join(root_dir, f'P2E2-RFR2-R*-{data_type}_results'))
+    
+    run_data_frames = {}
+    all_source_sites = set()
+    all_destination_sites = set()
+    
+    for run_dir in run_dirs:
+        # Extract run number from directory name
+        run_number = os.path.basename(run_dir).split('-')[2]
+        csv_files = glob.glob(os.path.join(run_dir, '*.csv'))
+        data_frames = {}
+        for csv_file in csv_files:
+            # Ignore files that end with results_summary.csv
+            if csv_file.endswith('results_summary.csv'):
+                continue
+            
+            # Extract source and destination site names from the file name
+            filename_parts = os.path.basename(csv_file).split('_')
+            source_site = filename_parts[0]
+            destination_site = filename_parts[3]
+            
+            # Read the CSV file into a DataFrame
+            df = pd.read_csv(csv_file)
+            # Identify the columns of interest
+            date_col = [col for col in df if "timestamp" in col][0]
+            performance_metric_col = [col for col in df if "_total_latency" in col][-1]
+            # Keep only the relevant columns
+            df = df[[date_col, performance_metric_col]]
+            # Convert the data to numeric
+            df[date_col] = pd.to_numeric(df[date_col], errors='coerce')
+            df[performance_metric_col] = pd.to_numeric(df[performance_metric_col], errors='coerce')
+            df.columns = ['Date', 'PerformanceMetric']  # Rename columns for consistency
+            
+            if source_site not in data_frames:
+                data_frames[source_site] = {}
+            if destination_site not in data_frames[source_site]:
+                data_frames[source_site][destination_site] = []
+            data_frames[source_site][destination_site].append((run_number, df))
+            all_source_sites.add(source_site)
+            all_destination_sites.add(destination_site)
+        if data_frames:
+            # Store data frames for the current run
+            run_data_frames[run_number] = data_frames
+    
+    if not run_data_frames:
+        print("No data found for the specified source site.")
+        return
+    
+    colors_to_use = [
+        'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 
+        'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'
+    ]
+
+    # Define a color cycle for plotting source-to-destination combinations
+    source_dest_color_cycle = iter(colors_to_use)
+    source_destination_colors = {}
+    
+    # Define a color cycle for plotting runs
+    run_color_cycle = iter(colors_to_use)
+    run_colors = {}
+
+    # Step 2: Generate plot for each run for each source site
+    for run_number, run_data in run_data_frames.items():
+        for source_site, destinations in run_data.items():
+            plt.figure(figsize=(10, 6))
+            for destination_site, dfs in destinations.items():
+                if destination_site not in source_destination_colors:
+                    source_destination_colors[destination_site] = next(source_dest_color_cycle)
+                color = source_destination_colors[destination_site]
+                for _, df in dfs:
+                    plt.plot(df['Date'], df['PerformanceMetric'], label=f'{source_site} to {destination_site}', color=color)
+            plt.yscale('log')
+            plt.ylim(10**1, 10**4)  # Set y-axis limits for logarithmic scale
+            plt.xlabel('Date')
+            plt.ylabel('Performance Metric (log scale)')
+            plt.title(f'Performance from {source_site} for Run {run_number}')
+            plt.legend()
+            # Save the plot as a PNG file in the plots directory
+            single_run_plot_path = os.path.join(plots_dir, f'{source_site}_single_run_{run_number}_{data_type}.png')
+            plt.savefig(single_run_plot_path)
+            plt.close()
+    
+    # Step 3: Generate separate plots for each destination site across all runs
+    for source_site in all_source_sites:
+        for destination_site in all_destination_sites:
+            if source_site != destination_site:  # Skip plots where source and destination are the same
+                plt.figure(figsize=(10, 6))
+                for run_number in sorted(run_data_frames.keys(), key=lambda x: int(x[1:])):  # Sort run numbers in ascending order
+                    run_data = run_data_frames[run_number]
+                    if source_site in run_data and destination_site in run_data[source_site]:
+                        for run_num, df in run_data[source_site][destination_site]:
+                            # Normalize the date values by subtracting the first date value
+                            df['Date'] -= df['Date'].iloc[0]
+                            if run_number not in run_colors:
+                                run_colors[run_number] = next(run_color_cycle)
+                            color = run_colors[run_number]
+                            plt.plot(df['Date'], df['PerformanceMetric'], label=f'Run {run_num}', color=color)
+                plt.yscale('log')
+                plt.ylim(10**1, 10**4)  # Set y-axis limits for logarithmic scale
+                plt.xlabel('Time (normalized)')
+                plt.ylabel('Performance Metric (log scale)')
+                plt.title(f'Performance from {source_site} to {destination_site} for All Runs')
+                plt.legend()
+                # Save the plot as a PNG file in the plots directory
+                all_runs_plot_path = os.path.join(plots_dir, f'{source_site}_to_{destination_site}_all_runs_{data_type}.png')
+                plt.savefig(all_runs_plot_path)
+                plt.close()
+
+
 argparser = argparse.ArgumentParser(
     description='Batch VOICES Performance Calculation Script for Pilot 2')
 argparser.add_argument(
@@ -371,6 +656,10 @@ argparser.add_argument(
     type=str,
     default=None,
     help='event name')
+argparser.add_argument(
+    '--plot_only',
+    action='store_true',
+    help='skip data analysis and only regenerate plots')
 args = argparser.parse_args()
 
 ################################################## MAIN ##################################################
@@ -387,102 +676,117 @@ else:
     print("\nERROR: Please provide event name using the -n argument. See help (-h) for more details")
     sys.exit()
 
+if args.plot_only:
+    plot_only_arg = " --plot_only"
+else:
+    plot_only_arg = ""
+
 with open(metadata_file_path, 'r') as metadata_file:
     # Reading from json file
     site_list = json.load(metadata_file)
 
 
 
-
-print("\n########## FINDING ALL DATA FILES ##########")
-
-
-all_data = {}
-
-for test_site in site_list:
-    print("\nFinding data files for " + test_site["site_name"])
-    all_data[test_site["site_name"]] = find_data_files(test_site["tdcs_dir"],test_site["pcap_out_dir"],test_site["pcap_in_dir"])
+if not args.plot_only:
+    print("\n########## FINDING ALL DATA FILES ##########")
 
 
+    all_data = {}
 
 
-print("\n########## GENERATING IMPORT FILES ##########")
+    for test_site in site_list:
+        print("\nFinding data files for " + test_site["site_name"])
+        all_data[test_site["site_name"]] = find_data_files(test_site["tdcs_dir"],test_site["pcap_out_dir"],test_site["pcap_in_dir"])
 
-import_file_directory_list = []
 
 
-for src_test_site in site_list:
-    
-    for dest_test_site in site_list:
-        if src_test_site != dest_test_site:
 
-            print("\nGenerating for: " + str(src_test_site["site_name"]) + " to " + str(dest_test_site["site_name"]))
+    print("\n########## GENERATING IMPORT FILES ##########")
 
-            v2xhub_site = None
+    import_file_directory_list = []
 
-            if src_test_site["lvc"] == "live" or dest_test_site["lvc"] == "live":
-                
-                v2xhub_site = site_list[get_obj_by_key_value(site_list,"is_v2xhub",True)]
 
-            import_file = generate_import_files(src_test_site,v2xhub_site,dest_test_site,False)
-            if import_file:
-                import_file_directory_list.append(import_file)
-
-print("\n########## RUNNING DATA ANALYSIS ##########")
-
-results_base_dir = "results/" + test_name + "_results" 
-
-try:
-    os.makedirs(results_base_dir)
-except:
-    pass
-
-results_summary_outfile_obj = open(results_base_dir + "/" + test_name + "_results_summary.csv",'w',newline='')
-results_summary_outfile_writer = csv.writer(results_summary_outfile_obj)
-results_summary_outfile_writer.writerow(["j2735_type","source","source_type","destination","destination_type","step_type","min","max","mean","jitter","std_dev"])
-results_summary_outfile_obj.close()
-
-for loader_dir in import_file_directory_list:
-
-    print("\nCurrent analysis direction: " + loader_dir)
-    
-    for data_type in data_types:
+    for src_test_site in site_list:
         
-        # do not generate import files for TCM because TCR import and analysis includes both TCR and TCM
-        # we dont want to remove it from the data list because we still want to get the data files in find_data_files
-        if data_type == "Traffic_Control_Message":
-            continue
+        for dest_test_site in site_list:
+            if src_test_site != dest_test_site:
+
+                print("\nGenerating for: " + str(src_test_site["site_name"]) + " to " + str(dest_test_site["site_name"]))
+
+                v2xhub_site = None
+
+                if src_test_site["lvc"] == "live" or dest_test_site["lvc"] == "live":
+                    
+                    v2xhub_site = site_list[get_obj_by_key_value(site_list,"is_v2xhub",True)]
+
+                import_file = generate_import_files(src_test_site,v2xhub_site,dest_test_site,False)
+                if import_file:
+                    import_file_directory_list.append(import_file)
+
+    print("\n########## RUNNING DATA ANALYSIS ##########")
+
+    results_base_dir = "results/" + test_name + "_results" 
+
+    try:
+        os.makedirs(results_base_dir)
+    except:
+        pass
+
+    results_summary_outfile_obj = open(results_base_dir + "/" + test_name + "_results_summary.csv",'w',newline='')
+    results_summary_outfile_writer = csv.writer(results_summary_outfile_obj)
+    results_summary_outfile_writer.writerow(["j2735_type","source","source_type","destination","destination_type","step_type","min","max","mean","jitter","std_dev"])
+    results_summary_outfile_obj.close()
+
+
+    for loader_dir in import_file_directory_list:
+
+        print("\nCurrent analysis direction: " + loader_dir)
         
-        # if the loader dir is tcr_tcm, we are only looking to calculate TCR
-        if "tcr_tcm" in loader_dir and data_type != "Traffic_Control_Request":
-            continue
-        
-        if data_type == "Traffic_Control_Request":
-            if "tcr_tcm" in loader_dir:
-                loader_file_name_start = loader_dir
-            else:
-                # we only want to run analysis on TCR and TCM in specific tcr_tcm loaders 
+        for data_type in data_types:
+            
+            # do not generate import files for TCM because TCR import and analysis includes both TCR and TCM
+            # we dont want to remove it from the data list because we still want to get the data files in find_data_files
+            if data_type == "Traffic_Control_Message":
                 continue
-        else:
-            loader_file_name_start = loader_dir + "_" + data_type
             
+            # if the loader dir is tcr_tcm, we are only looking to calculate TCR
+            if "tcr_tcm" in loader_dir and data_type != "Traffic_Control_Request":
+                continue
             
-        current_dir = os.getcwd()
-        abs_loader_dir = os.path.join(current_dir, "generated_import_files",loader_dir)
-
-        matching_loader_files = []
-
-        # Iterate over all files and directories in the given directory
-        for root, dirs, files in os.walk(abs_loader_dir):
-            # Check if the file matches the datatype file name
-            for filename in fnmatch.filter(files, loader_file_name_start + "*"):
-                # Append the absolute file path to the list of matching files
-                loader_file_to_run_abs = os.path.join(root, filename)
-
-                analysis_command =  "python3 calculate_e2e_perf.py -i " + loader_file_to_run_abs + " -t " + data_type + " -o " + filename + "_performance_results.csv -r " + test_name
-                print("\nExecuting analysis: " + analysis_command)
-                os.system(analysis_command)
+            if data_type == "Traffic_Control_Request":
+                if "tcr_tcm" in loader_dir:
+                    loader_file_name_start = loader_dir
+                else:
+                    # we only want to run analysis on TCR and TCM in specific tcr_tcm loaders 
+                    continue
+            else:
+                loader_file_name_start = loader_dir + "_" + data_type
                 
+                
+            current_dir = os.getcwd()
+            abs_loader_dir = os.path.join(current_dir, "generated_import_files",loader_dir)
+
+            matching_loader_files = []
+
+            # Iterate over all files and directories in the given directory
+            for root, dirs, files in os.walk(abs_loader_dir):
+                # Check if the file matches the datatype file name
+                for filename in fnmatch.filter(files, loader_file_name_start + "*"):
+                    # Append the absolute file path to the list of matching files
+                    loader_file_to_run_abs = os.path.join(root, filename)
+
+                    analysis_command =  "python3 calculate_e2e_perf.py -i " + loader_file_to_run_abs + " -t " + data_type + " -o " + filename + "_performance_results.csv -r " + test_name + plot_only_arg
+                    print("\nExecuting analysis: " + analysis_command)
+                    os.system(analysis_command)
+
+
+sites = ["fhwa-3","anl-1","mcity-2","ornl-1","ucla-1"]
+
+
+plot_performance_data("results", "BSM")
+
+# plot_performance_data("results", "fhwa-3", "SPAT")
+
             
         
                     

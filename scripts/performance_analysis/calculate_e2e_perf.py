@@ -1253,30 +1253,40 @@ def load_data_from_csv(datasets_infile):
 
 def plot_latency(file_path, results_base_dir):
     # Load the CSV file
-    data = pd.read_csv(file_path)
+    try:
+        data = pd.read_csv(file_path)
+    except:
+        print(f'ERROR: Unable to read file: {file_path}')
+        sys.exit()
     
     # Identify the columns containing "_incremental_latency" and "_total_latency"
     incremental_latency_cols = [col for col in data.columns if "_incremental_latency" in col]
     total_latency_cols = [col for col in data.columns if "_total_latency" in col]
     timestamp_cols = [col for col in data.columns if "timestamp" in col]
-    print(f'timestamp_cols: {timestamp_cols}')
+    # print(f'timestamp_cols: {timestamp_cols}')
     
     # Find the first and last columns with "_total_latency"
     first_total_latency_col = total_latency_cols[0]
     last_total_latency_col = total_latency_cols[-1]
     
     first_timestamp_col = timestamp_cols[0]
-    print(f'first_timestamp_col: {first_timestamp_col}')
+    # print(f'first_timestamp_col: {first_timestamp_col}')
     timestamps = pd.to_datetime(data[first_timestamp_col], unit='s',errors='coerce')
-    print(f'timestamps: {timestamps}')
+    data.insert(0,"converted_timestamps",timestamps,True)
+    # print(f'timestamps: {timestamps}')
 
     # Get the base name of the file without extension
     base_name = os.path.splitext(os.path.basename(file_path))[0]
     
     # Combine incremental columns and first total latency column for plotting
-    incremental_col_to_plot = incremental_latency_cols + [first_total_latency_col]
+    incremental_col_to_plot = incremental_latency_cols + [first_total_latency_col] + [last_total_latency_col]
 
+    # print(f'incremental_col_to_plot: {incremental_col_to_plot}')
+
+    ################# 
     # Plot the combined plot of all incremental latency columns and the first total latency column
+    ################# 
+
     plt.figure(figsize=(20, 8))
     eof_label_added = False
     dropped_packet_label_added = False
@@ -1320,15 +1330,19 @@ def plot_latency(file_path, results_base_dir):
     plt.savefig(combined_plot_path)
     plt.close()
 
+    ################# 
     # plot stacked bar chart
+    ################# 
+    
     plt.figure(figsize=(20, 8))
     x = range(0,len(incremental_col_to_plot_values[0]))
-    plt.bar(x, incremental_col_to_plot_values[0], color='r')
+    bar_width = 1/24/60/60/11
+    plt.bar(x=data["converted_timestamps"], height=incremental_col_to_plot_values[0], color='r', width=bar_width)
     if len(incremental_col_to_plot_values) > 1:
-        plt.bar(x, incremental_col_to_plot_values[1], bottom=incremental_col_to_plot_values[0], color='b')
+        plt.bar(data["converted_timestamps"], height=incremental_col_to_plot_values[1], bottom=incremental_col_to_plot_values[0], color='b', width=bar_width)
 
         if len(incremental_col_to_plot_values) > 2:
-            plt.bar(x, incremental_col_to_plot_values[2], bottom=incremental_col_to_plot_values[0]+incremental_col_to_plot_values[1], color='y')
+            plt.bar(data["converted_timestamps"], height=incremental_col_to_plot_values[2], bottom=incremental_col_to_plot_values[0]+incremental_col_to_plot_values[1], color='y', width=bar_width)
     
     plt.ylabel("Latency (ms)")
     plt.xlabel('Index')
@@ -1344,11 +1358,15 @@ def plot_latency(file_path, results_base_dir):
     plt.savefig(bar_plot_path)
     plt.close()
 
-    
+    # print(f'last_total_latency_col: {last_total_latency_col}')
+
+    ################# 
     # Plot the last total latency column
+    ################# 
+
     plt.figure(figsize=(20, 8))
     last_total_latency_data = pd.to_numeric(data[last_total_latency_col], errors='coerce')
-    plt.plot(data.index, last_total_latency_data, label="End to End Latency", color='red')
+    plt.plot(timestamps, last_total_latency_data, label="End to End Latency", color='red')
 
     eof_label_added = False
     dropped_packet_label_added = False
@@ -1357,19 +1375,19 @@ def plot_latency(file_path, results_base_dir):
     # Check for "EOF" in the last total latency column and plot a vertical line if found
     eof_indices = data[data[last_total_latency_col] == 'EOF'].index
     for idx in eof_indices:
-        plt.axvline(x=idx, color='r', linestyle='--', linewidth=1, alpha=0.1, label='EOF' if not eof_label_added else "")
+        plt.axvline(x=timestamps[idx], color='r', linestyle='--', linewidth=1, alpha=0.1, label='EOF' if not eof_label_added else "")
         eof_label_added = True
     
     # Check for "DROPPED PACKET" in the last total latency column and plot a vertical line if found
     dropped_indices = data[data[last_total_latency_col] == 'DROPPED PACKET'].index
     for idx in dropped_indices:
-        plt.axvline(x=idx, color='b', linestyle='--', linewidth=1, alpha=0.1, label='DROPPED PACKET' if not dropped_packet_label_added else "")
+        plt.axvline(x=timestamps[idx], color='b', linestyle='--', linewidth=1, alpha=0.1, label='DROPPED PACKET' if not dropped_packet_label_added else "")
         dropped_packet_label_added = True
     
     # Check for "NO PREV PACKET" in the last total latency column and plot a vertical line if found
     no_prev_indices = data[data[last_total_latency_col] == 'NO PREV PACKET'].index
     for idx in no_prev_indices:
-        plt.axvline(x=idx, color='g', linestyle='--', linewidth=1, alpha=0.1, label='NO PREV PACKET' if not no_prev_packet_label_added else "")
+        plt.axvline(x=timestamps[idx], color='g', linestyle='--', linewidth=1, alpha=0.1, label='NO PREV PACKET' if not no_prev_packet_label_added else "")
         no_prev_packet_label_added = True
 
     plt.title('End to End Latency')
@@ -1381,7 +1399,9 @@ def plot_latency(file_path, results_base_dir):
     plt.savefig(last_total_plot_path)
     plt.close()
 
+    ################# 
     # Plot total histograms
+    ################# 
     last_total_latency_data.hist(bins=50, figsize=(20, 8))
     plt.title('End to End Latency Histogram')
     hist_plot_path = f'{file_path}_histograms.png'
@@ -1390,6 +1410,7 @@ def plot_latency(file_path, results_base_dir):
 
 
 def clean_column_name(column_name):
+
 
     if "pcap_in" in column_name:
         return "SDO to UDP Conversion"
@@ -1614,6 +1635,10 @@ argparser.add_argument(
     type=str,
     default=None,
     help='a csv input file that contains the datasets to load (columns: "dataset_name","dataset_file_location","dataset_type" ')
+argparser.add_argument(
+    '--plot_only',
+    action='store_true',
+    help='skip data analysis and only regenerate plots')
 args = argparser.parse_args()
 
 log_level = getattr(logging, args.log_level)
@@ -1664,8 +1689,6 @@ else:
 if "J2735-" in J2735_message_type_name:
     J2735_message_subtype_name = J2735_message_type_name.replace("J2735-","")
     J2735_message_type_name = "J2735"
-    
-
 else:
     J2735_message_subtype_name = None
 
@@ -2123,10 +2146,10 @@ data_params = {
         },
         "TrafficLight" : {
             "skip_if_neqs"      : [
-                {
-                    "key"           : "const^signalID,String",
-                    "value"         : desired_signal_id,
-                }
+                # {
+                #     "key"           : "const^signalID,String",
+                #     "value"         : desired_signal_id,
+                # }
 
             ],
             
@@ -2485,12 +2508,13 @@ data_params = {
 
 ############################## LOAD DATA ##############################
 
-print("\nTotal Packets:")
+if not args.plot_only:
+    print("\nTotal Packets:")
 
-if args.infile == None:
-    load_data_user_input()
-else:
-    load_data_from_csv(args.infile)
+    if args.infile == None:
+        load_data_user_input()
+    else:
+        load_data_from_csv(args.infile)
 
 ############################## MAIN ##############################
 
@@ -2500,110 +2524,111 @@ else:
 # if the source packet is not found in one of the datasets (dropped packet or something), we need to try the next packet in the source dataset
 # to keep data aligned across all sets, we simply remove that packet from all data sources that have it
 
-if len(all_data) == 0:
-    print("\nNo datasets loaded, exiting")
-    sys.exit()
+if not args.plot_only:
+    if len(all_data) == 0:
+        print("\nNo datasets loaded, exiting")
+        sys.exit()
 
-source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
-source_data_obj = all_data[source_data_obj_index]
-source_data_list_original = source_data_obj["original_data_list"]
-source_data_list_filtered = source_data_obj["filtered_data_list"]
+    source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
+    source_data_obj = all_data[source_data_obj_index]
+    source_data_list_original = source_data_obj["original_data_list"]
+    source_data_list_filtered = source_data_obj["filtered_data_list"]
 
-source_packet_params = source_data_obj["dataset_params"]
+    source_packet_params = source_data_obj["dataset_params"]
 
-all_datasets_have_offset = False
+    all_datasets_have_offset = False
 
-packets_to_skip = 0
-max_packets_to_skip = 30
+    packets_to_skip = 0
+    max_packets_to_skip = 30
 
-source_reqid_list = []
-
-
-for dataset_to_filter in all_data:
-    filter_dataset(dataset_to_filter)
-
-all_filtered_datasets_contain_data = True
-
-print("\nFiltered Packet Totals:")
-for dataset in all_data:
-    
-    dataset_len = len(dataset["filtered_data_list"])
-    print("\t" + dataset["dataset_name"] + ": " + str(dataset_len))
-
-    if dataset_len == 0: 
-        all_filtered_datasets_contain_data = False
-
-if all_filtered_datasets_contain_data == False:
-    print("\nERROR: One or more filtered datasets does not contain any data")
-    sys.exit()
+    source_reqid_list = []
 
 
-# print("\nFilter to first unique Totals:")
-# for dataset_to_find_unique in all_data:
-#     find_first_unique_packet(dataset_to_find_unique)
+    for dataset_to_filter in all_data:
+        filter_dataset(dataset_to_filter)
 
+    all_filtered_datasets_contain_data = True
 
-# loop through the first 30 packets of the source 
-# while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_skip:
-logging.info("---------- FINDING FIRST PACKET FOR ALL DATASETS ----------")
-# logging.info("  --> Skipping first " + str(packets_to_skip) + " source packets")
-
-# iterate through all datasets and filter the dataset starting at the matched packet
-for source_dataset in all_data:
-
-    all_datasets_have_offset = True
-    
-    for dataset_to_search in all_data:
+    print("\nFiltered Packet Totals:")
+    for dataset in all_data:
         
-        # dont align a dataset with itself
-        if source_dataset["dataset_name"] == dataset_to_search["dataset_name"]:
-            source_dataset ["starting_dataset_index"] = 0
-            continue
+        dataset_len = len(dataset["filtered_data_list"])
+        print("\t" + dataset["dataset_name"] + ": " + str(dataset_len))
 
-        align_dataset(source_dataset,dataset_to_search)
+        if dataset_len == 0: 
+            all_filtered_datasets_contain_data = False
+
+    if all_filtered_datasets_contain_data == False:
+        print("\nERROR: One or more filtered datasets does not contain any data")
+        sys.exit()
+
+
+    # print("\nFilter to first unique Totals:")
+    # for dataset_to_find_unique in all_data:
+    #     find_first_unique_packet(dataset_to_find_unique)
+
+
+    # loop through the first 30 packets of the source 
+    # while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_skip:
+    logging.info("---------- FINDING FIRST PACKET FOR ALL DATASETS ----------")
+    # logging.info("  --> Skipping first " + str(packets_to_skip) + " source packets")
+
+    # iterate through all datasets and filter the dataset starting at the matched packet
+    for source_dataset in all_data:
+
+        all_datasets_have_offset = True
         
-        # if we go through the whole source_dataset and we haven't found the matching packet,
-        # break to continue to the next source packet
-        if not dataset_to_search["found_packet_matching_search"]:
-            logging.debug("Could not find offset in: " + dataset_to_search["dataset_name"] )
-            all_datasets_have_offset = False
+        for dataset_to_search in all_data:
+            
+            # dont align a dataset with itself
+            if source_dataset["dataset_name"] == dataset_to_search["dataset_name"]:
+                source_dataset ["starting_dataset_index"] = 0
+                continue
+
+            align_dataset(source_dataset,dataset_to_search)
+            
+            # if we go through the whole source_dataset and we haven't found the matching packet,
+            # break to continue to the next source packet
+            if not dataset_to_search["found_packet_matching_search"]:
+                logging.debug("Could not find offset in: " + dataset_to_search["dataset_name"] )
+                all_datasets_have_offset = False
+                break
+
+        
+
+        # if all datasets found a packet matching the source packet, break to stop looking
+        if all_datasets_have_offset == True:
+            logging.info("All datasets found source offset:")
+
+            for dataset in all_data:
+                logging.info("  " + dataset["dataset_name"] + ": " + str(dataset["starting_dataset_index"]))
+
             break
+        else:
+            # if one of the datasets did not find the matching source packet:
+            # clear filtered data, reset found_packet_matching_search, and increase the packets to skip
+            logging.debug("Some datasets could not find source offset, moving to next source dataset")
+            for dataset in all_data:
+                dataset["found_packet_matching_search"] = False
+                dataset["starting_dataset_index"] = None
 
-    
+            # packets_to_skip += 1
+            
+            # if packets_to_skip == max_packets_to_skip:
+            #     logging.debug("None of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
+            #     print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
+            #     sys.exit()
+            
+    if all_datasets_have_offset == False:
+        print("\nUnable to find the first packet of any of the datasets in all other datasets, unable to align data")
+        logging.error("Unable to find the first packet of any of the datasets in all other datasets, unable to align data")
+        sys.exit()
 
-    # if all datasets found a packet matching the source packet, break to stop looking
-    if all_datasets_have_offset == True:
-        logging.info("All datasets found source offset:")
-
-        for dataset in all_data:
-            logging.info("  " + dataset["dataset_name"] + ": " + str(dataset["starting_dataset_index"]))
-
-        break
-    else:
-        # if one of the datasets did not find the matching source packet:
-        # clear filtered data, reset found_packet_matching_search, and increase the packets to skip
-        logging.debug("Some datasets could not find source offset, moving to next source dataset")
-        for dataset in all_data:
-            dataset["found_packet_matching_search"] = False
-            dataset["starting_dataset_index"] = None
-
-        # packets_to_skip += 1
-        
-        # if packets_to_skip == max_packets_to_skip:
-        #     logging.debug("None of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
-        #     print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
-        #     sys.exit()
-        
-if all_datasets_have_offset == False:
-    print("\nUnable to find the first packet of any of the datasets in all other datasets, unable to align data")
-    logging.error("Unable to find the first packet of any of the datasets in all other datasets, unable to align data")
-    sys.exit()
-
-for dataset in all_data:
-    dataset["filtered_data_list"] = dataset["filtered_data_list"][dataset["starting_dataset_index"]:]
+    for dataset in all_data:
+        dataset["filtered_data_list"] = dataset["filtered_data_list"][dataset["starting_dataset_index"]:]
 
 
-check_for_dropped_packets()
+    check_for_dropped_packets()
 
 ############################## INITIALIZE CSV WRITER ##############################
 
@@ -2614,20 +2639,22 @@ else:
 
 results_base_dir = "results/" + args.results_summary_prefix + "_results" 
 
-try:
-    os.makedirs(results_base_dir)
-except:
-    pass
-
 results_filename = results_base_dir + "/" + outfile + ".csv"
-results_outfile_obj = open(results_filename,'w',newline='')
-results_outfile_writer = csv.writer(results_outfile_obj)
 
-calculate_performance_metrics()
+if not args.plot_only:
+    try:
+        os.makedirs(results_base_dir)
+    except:
+        pass
 
-results_outfile_obj.close()
+    results_outfile_obj = open(results_filename,'w',newline='')
+    results_outfile_writer = csv.writer(results_outfile_obj)
 
-performance_post_processing(results_base_dir + "/" + outfile + ".csv")
+    calculate_performance_metrics()
+
+    results_outfile_obj.close()
+
+    performance_post_processing(results_base_dir + "/" + outfile + ".csv")
 
 
 plot_latency(results_filename,results_base_dir)

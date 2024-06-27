@@ -452,13 +452,13 @@ for packet in packet_list:
         message_type_obj["outfile_writer"].writerow(msg_row)
 
     if platoon_row:
-        message_types["Platooning"]["outfile_writer"].writerow(msg_row)
+        message_types["Platooning"]["outfile_writer"].writerow(platoon_row)
 
     if j2735_payload_row:
-        message_types["J2735-Payload"]["outfile_writer"].writerow(msg_row)
+        message_types["J2735-Payload"]["outfile_writer"].writerow(j2735_payload_row)
     
     if j3224_payload_row:
-        message_types["J3224-Payload"]["outfile_writer"].writerow(msg_row)
+        message_types["J3224-Payload"]["outfile_writer"].writerow(j3224_payload_row)
 
 
 

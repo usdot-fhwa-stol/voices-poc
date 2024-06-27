@@ -273,6 +273,14 @@ def export_pcap_data(site_dir_abs,this_site_metadata):
                     this_site_metadata["pcap_export_success"] = False
                     sys.exit()
 
+                # check to see if any csv files are generated
+                csv_files = [file for file in os.listdir(decoded_pcap_dest) if file.endswith('.csv')]
+
+                if len(csv_files) == 0:
+                    print(f"NO CSV FILES GENERATED FROM PCAP DECODE")
+                    this_site_metadata[pcap_file["dest_dir"]] = ""
+                    
+
     return this_site_metadata
 
 def export_tdcs_data(site_dir_abs,this_site_metadata):
