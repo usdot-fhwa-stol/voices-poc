@@ -1,9 +1,17 @@
 import sys
 import re
 
+ip_map = {
+    "10.91.0.35" : "UCLA",
+    "10.91.0.4" : "MCITY",
+    "10.91.0.3" : "FHWA",
+    "10.91.0.163" : "ORNL",
+    "10.91.0.164" : "ANL",
+
+}
 
 
-infile = "test_ping.txt"
+infile = "run5-latency.txt"
 infile_obj = open(infile,'r')
 
 is_inside_desired_dataset = False
@@ -51,7 +59,7 @@ for line_i,line in enumerate(infile_obj):
                 continue
                 # sys.exit()
         else:
-            if re.search("- Send Failure -- Ping failed.",current_line):
+            if re.search("Ping failed.",current_line) or re.search("Ping canceled",current_line):
                 num_failed_pings += 1
                 continue
             else:
@@ -88,7 +96,10 @@ for line_i,line in enumerate(infile_obj):
 
 print("\n---------- RESULTS ----------")               
 for source_app in results_dataset:
-    print("\nSource: " + source_app)
+    if source_app in ip_map:
+        print("\nSource: " + ip_map[source_app])
+    else:
+        print("\nSource: " + source_app)
     for dest_app in results_dataset[source_app]:
         # print(str(results_dataset[source_app][dest_app]))
         num_dest_app_datapoints = len(results_dataset[source_app][dest_app])
@@ -105,11 +116,15 @@ for source_app in results_dataset:
         # print(str(ping_diff_list))
         dest_app_jitter = sum(ping_diff_list)/len(ping_diff_list)
         
-        print("    Dest: " + dest_app)
+        if dest_app in ip_map:
+            print("    Dest: " + ip_map[dest_app])
+        else:
+            print("    Dest: " + dest_app)
+        # print("    Dest: " + dest_app)
         print("        Pings: " + str(num_dest_app_datapoints))
         print("        Latency: " + str(dest_app_latency_average)  + " ms")
         print("        Jitter: " + str(dest_app_jitter)  + " ms")
         
         
         
-# print("\nNumber of Failed Pings: " + str(num_failed_pings))
+print("\nNumber of Failed Pings: " + str(num_failed_pings))

@@ -1110,33 +1110,41 @@ def performance_post_processing(results_file):
         results_summary_outfile_obj = open(results_base_dir + "/" + args.results_summary_prefix + "_results_summary.csv",'a')
         results_summary_outfile_writer = csv.writer(results_summary_outfile_obj)
 
-        
+    incremental_latency_cols = [col for col in filtered_dataset_numeric if "_incremental_latency" in col]
+    total_latency_cols = [col for col in filtered_dataset_numeric if "_total_latency" in col]
+
+    # we want the first total latency (which is really the first incremental), all remaining incremental, and the final total latency
+    # this probably wont play nice with only one total latency column but we are likely not doing all this for one latency step
+    results_only_dataset = filtered_dataset_numeric[[total_latency_cols[0]] + incremental_latency_cols + [total_latency_cols[-1]]]
+
+    results_only_dataset.rename(columns={total_latency_cols[-1]: total_latency_cols[-1] + '_e2e'}, inplace=True)
     
-    for column in filtered_dataset:
+    for column in results_only_dataset:
         
-        # skip all columns which do not contain incremental_latency
-        # but we want the first total_latency since it is essentially the first incremental
-        if not found_first_total_latency and "_total_latency" in column:
-            found_first_total_latency = True
-        elif not "_incremental_latency" in column:
-            # print("\t" + str(column) + ": XXX")
-            continue
+        ## REPLACED WITH results_only_dataset logic above
+        # # skip all columns which do not contain incremental_latency
+        # # but we want the first total_latency since it is essentially the first incremental
+        # if not found_first_total_latency and "_total_latency" in column:
+        #     found_first_total_latency = True
+        # elif not "_incremental_latency" in column:
+        #     # print("\t" + str(column) + ": XXX")
+        #     continue
         
         print("\t" + str(column) + ": ")
         
-        column_min = filtered_dataset_numeric[column].min()
-        column_max = filtered_dataset_numeric[column].max()
-        column_mean = filtered_dataset_numeric[column].mean()
+        column_min = results_only_dataset[column].min()
+        column_max = results_only_dataset[column].max()
+        column_mean = results_only_dataset[column].mean()
         print("\t\tMin: " + str(column_min))
         print("\t\tMax: " + str(column_max))
         print("\t\tMean: " + str(column_mean))
 
         # if "dsrc" in column or transmit, calculate jitter
         if "dsrc" in column or "transmit" in column:
-            # filtered_dataset = filtered_dataset_numeric.dropna()
+            # filtered_dataset = results_only_dataset.dropna()
             # print(str(filtered_dataset))
             
-            filtered_dataset_numeric_diff = filtered_dataset_numeric[column] - filtered_dataset_numeric[column].shift(-1)
+            filtered_dataset_numeric_diff = results_only_dataset[column] - results_only_dataset[column].shift(-1)
             filtered_dataset_numeric_diff_abs = filtered_dataset_numeric_diff.abs().dropna()
             # print(str(filtered_dataset_numeric_diff_abs))
             
@@ -1144,7 +1152,7 @@ def performance_post_processing(results_file):
             column_std_dev = "NA"
             print("\t\tJitter: " + str(column_mean_diff))
         else:
-            filtered_dataset_numeric_dropna = filtered_dataset_numeric[column].dropna()
+            filtered_dataset_numeric_dropna = results_only_dataset[column].dropna()
             column_std_dev = filtered_dataset_numeric_dropna.std()
             column_mean_diff = "NA"
             print("\t\tStd Dev: " + str(column_std_dev))
@@ -1165,7 +1173,9 @@ def performance_post_processing(results_file):
             # print("dst_name: " + dst_name)
 
 
-            if "_transmit" in column_split[1]:
+            if column.endswith("total_latency_e2e"):
+                step_type = "total_latency"
+            elif "_transmit" in column_split[1]:
                 step_type = "sdo_transmit"
             elif "_commit" in column_split[1]:
                 step_type = "sdo_commit"
