@@ -12,13 +12,13 @@ import itertools
 import time
 
 
-def plot_performance_data(root_dir, data_type):
+def plot_performance_data(root_dir, folder_prefix, data_type):
     # Create the plots directory if it doesn't exist
     plots_dir = os.path.join(root_dir, 'plots')
     os.makedirs(plots_dir, exist_ok=True)
 
     # Step 1: Traverse the directories and find CSV files
-    run_dirs = glob.glob(os.path.join(root_dir, f'P2E2-RFR2-R*-{data_type}_results'))
+    run_dirs = glob.glob(os.path.join(root_dir,folder_prefix + "*"))
     
     run_data_frames = {}
     all_source_sites = set()
@@ -26,7 +26,7 @@ def plot_performance_data(root_dir, data_type):
     
     for run_dir in run_dirs:
         # Extract run number from directory name
-        run_number = os.path.basename(run_dir).split('-')[2]
+        run_number = os.path.basename(run_dir).replace(folder_prefix,"")[2]
         csv_files = glob.glob(os.path.join(run_dir, '*.csv'))
         data_frames = {}
         for csv_file in csv_files:
@@ -34,16 +34,20 @@ def plot_performance_data(root_dir, data_type):
             
             # Ignore files that end with results_summary.csv
             if csv_file.endswith('results_summary.csv'):
+                print(f'\tSkipping results summary')
                 continue
             
             # only want to consider files with the proper data type
-            if ("-" + data_type.lower() + "_") not in csv_file:
+            if (data_type.lower() + "_") not in csv_file:
+                print(f'\tSkipping file that does not contain {data_type.lower()}')
                 continue
             
             # Extract source and destination site names from the file name
-            filename_parts = os.path.basename(csv_file).split('_')
-            source_site = filename_parts[0]
-            destination_site = filename_parts[3]
+            filename_to_split_parts = os.path.basename(csv_file).split('_to_')
+            source_site = filename_to_split_parts[0]
+
+            filename_type_split_parts = filename_to_split_parts[1].split("_" + data_type.lower() + "_" )
+            destination_site = filename_type_split_parts[0]
             
             # Read the CSV file into a DataFrame
             df = pd.read_csv(csv_file)
@@ -119,7 +123,7 @@ def plot_performance_data(root_dir, data_type):
         for destination_site in all_destination_sites:
             if source_site != destination_site:  # Skip plots where source and destination are the same
                 plt.figure(figsize=(10, 6))
-                for run_number in sorted(run_data_frames.keys(), key=lambda x: int(x[1:])):  # Sort run numbers in ascending order
+                for run_number in sorted(run_data_frames.keys(), key=lambda x: int(float(x[1:]))):  # Sort run numbers in ascending order
                     run_data = run_data_frames[run_number]
                     if source_site in run_data and destination_site in run_data[source_site]:
                         for run_num, df in run_data[source_site][destination_site]:
@@ -142,8 +146,9 @@ def plot_performance_data(root_dir, data_type):
                 plt.close()
 
 def main():
-    plot_performance_data("results", "BSM")
-    plot_performance_data("results", "SPAT")
+    # plot_performance_data("results", "BSM")
+    # plot_performance_data("results", "SPAT")
+    plot_performance_data("results","P2E0-","Vehicle")
     return
 
 if __name__ == '__main__':

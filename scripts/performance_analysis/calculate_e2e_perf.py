@@ -527,6 +527,7 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
 
     all_fields_match = True
 
+
     for match_i in range(0,num_match_keys):
         source_packet_key = source_packet_params[J2735_message_type_name]["match_keys"][match_i]["key"]
         search_packet_key = data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["key"]
@@ -1103,6 +1104,8 @@ def performance_post_processing(results_file):
     #     filtered_dataset = results_infile[(results_infile[column] != "EOF") & (results_infile[column] != "DROPPED PACKET") & (results_infile[column] != "NO PREV PACKET")]
     
     # convert values to numeric
+
+    
     filtered_dataset_numeric = filtered_dataset.apply(pd.to_numeric,errors='coerce')
     
     if args.results_summary_prefix:
@@ -1115,10 +1118,16 @@ def performance_post_processing(results_file):
 
     # we want the first total latency (which is really the first incremental), all remaining incremental, and the final total latency
     # this probably wont play nice with only one total latency column but we are likely not doing all this for one latency step
-    results_only_dataset = filtered_dataset_numeric[[total_latency_cols[0]] + incremental_latency_cols + [total_latency_cols[-1]]]
+    if len(total_latency_cols) > 1:
+        results_only_dataset_old_names = filtered_dataset_numeric[[total_latency_cols[0]] + incremental_latency_cols + [total_latency_cols[-1]]]
+        
+        results_only_dataset = results_only_dataset_old_names.rename(columns={total_latency_cols[-1]: total_latency_cols[-1] + '_e2e'})
 
-    results_only_dataset.rename(columns={total_latency_cols[-1]: total_latency_cols[-1] + '_e2e'}, inplace=True)
-    
+    else:
+        results_only_dataset_old_names = filtered_dataset_numeric[[total_latency_cols[-1]] + incremental_latency_cols ]
+        
+        results_only_dataset = results_only_dataset_old_names.rename(columns={total_latency_cols[-1]: total_latency_cols[-1] + '_e2e'})
+
     for column in results_only_dataset:
         
         ## REPLACED WITH results_only_dataset logic above
@@ -1132,9 +1141,9 @@ def performance_post_processing(results_file):
         
         print("\t" + str(column) + ": ")
         
-        column_min = results_only_dataset[column].min()
-        column_max = results_only_dataset[column].max()
-        column_mean = results_only_dataset[column].mean()
+        column_min = results_only_dataset[column].min(numeric_only=True)
+        column_max = results_only_dataset[column].max(numeric_only=True)
+        column_mean = results_only_dataset[column].mean(numeric_only=True)
         print("\t\tMin: " + str(column_min))
         print("\t\tMax: " + str(column_max))
         print("\t\tMean: " + str(column_mean))
@@ -1174,6 +1183,7 @@ def performance_post_processing(results_file):
 
 
             if column.endswith("total_latency_e2e"):
+                src_name = args.source_site.lower()
                 step_type = "total_latency"
             elif "_transmit" in column_split[1]:
                 step_type = "sdo_transmit"
@@ -1303,7 +1313,7 @@ def plot_latency(file_path, results_base_dir):
     no_prev_packet_label_added = False
 
     incremental_col_to_plot_values = []
-
+    
     first_timestamp_data = pd.to_numeric(data[first_timestamp_col], errors='coerce')
 
     for col in incremental_col_to_plot:
@@ -1581,7 +1591,7 @@ def select_message_type_user_input():
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
 
-J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","Vehicle","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
 
 J2735_message_type_ids = {
     "BSM"   : "0014",
@@ -1616,14 +1626,14 @@ argparser.add_argument(
     dest='data_type',
     type=str,
     default=None,
-    help='Data type to be analyzed OPTIONS: [J2725,MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
+    help='Data type to be analyzed OPTIONS: [J2725,MAP,SPAT,BSM,Vehicle,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
 argparser.add_argument(
-    '-s', '--source_vehicle',
-    metavar='<source_vehicle_index>',
-    dest='source_vehicle_index',
-    type=int,
+    '-s', '--source_site',
+    metavar='<source_site>',
+    dest='source_site',
+    type=str,
     default=None,
-    help='Index of vehicle to analyze data for: [#]')
+    help='Name of the source site in metadata')
 argparser.add_argument(
     '-o', '--outfile',
     metavar='<outfile>',
@@ -1649,6 +1659,13 @@ argparser.add_argument(
     '--plot_only',
     action='store_true',
     help='skip data analysis and only regenerate plots')
+argparser.add_argument(
+    '-m', '--metadata',
+    metavar='<metadata file>',
+    dest='metadata',
+    type=str,
+    default=None,
+    help='metadata file containing site details and file locations')
 args = argparser.parse_args()
 
 log_level = getattr(logging, args.log_level)
@@ -1686,6 +1703,16 @@ live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
 
 ############################## USER INPUT ##############################
 
+if args.metadata:
+    metadata_file_path = args.metadata
+else:
+    print("\nERROR: Please provide metadata file using the -m argument. See help (-h) for more details")
+    sys.exit()
+
+with open(metadata_file_path, 'r') as metadata_file:
+    # Reading from json file
+    metadata_site_list = json.load(metadata_file)
+
 if args.data_type == None:
     J2735_message_type_name = select_message_type_user_input()
 else:
@@ -1709,32 +1736,56 @@ if J2735_message_subtype_name:
     print("Message Sub-Type: " + J2735_message_subtype_name + " selected")
 
 # we do not need to select a vehicle for spat
-if J2735_message_type_name != "TrafficLight" and J2735_message_type_name != "J2735":
-    if args.source_vehicle_index == None:
-        vehicle_info = select_vehicle_user_input()
-    else:
+# we dont need this anymore, get data from metadata
+# if False:
+# 
+# # if J2735_message_type_name != "TrafficLight" and J2735_message_type_name != "J2735":
+#     if args.source_vehicle_index == None:
+#         vehicle_info = select_vehicle_user_input()
+#     else:
         
-        if args.source_vehicle_index > len(voices_vehicles):
-            print("ERROR: Source Vehicle index out of bounds, try again")
-            print("\nValid Vehicles:")
-            for vehicle_i,vehicle in enumerate(voices_vehicles):
-                print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
+#         if args.source_vehicle_index > len(voices_vehicles):
+#             print("ERROR: Source Vehicle index out of bounds, try again")
+#             print("\nValid Vehicles:")
+#             for vehicle_i,vehicle in enumerate(voices_vehicles):
+#                 print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
 
-            sys.exit()
+#             sys.exit()
         
-        vehicle_info = voices_vehicles[args.source_vehicle_index - 1]
-else:
-    # but, we need values for the params, so we put one in as a placeholder...
-    # probably can do this better
-    vehicle_info = voices_vehicles[0]
+#         vehicle_info = voices_vehicles[args.source_vehicle_index - 1]
+# else:
+# but, we need values for the params, so we put one in as a placeholder...
+# probably can do this better
 
-desired_bsm_id = vehicle_info["bsm_id"]
-desired_tena_identifier = vehicle_info["tena_host_id"]
-desired_host_static_id = vehicle_info["host_static_id"]
-desired_traffic_control_ip_address = vehicle_info["traffic_control_ip_address"]
+
+
+source_vehicle_metadata = metadata_site_list[get_obj_by_key_value(metadata_site_list,"site_name",args.source_site)]
+
+
+# {
+#     "tena_host_id"       : "CARMA-TFHRC-LIVE",
+#     "host_static_id":   "CARMA-TFHRC-LIVE", #CARMA-TFHRC-LIVE",
+#     "bsm_id"        : "f03ad610",
+#     "platoon_order" : 1, # this can be used for identifying what fields to look at in platoon sdos
+#     "lvc_designation" : "live",
+#     "traffic_control_ip_address"    : "172.30.1.146",
+# },
+
+# TODO: add bsm_id and host static ID and TENA identifier to metadata
+# desired_bsm_id = source_vehicle_metadata["bsm_id"]
+desired_bsm_id = ""
+# desired_tena_identifier = source_vehicle_metadata["tena_host_id"]
+desired_tena_identifier = ""
+# desired_host_static_id = source_vehicle_metadata["host_static_id"]
+desired_host_static_id = ""
+# desired_traffic_control_ip_address = source_vehicle_metadata["traffic_control_ip_address"]
+desired_traffic_control_ip_address = source_vehicle_metadata["ip_address"]
+
+source_ip_address = source_vehicle_metadata["ip_address"]
+
 
 # velocity is not set for constructive vehicles, so do not check it
-if vehicle_info["lvc_designation"] == "live":
+if source_vehicle_metadata["lvc"] == "live":
     tdcs_bsm_velocity_field = "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)"
     pcap_bsm_velocity_field = "speed(m/s)"
 else:
@@ -1750,14 +1801,15 @@ else:
 # remove two decimal places 
 # save
 
+# TODO: fix this with new metadata file? Probably dont need as we moved to J2735 messages 
 if J2735_message_type_name == "Mobility_Operations-INFO" or J2735_message_type_name == "Mobility_Operations-STATUS":
-    if vehicle_info["platoon_order"] == 1:
+    if source_vehicle_metadata["platoon_order"] == 1:
         mob_ops_tdcs_field = "downtrackDistanceInMeters,Float32"
         extract_tdcs_mobility_dtd = False
-    elif vehicle_info["platoon_order"] == 2:
+    elif source_vehicle_metadata["platoon_order"] == 2:
         mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (1)"
         extract_tdcs_mobility_dtd = True
-    elif vehicle_info["platoon_order"] == 3:
+    elif source_vehicle_metadata["platoon_order"] == 3:
         mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (2)"
         extract_tdcs_mobility_dtd = True
 else:
@@ -1822,6 +1874,43 @@ data_params = {
                 {
                     "key"       : None,
                 }
+            ]
+        },
+        "Vehicle" : {
+            "skip_if_neqs"      : [
+                {
+                }
+
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                }
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "latitude",
+                    "round"     : True,
+                    "round_decimals": 6,
+                    "buffer"    : 0.000002,
+                },
+                {
+                    "key"       : "longitude",
+                    "round"     : True,
+                    "round_decimals": 6,
+                    "buffer"    : 0.000002,
+                },
+                {
+                    "key"       : "const^identifier,String",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+
             ]
         },
         "TrafficLight" : { # actually decoded spat
@@ -2152,6 +2241,57 @@ data_params = {
                 {
                     "key"       : None,
                 }
+            ]
+        },
+
+        "Vehicle" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"   : "const^Metadata,SDOid.hostIPaddress",
+                    "value" : source_ip_address,
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Discovery",
+                },
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Destruction",
+                },
+                
+            ],
+
+            "match_keys"        : [
+                # {
+                #     "key"       : "tspi.position.geodetic_asTransmitted.latitudeInDegrees,Float64 (optional)",
+                #     "round"     : True,
+                #     "round_decimals": 6,
+                #     "buffer"    : 0.000002,
+                # },
+                # {
+                #     "key"       : "tspi.position.geodetic_asTransmitted.longitudeInDegrees,Float64 (optional)",
+                #     "round"     : True,
+                #     "round_decimals": 6,
+                #     "buffer"    : 0.000002,
+                # },
+                {
+                    "key"       : "const^identifier,String",
+                },
+                {
+                    "key"       : "Metadata,StateVersion",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
             ]
         },
         "TrafficLight" : {

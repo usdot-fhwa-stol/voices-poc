@@ -54,6 +54,7 @@ def create_folder(directory_path,directory_name_list):
                 break
             else:
                 delete_old_data = False
+                print("\tKeeping old data.")
             
     # if we confrirmed, delete the data
     if delete_old_data:
@@ -69,7 +70,6 @@ def create_folder(directory_path,directory_name_list):
             sys.exit()
     # if we said no to deletting data, keep the data and move on
     elif delete_old_data == False:
-        print("\tKeeping old data.")
         return True
     
     # if we did not get the confirmation or we deleted them, create them
@@ -303,8 +303,13 @@ def export_tdcs_data(site_dir_abs,this_site_metadata):
             this_site_metadata["tdcs_export_success"] = False
             sys.exit()
 
-        # if not "adapter_addresses_by_type" in this_site_metadata or this_site_metadata["adapter_addresses_by_type"] == {}:
+    if this_site_metadata["adapter_addresses_by_type"] == {}:
         this_site_metadata["adapter_addresses_by_type"] = get_adapter_addresses_by_type(this_site_metadata["tdcs_dir"],this_site_metadata["ip_address"])
+    else:
+        confirmation = input(f"\nWould you like to recheck for adapter endpoints? [y/n]: ").lower()
+        if confirmation == 'y':
+            this_site_metadata["adapter_addresses_by_type"] = get_adapter_addresses_by_type(this_site_metadata["tdcs_dir"],this_site_metadata["ip_address"])
+    
 
     return this_site_metadata
 
@@ -367,19 +372,25 @@ def main():
     # Get a list of all directories in the given parent directory
     site_dirs = [entry for entry in os.listdir(chosen_log_dir) if os.path.isdir(os.path.join(chosen_log_dir, entry))]
 
-    metatada = []
+    metadata = []
 
     # Iterate through each directory
     for site_dir in site_dirs:
         print ("\nExporting: " + site_dir)
         site_dir_abs = os.path.join(chosen_log_dir, site_dir)
 
+
+        if os.path.exists(metadata_file_path):
+            with open(metadata_file_path, 'r') as metadata_file:
+    
+                # Reading from json file
+                metadata = json.load(metadata_file)
+
         this_site_metadata = None
         
 
         if use_existing_metadata == 'y':
-            this_site_metadata = get_obj_by_key_value(metadata_json,"site_name",site_dir)
-            # print(f'this_site_metadata {this_site_metadata}')
+            this_site_metadata = get_obj_by_key_value(metadata,"site_name",site_dir)
         
         if this_site_metadata == None:
             
@@ -435,12 +446,29 @@ def main():
         ##### EXPORT TDCS DATA #####
         this_site_metadata = export_tdcs_data(site_dir_abs,this_site_metadata)
 
-        metatada.append(this_site_metadata)
+        this_site_metadata_exists = False
         
 
-    os.chdir(chosen_log_dir)
-    with open('metadata.json', 'w', encoding='utf-8') as f:
-        json.dump(metatada, f, ensure_ascii=False, indent=4)
+        for i_m,metadata_to_check in enumerate(metadata):
+            if metadata_to_check["site_name"] == this_site_metadata["site_name"]:
+                if metadata_to_check != this_site_metadata:
+                    print(f'\tUpdating existing metadata {i_m}')
+                    metadata[i_m] = this_site_metadata
+                this_site_metadata_exists = True
+                break
+        
+        if not this_site_metadata_exists:
+
+            metadata.append(this_site_metadata)
+        
+        os.chdir(chosen_log_dir)
+        with open('metadata.json', 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=4)
+        
+
+    # os.chdir(chosen_log_dir)
+    # with open('metadata.json', 'w', encoding='utf-8') as f:
+    #     json.dump(metadata, f, ensure_ascii=False, indent=4)
     
     print("\nFINISHED EXPORTING AND DECODING ALL DATA")
 

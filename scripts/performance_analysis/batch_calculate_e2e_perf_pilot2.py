@@ -53,10 +53,10 @@ import batch_generate_e2e_plots
 
 
 data_types = {
-    "J2735-SPAT": {
-        "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
-    },
+    # "J2735-SPAT": {
+    #     "pcap_file_pattern" : "J2735-Payload",
+    #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
+    # },
     # "J2735-BSM": {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
@@ -73,6 +73,10 @@ data_types = {
     #     "pcap_file_pattern" : "Mobility-Path",
     #     "sdo_file_pattern"   : "Mobility-Path"
     # },
+    "Vehicle": {
+        "pcap_file_pattern" : "Vehicle-THIS-DOES-NOT-EXIST",
+        "sdo_file_pattern"   : ["Entities-Vehicle"]
+    },
     # "Mobility_Request": {
     #     "pcap_file_pattern" : "Mobility-Request",
     #     "sdo_file_pattern"   : "Platoon"
@@ -181,10 +185,16 @@ def find_data_files(exported_tcds_dir,decoded_pcap_in_dir,decoded_pcap_out_dir):
     
     return data_file_locations
         
-def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
+def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm,test_name):
     
     try:
         os.mkdir("generated_import_files")
+    except:
+        # print("\nDir generated_import_file already exists")
+        pass
+    
+    try:
+        os.mkdir("generated_import_files/" + test_name)
     except:
         # print("\nDir generated_import_file already exists")
         pass
@@ -205,13 +215,13 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
         if is_tcr_tcm:
             
             try:
-                os.mkdir("generated_import_files/" + source_data["site_name"] + "_tcr_tcm")
+                os.mkdir("generated_import_files/" + test_name + "/" + source_data["site_name"] + "_tcr_tcm")
             except:
                 pass
                 # print("Dir generated_import_files/" + source_data["site_name"] + "_tcr_tcm" + " already exists")
             
             this_import_folder_name = source_data["site_name"] + "_tcr_tcm"
-            this_importfile_name = "generated_import_files/" + this_import_folder_name + "/" + source_data["site_name"] + "_tcr_tcm"
+            this_importfile_name = "generated_import_files/" + test_name + "/" + this_import_folder_name + "/" + source_data["site_name"] + "_tcr_tcm"
             this_importfile_name_obj = open(this_importfile_name + ".csv",'w',newline='')
             this_importfile_name_writer = csv.writer(this_importfile_name_obj,quoting=csv.QUOTE_ALL)
             
@@ -233,13 +243,13 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
         elif source_data["lvc"] == "live":
             
             try:
-                os.mkdir("generated_import_files/" + source_data["site_name"] + "_to_" + dest_data["site_name"])
+                os.mkdir("generated_import_files/" + test_name + "/" +  source_data["site_name"] + "_to_" + dest_data["site_name"])
             except:
                 pass
                 # print("Dir generated_import_file/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + " already exists")
             
             this_import_folder_name = source_data["site_name"] + "_to_" + dest_data["site_name"]
-            this_importfile_name = "generated_import_files/" + this_import_folder_name + "/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + "_" + data_type
+            this_importfile_name = "generated_import_files/" + test_name + "/" + this_import_folder_name + "/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + "_" + data_type
             this_importfile_name_obj = open(this_importfile_name + ".csv",'w',newline='')
             this_importfile_name_writer = csv.writer(this_importfile_name_obj,quoting=csv.QUOTE_ALL)
             
@@ -253,13 +263,13 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
         elif dest_data["lvc"] == "live":
             
             try:
-                os.mkdir("generated_import_files/" + source_data["site_name"] + "_to_" + dest_data["site_name"])
+                os.mkdir("generated_import_files/" + test_name + "/" +  source_data["site_name"] + "_to_" + dest_data["site_name"])
             except:
                 pass
                 # print("Dir generated_import_file/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + " already exists")
             
             this_import_folder_name = source_data["site_name"] + "_to_" + dest_data["site_name"]
-            this_importfile_name = "generated_import_files/" + this_import_folder_name + "/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + "_" + data_type
+            this_importfile_name = "generated_import_files/" + test_name + "/" + this_import_folder_name + "/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + "_" + data_type
             this_importfile_name_obj = open(this_importfile_name + ".csv",'w',newline='')
             this_importfile_name_writer = csv.writer(this_importfile_name_obj,quoting=csv.QUOTE_ALL)
             
@@ -290,8 +300,8 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
                 continue
                 
             try:
-                os.mkdir("generated_import_files/" + source_data["site_name"] + "_to_" + dest_data["site_name"])
-            except:
+                os.mkdir("generated_import_files/" + test_name + "/" +  source_data["site_name"] + "_to_" + dest_data["site_name"])
+            except Exception as err:
                 pass
                 # print("Dir generated_import_file/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + " already exists")
             
@@ -300,7 +310,7 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
             adapter_ip = source_data["adapter_addresses_by_type"][sdo_file_patterns[0]]
 
             this_import_folder_name = source_data["site_name"] + "_to_" + dest_data["site_name"]
-            this_importfile_name = "generated_import_files/" + this_import_folder_name + "/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + "_" + data_type + "_" + str(adapter_ip.replace(".","-").replace(":","_"))
+            this_importfile_name = "generated_import_files/" + test_name + "/" + this_import_folder_name + "/" + source_data["site_name"] + "_to_" + dest_data["site_name"] + "_" + data_type + "_" + str(adapter_ip.replace(".","-").replace(":","_"))
             this_importfile_name_obj = open(this_importfile_name + ".csv",'w',newline='')
             this_importfile_name_writer = csv.writer(this_importfile_name_obj,quoting=csv.QUOTE_ALL)
 
@@ -350,7 +360,11 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
             else:
                 import_data_file = all_data[dest_data["site_name"]][data_type]["exported_tcds_file"][0]
 
-            this_importfile_name_writer.writerow(["true",source_data["site_name"] + " SDO to " + dest_data["site_name"] +  " SDO transmit",import_data_file,"tdcs",data_type,None,source_data["start_time"],source_data["end_time"]])
+            if not import_data_file:
+                print(f'\t\tImport data file is empty, skipping SDO transmit')
+            else:
+                
+                this_importfile_name_writer.writerow(["true",source_data["site_name"] + " SDO to " + dest_data["site_name"] +  " SDO transmit",import_data_file,"tdcs",data_type,None,source_data["start_time"],source_data["end_time"]])
             
             # include pcap in if we are not trafficlight (this doesnt have pcap out since it is not j2735)
             # and if we have a pcap in file listed
@@ -359,6 +373,16 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm):
         else:
             print("Invalid vehicle configuration. Must be: live to constructive vehicle, constructive to live vehicle, or constructive to constructive vehicle")
             sys.exit()
+
+        this_importfile_name_obj.close()
+        
+        with open(this_importfile_name + ".csv") as f:
+            num_importfile_rows = sum(1 for line in f)
+        print(f'\t\tnum_importfile_rows {num_importfile_rows}')
+        if  num_importfile_rows <= 2:
+            print(f'ERROR: only one data source added, skipping this analysis')
+            os.remove(this_importfile_name + ".csv")
+
     
     return this_import_folder_name
 
@@ -442,7 +466,7 @@ if not args.plot_only:
                     
                     v2xhub_site = site_list[get_obj_by_key_value(site_list,"is_v2xhub",True)]
 
-                import_file = generate_import_files(src_test_site,v2xhub_site,dest_test_site,False)
+                import_file = generate_import_files(src_test_site,v2xhub_site,dest_test_site,False,test_name)
                 if import_file:
                     import_file_directory_list.append(import_file)
 
@@ -487,7 +511,7 @@ if not args.plot_only:
                 
                 
             current_dir = os.getcwd()
-            abs_loader_dir = os.path.join(current_dir, "generated_import_files",loader_dir)
+            abs_loader_dir = os.path.join(current_dir, "generated_import_files",test_name,loader_dir)
 
             matching_loader_files = []
 
@@ -497,10 +521,14 @@ if not args.plot_only:
                 for filename in fnmatch.filter(files, loader_file_name_start + "*"):
                     # Append the absolute file path to the list of matching files
                     loader_file_to_run_abs = os.path.join(root, filename)
+                    source_site = os.path.basename(loader_file_to_run_abs).split("_")[0]
 
-                    analysis_command =  "python3 calculate_e2e_perf.py -i " + loader_file_to_run_abs + " -t " + data_type + " -o " + filename + "_performance_results.csv -r " + test_name + plot_only_arg
+                    analysis_command =  "python3 calculate_e2e_perf.py -i " + loader_file_to_run_abs + " -t " + data_type + " -o " + filename + "_performance_results.csv -r " + test_name + plot_only_arg + " -m " + metadata_file_path + " -s " + source_site
                     print("\nExecuting analysis: " + analysis_command)
-                    os.system(analysis_command)
+                    exit_status = os.system(analysis_command)
+                    if exit_status != 0:
+                        print(f'\nAnalysis encountered an error, exiting...')
+                        sys.exit()
 
 
 # for datatype in data_types:
