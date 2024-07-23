@@ -3,14 +3,14 @@ import os
 import fnmatch
 import json
 import csv
-import re
+# import re
 import argparse
-import glob
-import matplotlib.pyplot as plt
-import pandas as pd
-import itertools
-import time
-import batch_generate_e2e_plots
+# import glob
+# import matplotlib.pyplot as plt
+# import pandas as pd
+# import itertools
+# import time
+# import batch_generate_e2e_plots
 
 ## TODO
 #   - make import files a json object so name doesnt matter
@@ -65,6 +65,10 @@ data_types = {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
     # },
+    "J3224": {
+        "pcap_file_pattern" : "J3224-Payload",
+        "sdo_file_pattern"   : ["TJ3224Msg-J3224"]
+    },
     # "BSM": {
     #     "pcap_file_pattern" : "BSM",
     #     "sdo_file_pattern"   : "BSM"
@@ -73,10 +77,10 @@ data_types = {
     #     "pcap_file_pattern" : "Mobility-Path",
     #     "sdo_file_pattern"   : "Mobility-Path"
     # },
-    "Vehicle": {
-        "pcap_file_pattern" : "Vehicle-THIS-DOES-NOT-EXIST",
-        "sdo_file_pattern"   : ["Entities-Vehicle"]
-    },
+    # "Vehicle": {
+    #     "pcap_file_pattern" : "Vehicle-THIS-DOES-NOT-EXIST",
+    #     "sdo_file_pattern"   : ["Entities-Vehicle"]
+    # },
     # "Mobility_Request": {
     #     "pcap_file_pattern" : "Mobility-Request",
     #     "sdo_file_pattern"   : "Platoon"

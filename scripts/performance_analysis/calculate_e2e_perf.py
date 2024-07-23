@@ -1591,7 +1591,7 @@ def select_message_type_user_input():
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
 
-J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","Vehicle","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types = ["J2735","J3224","J2735-BSM","J2735-SPAT","J2735-MAP","Vehicle","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
 
 J2735_message_type_ids = {
     "BSM"   : "0014",
@@ -1600,7 +1600,7 @@ J2735_message_type_ids = {
 }
 
 # list of J2735 messages that become TENA Messages (as opposed to SDOs)
-J2735_message_types_as_tena_message = ["Traffic_Control_Request","Traffic_Control_Message", "J2735"]
+J2735_message_types_as_tena_message = ["Traffic_Control_Request","Traffic_Control_Message", "J2735","J3224"]
 
 desired_intersection_name = ""
 desired_signal_id = "1628"
@@ -1687,18 +1687,18 @@ logging.info("========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
 
 ############################## SET CLOCK SKEWS ##############################
 
-live_to_nist_clock_skew = 0.060723
-virtual_to_nist_clock_skew = -0.051729
+# live_to_nist_clock_skew = 0.060723
+# virtual_to_nist_clock_skew = -0.051729
 
-live_to_virtual_clock_skew = live_to_nist_clock_skew - virtual_to_nist_clock_skew
+# live_to_virtual_clock_skew = live_to_nist_clock_skew - virtual_to_nist_clock_skew
 
-virt_to_v2x_clock_skew = -44.806000
-virt_to_second_clock_skew = -45.000999
-virt_to_third_clock_skew = -45.786999
+# virt_to_v2x_clock_skew = -44.806000
+# virt_to_second_clock_skew = -45.000999
+# virt_to_third_clock_skew = -45.786999
 
-live_to_v2x_clock_skew = live_to_virtual_clock_skew + virt_to_v2x_clock_skew
-live_to_second_clock_skew = live_to_virtual_clock_skew + virt_to_second_clock_skew
-live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
+# live_to_v2x_clock_skew = live_to_virtual_clock_skew + virt_to_v2x_clock_skew
+# live_to_second_clock_skew = live_to_virtual_clock_skew + virt_to_second_clock_skew
+# live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
 
 
 ############################## USER INPUT ##############################
@@ -2191,6 +2191,31 @@ data_params = {
                 }
             ]
         },
+        "J3224" : {
+            "skip_if_neqs"      : [
+            ],
+            
+            "skip_if_eqs"       : [
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "hex_payload",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
     },
     
     "tdcs_params" : {
@@ -2243,7 +2268,6 @@ data_params = {
                 }
             ]
         },
-
         "Vehicle" : {
             "skip_if_neqs"      : [
                 {
@@ -2624,6 +2648,36 @@ data_params = {
             ]
         },
         "J2735" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "Metadata,Endpoint",
+                    "value"         : None,
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "binaryContent^UInt8",
+                    "j2735_vector": True,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
+        "J3224" : {
             "skip_if_neqs"      : [
                 {
                     "key"           : "Metadata,Endpoint",
