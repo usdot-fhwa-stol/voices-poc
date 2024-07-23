@@ -555,6 +555,10 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 hex_element = hex(binary_element).split('x')[-1].zfill(2)
                 j2735_payload = j2735_payload + hex_element
 
+            if J2735_message_subtype_name == "SPAT":
+                hex_string_length = (int(num_j2735_vector_elements[3]) + 3)*2
+                j2735_payload = j2735_payload.slice(hex_string_length)
+
             source_packet_to_match[source_packet_key] = j2735_payload
 
         # if source packet key is j2735_vector, combine all array elements to a single hex value
@@ -567,6 +571,15 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 binary_element = int(search_packet["binaryContent^UInt8 (" + str(array_element) + ")"])
                 hex_element = hex(binary_element).split('x')[-1].zfill(2)
                 j2735_payload = j2735_payload + hex_element
+
+            # !!! ASSUME ALL SPAT ARE LESS THAN 255 HEX BYTES
+            # the third hex byte in a J2735 message is the remaining char
+            # ex: 00 13 6B  40 85...
+            #      0 19 107 64 79
+            #            ^ = 107 hex bytes remaining after this byte == 110 total
+            if J2735_message_subtype_name == "SPAT":
+                hex_string_length = (int(search_packet["binaryContent^UInt8 (3)"]) + 3)*2
+                j2735_payload = j2735_payload[0:hex_string_length]
 
             search_packet[search_packet_key] = j2735_payload
 
@@ -2661,7 +2674,7 @@ data_params = {
             "match_keys"        : [
                 {
                     "key"       : "binaryContent^UInt8",
-                    "j2735_vector": True,
+                    "j2735_vector": True, # !!!! - there is a big assumption in here that J2735 SPaT are less than 255 hex bytes
                 },
                 {
                     "key"       : None,

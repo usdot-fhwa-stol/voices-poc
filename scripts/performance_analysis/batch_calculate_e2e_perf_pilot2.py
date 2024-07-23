@@ -61,14 +61,14 @@ data_types = {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
     # },
-    # "J2735-MAP": {
-    #     "pcap_file_pattern" : "J2735-Payload",
-    #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
-    # },
-    "J3224": {
-        "pcap_file_pattern" : "J3224-Payload",
-        "sdo_file_pattern"   : ["TJ3224Msg-J3224"]
+    "J2735-MAP": {
+        "pcap_file_pattern" : "J2735-Payload",
+        "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
     },
+    # "J3224": {
+    #     "pcap_file_pattern" : "J3224-Payload",
+    #     "sdo_file_pattern"   : ["TJ3224Msg-J3224"]
+    # },
     # "BSM": {
     #     "pcap_file_pattern" : "BSM",
     #     "sdo_file_pattern"   : "BSM"
@@ -382,7 +382,7 @@ def generate_import_files(source_data,v2xhub_data,dest_data,is_tcr_tcm,test_name
         
         with open(this_importfile_name + ".csv") as f:
             num_importfile_rows = sum(1 for line in f)
-        print(f'\t\tnum_importfile_rows {num_importfile_rows}')
+        # print(f'\t\tnum_importfile_rows {num_importfile_rows}')
         if  num_importfile_rows <= 2:
             print(f'ERROR: only one data source added, skipping this analysis')
             os.remove(this_importfile_name + ".csv")
