@@ -61,18 +61,18 @@ data_types = {
     #     "pcap_file_pattern" : "J2735-Payload",
     #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
     # },
-    "J2735-MAP": {
-        "pcap_file_pattern" : "J2735-Payload",
-        "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
-    },
+    # "J2735-MAP": {
+    #     "pcap_file_pattern" : "J2735-Payload",
+    #     "sdo_file_pattern"   : ["TJ2735Msg-J2735"]
+    # },
     # "J3224": {
     #     "pcap_file_pattern" : "J3224-Payload",
     #     "sdo_file_pattern"   : ["TJ3224Msg-J3224"]
     # },
-    # "BSM": {
-    #     "pcap_file_pattern" : "BSM",
-    #     "sdo_file_pattern"   : "BSM"
-    # },
+    "BSM": {
+        "pcap_file_pattern" : "BSM-SKIPME",
+        "sdo_file_pattern"   : ["Track-BSM"]
+    },
     # "Mobility_Path": {
     #     "pcap_file_pattern" : "Mobility-Path",
     #     "sdo_file_pattern"   : "Mobility-Path"
@@ -525,7 +525,7 @@ if not args.plot_only:
                 for filename in fnmatch.filter(files, loader_file_name_start + "*"):
                     # Append the absolute file path to the list of matching files
                     loader_file_to_run_abs = os.path.join(root, filename)
-                    source_site = os.path.basename(loader_file_to_run_abs).split("_")[0]
+                    source_site = os.path.basename(loader_file_to_run_abs).split("_to_")[0]
 
                     analysis_command =  "python3 calculate_e2e_perf.py -i " + loader_file_to_run_abs + " -t " + data_type + " -o " + filename + "_performance_results.csv -r " + test_name + plot_only_arg + " -m " + metadata_file_path + " -s " + source_site
                     print("\nExecuting analysis: " + analysis_command)

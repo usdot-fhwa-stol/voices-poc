@@ -920,7 +920,7 @@ def calculate_performance_metrics():
         logging.debug("----- CALCULATING PERFORMANCE FOR SOURCE PACKET " + source_packet[source_data_obj["dataset_index_column_name"]] + " -----")
         logging.debug("source_packet_timestamp: " + str(source_packet_timestamp))
 
-        if J2735_message_type_name == "BSM":
+        if J2735_message_type_name == "BSM" and source_data_obj["dataset_type"] == "pcap":
 
             # calculate the bsm broadcast latency
             secMark = float(source_packet["secMark"])
@@ -1771,8 +1771,13 @@ if J2735_message_subtype_name:
 # probably can do this better
 
 
+source_vehicle_metadata_index = get_obj_by_key_value(metadata_site_list,"site_name",args.source_site)
 
-source_vehicle_metadata = metadata_site_list[get_obj_by_key_value(metadata_site_list,"site_name",args.source_site)]
+if source_vehicle_metadata_index == None:
+    print(f'\nERROR: Unable to find vehicle {args.source_site} in metadata')
+    sys.exit()
+
+source_vehicle_metadata = metadata_site_list[source_vehicle_metadata_index]
 
 
 # {
@@ -2234,10 +2239,10 @@ data_params = {
     "tdcs_params" : {
         "BSM" : {
             "skip_if_neqs"      : [
-                {
-                    "key"           : "const^identifier,String",
-                    "value"         : desired_tena_identifier,
-                }
+                # {
+                #     "key"           : "const^identifier,String",
+                #     "value"         : desired_tena_identifier,
+                # }
 
             ],
             
@@ -2268,12 +2273,15 @@ data_params = {
                 {
                     "key"       : "msWithinMinute,UInt16",
                 },
+                # {
+                #     # velocity is not set in TDCS for constructive BSMs 
+                #     "key"       : tdcs_bsm_velocity_field,
+                #     "round"     : True,
+                #     "round_decimals": 2,
+                #     "buffer"    : 0.03,
+                # },
                 {
-                    # velocity is not set in TDCS for constructive BSMs 
-                    "key"       : tdcs_bsm_velocity_field,
-                    "round"     : True,
-                    "round_decimals": 2,
-                    "buffer"    : 0.03,
+                    "key"       : None,
                 },
                 
                 {
