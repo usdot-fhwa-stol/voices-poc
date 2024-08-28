@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 import csv
 import re
+import split_tdcs_for_throughput
 
 ## TODO: 
 #   - move the confirmation to delete from the create_folder function
@@ -445,6 +446,11 @@ def main():
         
         ##### EXPORT TDCS DATA #####
         this_site_metadata = export_tdcs_data(site_dir_abs,this_site_metadata)
+
+        ##### SPLIT TDCS DATA #####
+        tdcs_to_split = find_largest_sqlite_file(site_dir_abs)
+        split_tdcs_for_throughput.split_tdcs(tdcs_to_split,this_site_metadata["ip_address"])
+
 
         this_site_metadata_exists = False
         

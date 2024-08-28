@@ -37,6 +37,8 @@ def find_matching_rows(database_file, ip_address, entity_type, is_msg):
                 if endpoint_ip == ip_address:
                     final_matching_row_ids.append(row_id)
 
+            print(f'\tFound {len(final_matching_row_ids)} rows matching IP')
+
         else:
             cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '{entity_type}%const'")
 
@@ -72,7 +74,7 @@ def find_matching_rows(database_file, ip_address, entity_type, is_msg):
                 print(f"No matching rows found for {entity_type}.")
                 return []
             else:
-                print(f'\tFound {len(matching_row_ids)} matching rows')
+                print(f'\tFound {len(matching_row_ids)} matching IPs in const table')
 
             # Construct the column name
             column_name = f'DB,{table_name_with_const},rowID'
@@ -88,6 +90,8 @@ def find_matching_rows(database_file, ip_address, entity_type, is_msg):
                 row_id, reference_row_id = row
                 if reference_row_id in matching_row_ids:
                     final_matching_row_ids.append(row_id)
+
+            print(f'\tFound {len(final_matching_row_ids)} rows matching IP')
 
         # Close the connection
         conn.close()
@@ -143,40 +147,91 @@ def delete_rows(database_file, entity_type, row_ids, is_msg, include_rows=True):
         print(f"Error: {e}")
         sys.exit(1)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Find matching rows in a SQLite database based on IP address and create two new databases.')
-    parser.add_argument('-d', '--database_file', type=str, required=True, help='Location of the SQLite database file')
-    parser.add_argument('-i', '--ip_address', type=str, required=True, help='IP address to match')
 
-    args = parser.parse_args()
+def create_folder(directory_path,directory_name_list):
+    
+    delete_old_data = None
+    confirmation = None
 
-    base_filename, file_extension = os.path.splitext(args.database_file)
-    outbound_database_file = f"{base_filename}_outbound{file_extension}"
-    inbound_database_file = f"{base_filename}_inbound{file_extension}"
+    for directory_name in directory_name_list:
+        
+        exported_folder_path = os.path.join(directory_path, directory_name)
+        # Check if the folder already exists and there are files in it
+        if os.path.exists(exported_folder_path) and len([file for file in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, file))]) > 0:
+            # Confirm with the user before deleting
+            confirmation = input(f"\nExsisting {directory_name} data found, delete old data and re-export? [y/n]: ").lower()
+            if confirmation == 'y':
+                delete_old_data = True
+                break
+            else:
+                delete_old_data = False
+                print("\tKeeping old data.")
+            
+    # if we confrirmed, delete the data
+    if delete_old_data:
+        try:
+            for directory_name in directory_name_list:
+                exported_folder_path = os.path.join(directory_path, directory_name)
+                # Use shutil.rmtree to delete the folder and its contents
+                shutil.rmtree(exported_folder_path)
+                print(f"\tFolder '{exported_folder_path}' deleted successfully.")
+
+        except Exception as e:
+            print(f"\tError deleting folder: {e}")
+            sys.exit()
+    # if we said no to deletting data, keep the data and move on
+    elif delete_old_data == False:
+        return True
+    
+    # if we did not get the confirmation or we deleted them, create them
+    for directory_name in directory_name_list:
+        exported_folder_path = os.path.join(directory_path, directory_name)
+        try:
+            os.makedirs(exported_folder_path)
+            print(f"\tCreated {directory_name} folder in {directory_path}")
+        except OSError as e:
+            print(f"\tError creating folder {exported_folder_path}: {e}")
+
+def split_tdcs(database_file,ip_address):
+
+    database_file_directory = os.path.dirname(database_file)
+    database_file_basename = os.path.basename(database_file)
+
+    database_file_prefix, file_extension = os.path.splitext(database_file_basename)
+    outbound_database_file = f"{database_file_prefix}_outbound{file_extension}"
+    inbound_database_file = f"{database_file_prefix}_inbound{file_extension}"
+
+    skip_export = create_folder(database_file_directory,["split_tdcs"])
+
+    outbound_database_file_full = os.path.join(database_file_directory,"split_tdcs",outbound_database_file)
+    inbound_database_file_full = os.path.join(database_file_directory,"split_tdcs",inbound_database_file)
+
+    if skip_export == True:
+        return
 
     entity_types = ["Class,VUG::Entities::Vehicle","Class,VUG::Entities::Signals::TrafficLight","Msg,VUG::TJ2735Msg::J2735"]
     matching_rows_by_type = {}
 
     for entity_type in entity_types:
-        print(f"Finding matching rows for {args.ip_address} in {entity_type}")
+        print(f"Finding matching rows for {ip_address} in {entity_type}")
         if entity_type.startswith("Msg,"):
             is_msg = True
         else:
             is_msg = False
 
-        matching_row_ids = find_matching_rows(args.database_file, args.ip_address, entity_type,is_msg)
+        matching_row_ids = find_matching_rows(database_file, ip_address, entity_type,is_msg)
         if matching_row_ids:
             matching_rows_by_type[entity_type] = matching_row_ids
-            print(f'\tMatching Rows: {matching_row_ids}')
+            # print(f'\tMatching Rows: {matching_row_ids}')
 
     # all_matching_row_ids = set(vehicle_matching_row_ids + traffic_light_matching_row_ids)
 
     if matching_rows_by_type:
         # Copy the original database to the new database files
-        print(f"Creating outbound database copy: {outbound_database_file}")
-        shutil.copyfile(args.database_file, outbound_database_file)
-        print(f"Creating inbound database copy: {inbound_database_file}")
-        shutil.copyfile(args.database_file, inbound_database_file)
+        print(f"Creating outbound database copy: {outbound_database_file_full}")
+        shutil.copyfile(database_file, outbound_database_file_full)
+        print(f"Creating inbound database copy: {inbound_database_file_full}")
+        shutil.copyfile(database_file, inbound_database_file_full)
 
         # Delete rows from the copied databases
         for entity_type in matching_rows_by_type:
@@ -184,8 +239,19 @@ if __name__ == "__main__":
                 is_msg = True
             else:
                 is_msg = False
-            delete_rows(outbound_database_file, entity_type, matching_rows_by_type[entity_type], is_msg, include_rows=True)
-            delete_rows(inbound_database_file, entity_type, matching_rows_by_type[entity_type], is_msg, include_rows=False)
+            delete_rows(outbound_database_file_full, entity_type, matching_rows_by_type[entity_type], is_msg, include_rows=True)
+            delete_rows(inbound_database_file_full, entity_type, matching_rows_by_type[entity_type], is_msg, include_rows=False)
         print("Databases created successfully.")
     else:
         print("No matching rows found in any tables.")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Find matching rows in a SQLite database based on IP address and create two new databases.')
+    parser.add_argument('-f', '--database_file', type=str, required=False, help='Location of the SQLite database file')
+    parser.add_argument('-i', '--ip_address', type=str, required=True, help='IP address to match')
+
+    args = parser.parse_args()
+
+    split_tdcs(args.database_file,args.ip_address)
+
+
