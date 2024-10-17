@@ -1,0 +1,45 @@
+#
+# BUILD COMMAND: VERSION=0.0.8 && sudo DOCKER_BUILDKIT=1 docker build --build-arg version=$VERSION -t usdotfhwastoldev/carla-voices:pilot2-event2-$VERSION . --progress=plain -f carla-voices_Dockerfile
+#
+
+FROM carlasim/carla:0.9.10
+
+ARG VERSION
+
+LABEL version=${VERSION}
+LABEL description="VOICES Docker image for CARLA including event maps"
+
+SHELL ["/bin/bash", "-ec"]
+
+ARG DEBIAN_FRONTEND="noninteractive" 
+ARG TZ="America/New_York"
+
+RUN --mount=type=bind,target=./Import,readonly,source=./lib/MAPS \
+    sed -i 's/--keep-newer-files/--skip-old-files/' ImportAssets.sh && \
+    ./ImportAssets.sh 
+
+COPY ./lib/COPY/start_scripts /home/carla/start_scripts
+COPY ./lib/COPY/.voices_site_config_docker /home/carla/.voices_site_config_docker
+COPY ./lib/COPY/.voices_scenario_config_docker /home/carla/.voices_scenario_config_docker
+COPY ./lib/COPY/VOICES_Limited_License_V0.2.pdf /home/carla/VOICES_Limited_License_V0.2.pdf
+
+USER root
+
+# remove cuda and nvidia sources as we are not updating them
+RUN rm /etc/apt/sources.list.d/cuda.list && \
+    rm /etc/apt/sources.list.d/nvidia-ml.list && \
+    apt-get update && \
+    # add vulkan-utils to fix crashing 
+    apt install -y vulkan-utils && \
+    # install iproute2
+    apt install -y iproute2 && \
+    # cleanup apt lists
+    rm -rf /var/lib/apt/lists/*
+
+RUN chmod a+x -R /home/carla/start_scripts/*
+
+RUN echo 'source /home/carla/start_scripts/setup-carla-docker.sh' >> /home/carla/.bashrc
+
+USER carla
+
+CMD ["/bin/bash","-l","-c","/home/carla/start_scripts/startup-carla.sh"]

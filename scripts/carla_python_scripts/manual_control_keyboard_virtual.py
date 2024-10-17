@@ -59,6 +59,7 @@ from __future__ import print_function
 import glob
 import os
 import sys
+import time
 
 from find_carla_egg import find_carla_egg
 
@@ -176,13 +177,31 @@ class World(object):
         self._weather_index = 0
         self._actor_filter = args.filter
         self._gamma = args.gamma
-        self.restart(args)
+        
+        max_reset_attempts = 20
+        reset_attempts = 0
+        reset_wait_time = 5
+
+        while reset_attempts < max_reset_attempts:
+            try:
+                self.restart(args)
+            except Exception as errMsg:
+                reset_attempts += 1
+                print("ERROR: Unable to spawn vehicle, attempt # " + str(reset_attempts))
+                print("    --> " + str(errMsg))
+                time.sleep(reset_wait_time)
+            else:
+                break
+
+
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
         self.constant_velocity_enabled = False
 
     def restart(self,args):
+        
+        
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -192,8 +211,11 @@ class World(object):
         carlaVehicles = self.world.get_actors().filter('vehicle.*')
         for vehicle in carlaVehicles:
             currentAttributes = vehicle.attributes
+            print("Checking vehicle: " + str(currentAttributes["role_name"]))
             if currentAttributes["role_name"] == args.follow_vehicle:
-            	    self.player = vehicle
+            	self.player = vehicle
+        if not self.player:
+            print("ERROR: Unable to find vehicle with rolename: " + args.follow_vehicle)
         #self.player = carlaVehicles[0]
         
         # Set up the sensors.
@@ -400,7 +422,7 @@ class KeyboardControl(object):
 
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
-                self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
+                self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time(), world, args)
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
@@ -418,9 +440,17 @@ class KeyboardControl(object):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
             world.player.apply_control(self._control)
 
-    def _parse_vehicle_keys(self, keys, milliseconds):
+    def _parse_vehicle_keys(self, keys, milliseconds, world, args):
+                
+        v = world.player.get_velocity()
+        speed = (3.6 * math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2))
+    
         if keys[K_UP] or keys[K_w]:
-            self._control.throttle = min(self._control.throttle + 0.01, 1)
+            if speed > args.speed_limit:
+                self._control.throttle = 0.0
+            else:
+                self._control.throttle = min(self._control.throttle + 0.01, 1)
+
         else:
             self._control.throttle = 0.0
 
@@ -530,7 +560,7 @@ class HUD(object):
             'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
             'Location:% 20s' % ('(% 5.6f, % 5.6f)' % (t.location.x, t.location.y)),
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
-            'Height:  % 18.0f m' % t.location.z,
+            'Height:  % 18.2f m' % t.location.z,
             '']
         if isinstance(c, carla.VehicleControl):
             self._info_text += [
@@ -1092,6 +1122,12 @@ def main():
         '--follow_vehicle',
         default="TFHRC-MANUAL-1",
         help='Vehicle to be used for the follow cam (default: "TFHRC-MANUAL-1"')
+    argparser.add_argument(
+        '-s', '--speed_limit',
+        metavar='S',
+        default=50,
+        type=int,
+        help='Speed limit for manual vehicle in kph (default: 50 kph)')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

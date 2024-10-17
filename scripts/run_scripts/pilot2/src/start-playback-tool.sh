@@ -18,44 +18,65 @@
 #  *
 
 
-voices_config=~/.voices_config
+voices_site_config=$HOME/.voices_site_config
+voices_scenario_config=$HOME/.voices_scenario_config
 
-if [ -L ${voices_config} ] ; then
-   if [ -e ${voices_config} ] ; then
-      config_link_dest=$(readlink -f $voices_config)
-      link_base_name=$(basename ${config_link_dest})
+voices_site_config_docker=$HOME/.voices_site_config_docker
+voices_scenario_config_docker=$HOME/.voices_scenario_config_docker
 
-      . $voices_config
+if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
+    if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
+        site_config_link_dest=$(readlink -f $voices_site_config)
+        site_link_base_name=$(basename ${site_config_link_dest})
 
+        scenario_config_link_dest=$(readlink -f $voices_scenario_config)
+        scenario_link_base_name=$(basename ${scenario_config_link_dest})
 
-      echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
-   else
-      echo "[!!!] .voices_config link is broken"
-      exit 1
+        source $HOME/.voices_site_config
+
+		# if voices config docker exists, then source it to overwrite docker specific vars
+		if [ -e ${voices_site_config_docker} ]; then
+			source $HOME/.voices_site_config_docker
+		fi
+
+		source $HOME/.voices_scenario_config
+
+		if [ -e ${voices_scenario_config_docker} ]; then
+			source $HOME/.voices_scenario_config_docker
+		fi
+
+        echo "Site Config: "$site_link_base_name
+        echo "Scenario Config: "$scenario_link_base_name
+    else
+        echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
+        echo "Site Config: "$(readlink -f $site_link_base_name)
+        echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
+        exit 1
    fi
-elif [ -e ${voices_config} ] ; then
-   echo "[!!!] .voices_config file is not a symbolic link"
-   exit 1
+elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
+    echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
+    exit 1
 else
-   echo "[!!!] .voices_config link is is missing"
-   exit 1
-fi
-
-if [[ $? -ne 0 ]] ; then
-    echo
-    echo "[!!!] .config file not found, please run the start script from its containing folder"
-    echo
+    echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
     exit 1
 fi
 
-localadapterPath=$localInstallPath/$scenarioPublisherVersion
+localadapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_SCENARIO_PUBLISHER_VERSION
 
 adapterVerbosity='4'
 
-mkdir -p $localAdapterLogPath
+useBestEffort=''
+if [[ $VUG_USE_BEST_EFFORT == true ]]; then
+    useBestEffort='-bestEffort'
+fi
 
-adapterLogFile=$localAdapterLogPath/scenario_publisher_terminal_out.log
+mkdir -p $VUG_ADAPTER_LOG_PATH
+
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/scenario_publisher_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -68,7 +89,7 @@ BASH_XTRACEFD=4
 
 set -x
 
-cd $voicesPocPath/logs/tdcs_data
+cd $VUG_LOG_FILES_ROOT/tdcs_data
 
 
-$playbackToolPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress
+$VUG_PLAYBACK_TOOL_PATH/start.sh $useBestEffort -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS

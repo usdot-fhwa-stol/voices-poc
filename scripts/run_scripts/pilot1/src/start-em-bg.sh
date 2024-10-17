@@ -13,7 +13,7 @@ if [ -L ${voices_config} ] ; then
 
 
       echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
+      echo "Scenario Config: "$VUG_SCENARIO_CONFIG_FILE
    else
       echo "[!!!] .voices_config link is broken"
       exit 1
@@ -26,10 +26,10 @@ else
    exit 1
 fi
 
-$tenaExecutionManagerPath/bin/executionManager \
-    -listenendpoints $emAddress:$emPort \
-    -logDir $tenaExecutionManagerPath/log \
-    -recoveryDir $tenaExecutionManagerPath/save \
+$VUG_EM_PATH/bin/executionManager \
+    -listenendpoints $VUG_EM_ADDRESS:$VUG_EM_PORT \
+    -logDir $VUG_EM_PATH/log \
+    -recoveryDir $VUG_EM_PATH/save \
     -connectionTimeoutInMilliseconds 10000 -twowayTimeoutInMilliseconds 20000 \
     -transientCommunicationAttempts 3 -disconnectTimeoutInMilliseconds 5000 \
     -quiet -nonInteractive &

@@ -26,15 +26,15 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$carlaAdapterVersion
+localCarlaAdapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARLA_ADAPTER_VERSION
 
-carlaHost=$localAddress
+carlaHost=$VUG_LOCAL_ADDRESS
 
 adapterVerbosity='4'
  
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/carla_adapter_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/carla_adapter_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -47,4 +47,4 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/CARLAtenaAdapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carlaHost $carlaHost -simId $simId -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile
+$localCarlaAdapterPath/bin/CARLAtenaAdapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carlaHost $carlaHost -simId $VUG_SIM_ID -verbosity $adapterVerbosity 2>&1 | tee -a $adapterLogFile

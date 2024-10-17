@@ -1,12 +1,31 @@
 #ignore data and pycache for j2735 decoder
-scripts/J2735_pcap_decoder/data/
-scripts/J2735_pcap_decoder/src/__pycache__/
+scripts/encoding_decoding_tools/J2735_pcap_decoder/data/
+scripts/encoding_decoding_tools/decode_single_packet/decoded_packet.json
 
 #ignore log directories
 logs/
 
-#ignore carla script pycache
-scripts/carla_python_scripts/__pycache__/
+#ignore all pycache
+**/__pycache__/
+
+#ignore all pcap and sqlite data files
+**.pcap
+**.sqlite
+
+#ignore decoded jsons
+scripts/encoding_decoding_tools/decode_single_packet/*.json
+scripts/encoding_decoding_tools/encode_single_packet/*.json
+
+#ignore net.xml and xodr in Sumo util as we are likely just converting
+scripts/carla_python_scripts/Sumo/util/*.net.xml
+scripts/carla_python_scripts/Sumo/util/*.xodr
+
+
+#ignore scripts working dir
+scripts/carla_python_scripts/misc
+
+#ignore SDSM.py because contains paid ASN1
+scripts/**/SDSM.py
 
 #ignore node_info.config
 config/node_info.config
@@ -14,11 +33,20 @@ config/node_info.config
 #intelliJ files
 .idea/
 
+#waypoint output files
+scripts/carla_python_scripts/waypoint_files/
+
+#performance analysis outputs
+scripts/performance_analysis/results/
+scripts/performance_analysis/generated_import_files/
+scripts/performance_analysis/performance_analysis.log
+
 # ignore docker lib files
-docker/lib/BUILD
-docker/lib/COPY/VOICES_Adapters
-docker/lib/COPY/CARLA*
-docker/lib/MAPS
+docker/build/lib/BUILD
+docker/build/lib/COPY/VUG_Adapters
+docker/build/lib/COPY/CARLA*
+docker/build/lib/MAPS
+docker/build/lib/OLD
+
 
 # ignore SUMO pycache
-scripts/carla_python_scripts/Sumo/sumo_integration/__pycache__

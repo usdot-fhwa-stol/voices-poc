@@ -10,6 +10,8 @@ import json
 from pprint import pprint
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 ############################## TODO ##############################
@@ -525,6 +527,7 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
 
     all_fields_match = True
 
+
     for match_i in range(0,num_match_keys):
         source_packet_key = source_packet_params[J2735_message_type_name]["match_keys"][match_i]["key"]
         search_packet_key = data_to_search_params[J2735_message_type_name]["match_keys"][match_i]["key"]
@@ -552,6 +555,10 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 hex_element = hex(binary_element).split('x')[-1].zfill(2)
                 j2735_payload = j2735_payload + hex_element
 
+            if J2735_message_subtype_name == "SPAT":
+                hex_string_length = (int(num_j2735_vector_elements[3]) + 3)*2
+                j2735_payload = j2735_payload.slice(hex_string_length)
+
             source_packet_to_match[source_packet_key] = j2735_payload
 
         # if source packet key is j2735_vector, combine all array elements to a single hex value
@@ -564,6 +571,15 @@ def check_if_data_matches(source_packet_params,data_to_search_params,source_pack
                 binary_element = int(search_packet["binaryContent^UInt8 (" + str(array_element) + ")"])
                 hex_element = hex(binary_element).split('x')[-1].zfill(2)
                 j2735_payload = j2735_payload + hex_element
+
+            # !!! ASSUME ALL SPAT ARE LESS THAN 255 HEX BYTES
+            # the third hex byte in a J2735 message is the remaining char
+            # ex: 00 13 6B  40 85...
+            #      0 19 107 64 79
+            #            ^ = 107 hex bytes remaining after this byte == 110 total
+            if J2735_message_subtype_name == "SPAT":
+                hex_string_length = (int(search_packet["binaryContent^UInt8 (3)"]) + 3)*2
+                j2735_payload = j2735_payload[0:hex_string_length]
 
             search_packet[search_packet_key] = j2735_payload
 
@@ -904,7 +920,7 @@ def calculate_performance_metrics():
         logging.debug("----- CALCULATING PERFORMANCE FOR SOURCE PACKET " + source_packet[source_data_obj["dataset_index_column_name"]] + " -----")
         logging.debug("source_packet_timestamp: " + str(source_packet_timestamp))
 
-        if J2735_message_type_name == "BSM":
+        if J2735_message_type_name == "BSM" and source_data_obj["dataset_type"] == "pcap":
 
             # calculate the bsm broadcast latency
             secMark = float(source_packet["secMark"])
@@ -1101,40 +1117,56 @@ def performance_post_processing(results_file):
     #     filtered_dataset = results_infile[(results_infile[column] != "EOF") & (results_infile[column] != "DROPPED PACKET") & (results_infile[column] != "NO PREV PACKET")]
     
     # convert values to numeric
+
+    
     filtered_dataset_numeric = filtered_dataset.apply(pd.to_numeric,errors='coerce')
     
     if args.results_summary_prefix:
 
-        results_summary_outfile_obj = open("results/" + args.results_summary_prefix + "_results_summary.csv",'a')
+        results_summary_outfile_obj = open(results_base_dir + "/" + args.results_summary_prefix + "_results_summary.csv",'a')
         results_summary_outfile_writer = csv.writer(results_summary_outfile_obj)
 
+    incremental_latency_cols = [col for col in filtered_dataset_numeric if "_incremental_latency" in col]
+    total_latency_cols = [col for col in filtered_dataset_numeric if "_total_latency" in col]
+
+    # we want the first total latency (which is really the first incremental), all remaining incremental, and the final total latency
+    # this probably wont play nice with only one total latency column but we are likely not doing all this for one latency step
+    if len(total_latency_cols) > 1:
+        results_only_dataset_old_names = filtered_dataset_numeric[[total_latency_cols[0]] + incremental_latency_cols + [total_latency_cols[-1]]]
         
-    
-    for column in filtered_dataset:
+        results_only_dataset = results_only_dataset_old_names.rename(columns={total_latency_cols[-1]: total_latency_cols[-1] + '_e2e'})
+
+    else:
+        results_only_dataset_old_names = filtered_dataset_numeric[[total_latency_cols[-1]] + incremental_latency_cols ]
         
-        # skip all columns which do not contain incremental_latency
-        # but we want the first total_latency since it is essentially the first incremental
-        if not found_first_total_latency and "_total_latency" in column:
-            found_first_total_latency = True
-        elif not "_incremental_latency" in column:
-            # print("\t" + str(column) + ": XXX")
-            continue
+        results_only_dataset = results_only_dataset_old_names.rename(columns={total_latency_cols[-1]: total_latency_cols[-1] + '_e2e'})
+
+    for column in results_only_dataset:
+        
+        ## REPLACED WITH results_only_dataset logic above
+        # # skip all columns which do not contain incremental_latency
+        # # but we want the first total_latency since it is essentially the first incremental
+        # if not found_first_total_latency and "_total_latency" in column:
+        #     found_first_total_latency = True
+        # elif not "_incremental_latency" in column:
+        #     # print("\t" + str(column) + ": XXX")
+        #     continue
         
         print("\t" + str(column) + ": ")
         
-        column_min = filtered_dataset_numeric[column].min()
-        column_max = filtered_dataset_numeric[column].max()
-        column_mean = filtered_dataset_numeric[column].mean()
+        column_min = results_only_dataset[column].min(numeric_only=True)
+        column_max = results_only_dataset[column].max(numeric_only=True)
+        column_mean = results_only_dataset[column].mean(numeric_only=True)
         print("\t\tMin: " + str(column_min))
         print("\t\tMax: " + str(column_max))
         print("\t\tMean: " + str(column_mean))
 
         # if "dsrc" in column or transmit, calculate jitter
         if "dsrc" in column or "transmit" in column:
-            # filtered_dataset = filtered_dataset_numeric.dropna()
+            # filtered_dataset = results_only_dataset.dropna()
             # print(str(filtered_dataset))
             
-            filtered_dataset_numeric_diff = filtered_dataset_numeric[column] - filtered_dataset_numeric[column].shift(-1)
+            filtered_dataset_numeric_diff = results_only_dataset[column] - results_only_dataset[column].shift(-1)
             filtered_dataset_numeric_diff_abs = filtered_dataset_numeric_diff.abs().dropna()
             # print(str(filtered_dataset_numeric_diff_abs))
             
@@ -1142,7 +1174,7 @@ def performance_post_processing(results_file):
             column_std_dev = "NA"
             print("\t\tJitter: " + str(column_mean_diff))
         else:
-            filtered_dataset_numeric_dropna = filtered_dataset_numeric[column].dropna()
+            filtered_dataset_numeric_dropna = results_only_dataset[column].dropna()
             column_std_dev = filtered_dataset_numeric_dropna.std()
             column_mean_diff = "NA"
             print("\t\tStd Dev: " + str(column_std_dev))
@@ -1163,7 +1195,10 @@ def performance_post_processing(results_file):
             # print("dst_name: " + dst_name)
 
 
-            if "_transmit" in column_split[1]:
+            if column.endswith("total_latency_e2e"):
+                src_name = args.source_site.lower()
+                step_type = "total_latency"
+            elif "_transmit" in column_split[1]:
                 step_type = "sdo_transmit"
             elif "_commit" in column_split[1]:
                 step_type = "sdo_commit"
@@ -1246,6 +1281,179 @@ def load_data_from_csv(datasets_infile):
         if str(dataset_line["load_data"]) == "true":
             load_data(dataset_line["dataset_name"],dataset_line["dataset_file_location"],dataset_line["dataset_type"],dataset_line["message_type"],dataset_line["adapter_ip"],dataset_line["start_time"],dataset_line["end_time"])
 
+#################### PLOT DATA ####################
+
+
+def plot_latency(file_path, results_base_dir):
+    # Load the CSV file
+    try:
+        data = pd.read_csv(file_path)
+    except:
+        print(f'ERROR: Unable to read file: {file_path}')
+        sys.exit()
+    
+    # Identify the columns containing "_incremental_latency" and "_total_latency"
+    incremental_latency_cols = [col for col in data.columns if "_incremental_latency" in col]
+    total_latency_cols = [col for col in data.columns if "_total_latency" in col]
+    timestamp_cols = [col for col in data.columns if "timestamp" in col]
+    # print(f'timestamp_cols: {timestamp_cols}')
+    
+    # Find the first and last columns with "_total_latency"
+    first_total_latency_col = total_latency_cols[0]
+    last_total_latency_col = total_latency_cols[-1]
+    
+    first_timestamp_col = timestamp_cols[0]
+    # print(f'first_timestamp_col: {first_timestamp_col}')
+    timestamps = pd.to_datetime(data[first_timestamp_col], unit='s',errors='coerce')
+    data.insert(0,"converted_timestamps",timestamps,True)
+    # print(f'timestamps: {timestamps}')
+
+    # Get the base name of the file without extension
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
+    
+    # Combine incremental columns and first total latency column for plotting
+    incremental_col_to_plot = incremental_latency_cols + [first_total_latency_col] + [last_total_latency_col]
+
+    # print(f'incremental_col_to_plot: {incremental_col_to_plot}')
+
+    ################# 
+    # Plot the combined plot of all incremental latency columns and the first total latency column
+    ################# 
+
+    plt.figure(figsize=(20, 8))
+    eof_label_added = False
+    dropped_packet_label_added = False
+    no_prev_packet_label_added = False
+
+    incremental_col_to_plot_values = []
+    
+    first_timestamp_data = pd.to_numeric(data[first_timestamp_col], errors='coerce')
+
+    for col in incremental_col_to_plot:
+        numeric_data = pd.to_numeric(data[col], errors='coerce')
+        
+        incremental_col_to_plot_values.append(numeric_data)
+
+        plt.plot(timestamps, numeric_data, label=clean_column_name(col))
+        
+        # Check for "EOF" in the column and plot a vertical line if found
+        eof_indices = data[data[col] == 'EOF'].index
+        for idx in eof_indices:
+            plt.axvline(x=timestamps[idx], color='r', linestyle='--', linewidth=1, alpha=0.1, label='EOF' if not eof_label_added else "")
+            eof_label_added = True
+        
+        # Check for "DROPPED PACKET" in the column and plot a vertical line if found
+        dropped_indices = data[data[col] == 'DROPPED PACKET'].index
+        for idx in dropped_indices:
+            plt.axvline(x=timestamps[idx], color='b', linestyle='--', linewidth=1, alpha=0.1, label='DROPPED PACKET' if not dropped_packet_label_added else "")
+            dropped_packet_label_added = True
+        
+        # Check for "NO PREV PACKET" in the column and plot a vertical line if found
+        no_prev_indices = data[data[col] == 'NO PREV PACKET'].index
+        for idx in no_prev_indices:
+            plt.axvline(x=timestamps[idx], color='g', linestyle='--', linewidth=1, alpha=0.1, label='NO PREV PACKET' if not no_prev_packet_label_added else "")
+            no_prev_packet_label_added = True
+    
+    plt.title('Latency of each Segment')
+    plt.xlabel('Index')
+    plt.ylabel('Latency (ms)')
+    plt.legend()
+    plt.grid(True)
+    combined_plot_path = os.path.join(results_base_dir, f'{base_name}_combined_plot.png')
+    plt.savefig(combined_plot_path)
+    plt.close()
+
+    ################# 
+    # plot stacked bar chart
+    ################# 
+    
+    plt.figure(figsize=(20, 8))
+    x = range(0,len(incremental_col_to_plot_values[0]))
+    bar_width = 1/24/60/60/11
+    plt.bar(x=data["converted_timestamps"], height=incremental_col_to_plot_values[0], color='r', width=bar_width)
+    if len(incremental_col_to_plot_values) > 1:
+        plt.bar(data["converted_timestamps"], height=incremental_col_to_plot_values[1], bottom=incremental_col_to_plot_values[0], color='b', width=bar_width)
+
+        if len(incremental_col_to_plot_values) > 2:
+            plt.bar(data["converted_timestamps"], height=incremental_col_to_plot_values[2], bottom=incremental_col_to_plot_values[0]+incremental_col_to_plot_values[1], color='y', width=bar_width)
+    
+    plt.ylabel("Latency (ms)")
+    plt.xlabel('Index')
+
+    cleaned_col_names = []
+    for col_name in incremental_col_to_plot:
+        cleaned_col_names.append(clean_column_name(col_name))
+
+    plt.legend(cleaned_col_names)
+    plt.title("Latency in Segments")
+    
+    bar_plot_path = f'{file_path}_stacked_bar_chart.png'
+    plt.savefig(bar_plot_path)
+    plt.close()
+
+    # print(f'last_total_latency_col: {last_total_latency_col}')
+
+    ################# 
+    # Plot the last total latency column
+    ################# 
+
+    plt.figure(figsize=(20, 8))
+    last_total_latency_data = pd.to_numeric(data[last_total_latency_col], errors='coerce')
+    plt.plot(timestamps, last_total_latency_data, label="End to End Latency", color='red')
+
+    eof_label_added = False
+    dropped_packet_label_added = False
+    no_prev_packet_label_added = False
+    
+    # Check for "EOF" in the last total latency column and plot a vertical line if found
+    eof_indices = data[data[last_total_latency_col] == 'EOF'].index
+    for idx in eof_indices:
+        plt.axvline(x=timestamps[idx], color='r', linestyle='--', linewidth=1, alpha=0.1, label='EOF' if not eof_label_added else "")
+        eof_label_added = True
+    
+    # Check for "DROPPED PACKET" in the last total latency column and plot a vertical line if found
+    dropped_indices = data[data[last_total_latency_col] == 'DROPPED PACKET'].index
+    for idx in dropped_indices:
+        plt.axvline(x=timestamps[idx], color='b', linestyle='--', linewidth=1, alpha=0.1, label='DROPPED PACKET' if not dropped_packet_label_added else "")
+        dropped_packet_label_added = True
+    
+    # Check for "NO PREV PACKET" in the last total latency column and plot a vertical line if found
+    no_prev_indices = data[data[last_total_latency_col] == 'NO PREV PACKET'].index
+    for idx in no_prev_indices:
+        plt.axvline(x=timestamps[idx], color='g', linestyle='--', linewidth=1, alpha=0.1, label='NO PREV PACKET' if not no_prev_packet_label_added else "")
+        no_prev_packet_label_added = True
+
+    plt.title('End to End Latency')
+    plt.xlabel('Index')
+    plt.ylabel('Latency (ms)')
+    plt.legend()
+    plt.grid(True)
+    last_total_plot_path = os.path.join(results_base_dir, f'{base_name}_last_total_latency_plot.png')
+    plt.savefig(last_total_plot_path)
+    plt.close()
+
+    ################# 
+    # Plot total histograms
+    ################# 
+    last_total_latency_data.hist(bins=50, figsize=(20, 8))
+    plt.title('End to End Latency Histogram')
+    hist_plot_path = f'{file_path}_histograms.png'
+    plt.savefig(hist_plot_path)
+    plt.close()
+
+
+def clean_column_name(column_name):
+
+
+    if "pcap_in" in column_name:
+        return "SDO to UDP Conversion"
+    elif "sdo_transmit" in column_name:
+        return "SDO Transmit Latency"
+    elif "sdo_commit" in column_name:
+        return "UDP to SDO Conversion"
+    else:
+        return column_name
+    
 
 #################### SELECT SOURCE VEHICLE ####################
 
@@ -1396,7 +1604,7 @@ def select_message_type_user_input():
 # specifies the number of match_keys defined in the params for each data source
 num_match_keys = 5
 
-J2735_message_types = ["J2735","J2735-BSM","J2735-SPAT","J2735-MAP","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
+J2735_message_types = ["J2735","J3224","J2735-BSM","J2735-SPAT","J2735-MAP","Vehicle","MAP","TrafficLight","BSM","Mobility_Request","Mobility_Response","Mobility_Path","Mobility_Operations-STATUS","Mobility_Operations-INFO","Traffic_Control_Request","Traffic_Control_Message"]
 
 J2735_message_type_ids = {
     "BSM"   : "0014",
@@ -1405,7 +1613,7 @@ J2735_message_type_ids = {
 }
 
 # list of J2735 messages that become TENA Messages (as opposed to SDOs)
-J2735_message_types_as_tena_message = ["Traffic_Control_Request","Traffic_Control_Message", "J2735"]
+J2735_message_types_as_tena_message = ["Traffic_Control_Request","Traffic_Control_Message", "J2735","J3224"]
 
 desired_intersection_name = ""
 desired_signal_id = "1628"
@@ -1431,14 +1639,14 @@ argparser.add_argument(
     dest='data_type',
     type=str,
     default=None,
-    help='Data type to be analyzed OPTIONS: [J2725,MAP,SPAT,BSM,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
+    help='Data type to be analyzed OPTIONS: [J2725,MAP,SPAT,BSM,Vehicle,Mobility_Request,Mobility_Response,Mobility_Path,Mobility_Operations-STATUS,Mobility_Operations-INFO,Traffic_Control_Request,Traffic_Control_Message]')
 argparser.add_argument(
-    '-s', '--source_vehicle',
-    metavar='<source_vehicle_index>',
-    dest='source_vehicle_index',
-    type=int,
+    '-s', '--source_site',
+    metavar='<source_site>',
+    dest='source_site',
+    type=str,
     default=None,
-    help='Index of vehicle to analyze data for: [#]')
+    help='Name of the source site in metadata')
 argparser.add_argument(
     '-o', '--outfile',
     metavar='<outfile>',
@@ -1460,6 +1668,17 @@ argparser.add_argument(
     type=str,
     default=None,
     help='a csv input file that contains the datasets to load (columns: "dataset_name","dataset_file_location","dataset_type" ')
+argparser.add_argument(
+    '--plot_only',
+    action='store_true',
+    help='skip data analysis and only regenerate plots')
+argparser.add_argument(
+    '-m', '--metadata',
+    metavar='<metadata file>',
+    dest='metadata',
+    type=str,
+    default=None,
+    help='metadata file containing site details and file locations')
 args = argparser.parse_args()
 
 log_level = getattr(logging, args.log_level)
@@ -1481,21 +1700,31 @@ logging.info("========== STARTING VOICES PERFORMANCE ANALYSIS ==========")
 
 ############################## SET CLOCK SKEWS ##############################
 
-live_to_nist_clock_skew = 0.060723
-virtual_to_nist_clock_skew = -0.051729
+# live_to_nist_clock_skew = 0.060723
+# virtual_to_nist_clock_skew = -0.051729
 
-live_to_virtual_clock_skew = live_to_nist_clock_skew - virtual_to_nist_clock_skew
+# live_to_virtual_clock_skew = live_to_nist_clock_skew - virtual_to_nist_clock_skew
 
-virt_to_v2x_clock_skew = -44.806000
-virt_to_second_clock_skew = -45.000999
-virt_to_third_clock_skew = -45.786999
+# virt_to_v2x_clock_skew = -44.806000
+# virt_to_second_clock_skew = -45.000999
+# virt_to_third_clock_skew = -45.786999
 
-live_to_v2x_clock_skew = live_to_virtual_clock_skew + virt_to_v2x_clock_skew
-live_to_second_clock_skew = live_to_virtual_clock_skew + virt_to_second_clock_skew
-live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
+# live_to_v2x_clock_skew = live_to_virtual_clock_skew + virt_to_v2x_clock_skew
+# live_to_second_clock_skew = live_to_virtual_clock_skew + virt_to_second_clock_skew
+# live_to_third_clock_skew = live_to_virtual_clock_skew + virt_to_third_clock_skew
 
 
 ############################## USER INPUT ##############################
+
+if args.metadata:
+    metadata_file_path = args.metadata
+else:
+    print("\nERROR: Please provide metadata file using the -m argument. See help (-h) for more details")
+    sys.exit()
+
+with open(metadata_file_path, 'r') as metadata_file:
+    # Reading from json file
+    metadata_site_list = json.load(metadata_file)
 
 if args.data_type == None:
     J2735_message_type_name = select_message_type_user_input()
@@ -1510,8 +1739,6 @@ else:
 if "J2735-" in J2735_message_type_name:
     J2735_message_subtype_name = J2735_message_type_name.replace("J2735-","")
     J2735_message_type_name = "J2735"
-    
-
 else:
     J2735_message_subtype_name = None
 
@@ -1522,32 +1749,61 @@ if J2735_message_subtype_name:
     print("Message Sub-Type: " + J2735_message_subtype_name + " selected")
 
 # we do not need to select a vehicle for spat
-if J2735_message_type_name != "TrafficLight" and J2735_message_type_name != "J2735":
-    if args.source_vehicle_index == None:
-        vehicle_info = select_vehicle_user_input()
-    else:
+# we dont need this anymore, get data from metadata
+# if False:
+# 
+# # if J2735_message_type_name != "TrafficLight" and J2735_message_type_name != "J2735":
+#     if args.source_vehicle_index == None:
+#         vehicle_info = select_vehicle_user_input()
+#     else:
         
-        if args.source_vehicle_index > len(voices_vehicles):
-            print("ERROR: Source Vehicle index out of bounds, try again")
-            print("\nValid Vehicles:")
-            for vehicle_i,vehicle in enumerate(voices_vehicles):
-                print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
+#         if args.source_vehicle_index > len(voices_vehicles):
+#             print("ERROR: Source Vehicle index out of bounds, try again")
+#             print("\nValid Vehicles:")
+#             for vehicle_i,vehicle in enumerate(voices_vehicles):
+#                 print("\n[" + str(vehicle_i + 1) + "] \tHOST ID: " + vehicle["host_static_id"] + " \n\tTENA ID: " + vehicle["tena_host_id"] + " \n\tBSM ID: " + vehicle["bsm_id"])
 
-            sys.exit()
+#             sys.exit()
         
-        vehicle_info = voices_vehicles[args.source_vehicle_index - 1]
-else:
-    # but, we need values for the params, so we put one in as a placeholder...
-    # probably can do this better
-    vehicle_info = voices_vehicles[0]
+#         vehicle_info = voices_vehicles[args.source_vehicle_index - 1]
+# else:
+# but, we need values for the params, so we put one in as a placeholder...
+# probably can do this better
 
-desired_bsm_id = vehicle_info["bsm_id"]
-desired_tena_identifier = vehicle_info["tena_host_id"]
-desired_host_static_id = vehicle_info["host_static_id"]
-desired_traffic_control_ip_address = vehicle_info["traffic_control_ip_address"]
+
+source_vehicle_metadata_index = get_obj_by_key_value(metadata_site_list,"site_name",args.source_site)
+
+if source_vehicle_metadata_index == None:
+    print(f'\nERROR: Unable to find vehicle {args.source_site} in metadata')
+    sys.exit()
+
+source_vehicle_metadata = metadata_site_list[source_vehicle_metadata_index]
+
+
+# {
+#     "tena_host_id"       : "CARMA-TFHRC-LIVE",
+#     "host_static_id":   "CARMA-TFHRC-LIVE", #CARMA-TFHRC-LIVE",
+#     "bsm_id"        : "f03ad610",
+#     "platoon_order" : 1, # this can be used for identifying what fields to look at in platoon sdos
+#     "lvc_designation" : "live",
+#     "traffic_control_ip_address"    : "172.30.1.146",
+# },
+
+# TODO: add bsm_id and host static ID and TENA identifier to metadata
+# desired_bsm_id = source_vehicle_metadata["bsm_id"]
+desired_bsm_id = ""
+# desired_tena_identifier = source_vehicle_metadata["tena_host_id"]
+desired_tena_identifier = ""
+# desired_host_static_id = source_vehicle_metadata["host_static_id"]
+desired_host_static_id = ""
+# desired_traffic_control_ip_address = source_vehicle_metadata["traffic_control_ip_address"]
+desired_traffic_control_ip_address = source_vehicle_metadata["ip_address"]
+
+source_ip_address = source_vehicle_metadata["ip_address"]
+
 
 # velocity is not set for constructive vehicles, so do not check it
-if vehicle_info["lvc_designation"] == "live":
+if source_vehicle_metadata["lvc"] == "live":
     tdcs_bsm_velocity_field = "tspi.velocity.ltpENU_asTransmitted.vxInMetersPerSecond,Float32 (optional)"
     pcap_bsm_velocity_field = "speed(m/s)"
 else:
@@ -1563,14 +1819,15 @@ else:
 # remove two decimal places 
 # save
 
+# TODO: fix this with new metadata file? Probably dont need as we moved to J2735 messages 
 if J2735_message_type_name == "Mobility_Operations-INFO" or J2735_message_type_name == "Mobility_Operations-STATUS":
-    if vehicle_info["platoon_order"] == 1:
+    if source_vehicle_metadata["platoon_order"] == 1:
         mob_ops_tdcs_field = "downtrackDistanceInMeters,Float32"
         extract_tdcs_mobility_dtd = False
-    elif vehicle_info["platoon_order"] == 2:
+    elif source_vehicle_metadata["platoon_order"] == 2:
         mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (1)"
         extract_tdcs_mobility_dtd = True
-    elif vehicle_info["platoon_order"] == 3:
+    elif source_vehicle_metadata["platoon_order"] == 3:
         mob_ops_tdcs_field = "joinedVehicles^strategyParameters,String (2)"
         extract_tdcs_mobility_dtd = True
 else:
@@ -1635,6 +1892,43 @@ data_params = {
                 {
                     "key"       : None,
                 }
+            ]
+        },
+        "Vehicle" : {
+            "skip_if_neqs"      : [
+                {
+                }
+
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                }
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "latitude",
+                    "round"     : True,
+                    "round_decimals": 6,
+                    "buffer"    : 0.000002,
+                },
+                {
+                    "key"       : "longitude",
+                    "round"     : True,
+                    "round_decimals": 6,
+                    "buffer"    : 0.000002,
+                },
+                {
+                    "key"       : "const^identifier,String",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+
             ]
         },
         "TrafficLight" : { # actually decoded spat
@@ -1899,7 +2193,32 @@ data_params = {
 
             "match_keys"        : [
                 {
-                    "key"       : "payload",
+                    "key"       : "hex_payload",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
+        "J3224" : {
+            "skip_if_neqs"      : [
+            ],
+            
+            "skip_if_eqs"       : [
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "hex_payload",
                 },
                 {
                     "key"       : None,
@@ -1920,10 +2239,10 @@ data_params = {
     "tdcs_params" : {
         "BSM" : {
             "skip_if_neqs"      : [
-                {
-                    "key"           : "const^identifier,String",
-                    "value"         : desired_tena_identifier,
-                }
+                # {
+                #     "key"           : "const^identifier,String",
+                #     "value"         : desired_tena_identifier,
+                # }
 
             ],
             
@@ -1954,12 +2273,15 @@ data_params = {
                 {
                     "key"       : "msWithinMinute,UInt16",
                 },
+                # {
+                #     # velocity is not set in TDCS for constructive BSMs 
+                #     "key"       : tdcs_bsm_velocity_field,
+                #     "round"     : True,
+                #     "round_decimals": 2,
+                #     "buffer"    : 0.03,
+                # },
                 {
-                    # velocity is not set in TDCS for constructive BSMs 
-                    "key"       : tdcs_bsm_velocity_field,
-                    "round"     : True,
-                    "round_decimals": 2,
-                    "buffer"    : 0.03,
+                    "key"       : None,
                 },
                 
                 {
@@ -1967,12 +2289,62 @@ data_params = {
                 }
             ]
         },
-        "TrafficLight" : {
+        "Vehicle" : {
             "skip_if_neqs"      : [
                 {
-                    "key"           : "const^signalID,String",
-                    "value"         : desired_signal_id,
-                }
+                    "key"   : "const^Metadata,SDOid.hostIPaddress",
+                    "value" : source_ip_address,
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Discovery",
+                },
+                {
+                    "key"   : "Metadata,Enum,Middleware::EventType",
+                    "value" : "Destruction",
+                },
+                
+            ],
+
+            "match_keys"        : [
+                # {
+                #     "key"       : "tspi.position.geodetic_asTransmitted.latitudeInDegrees,Float64 (optional)",
+                #     "round"     : True,
+                #     "round_decimals": 6,
+                #     "buffer"    : 0.000002,
+                # },
+                # {
+                #     "key"       : "tspi.position.geodetic_asTransmitted.longitudeInDegrees,Float64 (optional)",
+                #     "round"     : True,
+                #     "round_decimals": 6,
+                #     "buffer"    : 0.000002,
+                # },
+                {
+                    "key"       : "const^identifier,String",
+                },
+                {
+                    "key"       : "Metadata,StateVersion",
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+            ]
+        },
+        "TrafficLight" : {
+            "skip_if_neqs"      : [
+                # {
+                #     "key"           : "const^signalID,String",
+                #     "value"         : desired_signal_id,
+                # }
 
             ],
             
@@ -2310,6 +2682,36 @@ data_params = {
             "match_keys"        : [
                 {
                     "key"       : "binaryContent^UInt8",
+                    "j2735_vector": True, # !!!! - there is a big assumption in here that J2735 SPaT are less than 255 hex bytes
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                },
+                {
+                    "key"       : None,
+                }
+            ]
+        },
+        "J3224" : {
+            "skip_if_neqs"      : [
+                {
+                    "key"           : "Metadata,Endpoint",
+                    "value"         : None,
+                },
+            ],
+            
+            "skip_if_eqs"       : [
+            ],
+
+            "match_keys"        : [
+                {
+                    "key"       : "binaryContent^UInt8",
                     "j2735_vector": True,
                 },
                 {
@@ -2331,12 +2733,13 @@ data_params = {
 
 ############################## LOAD DATA ##############################
 
-print("\nTotal Packets:")
+if not args.plot_only:
+    print("\nTotal Packets:")
 
-if args.infile == None:
-    load_data_user_input()
-else:
-    load_data_from_csv(args.infile)
+    if args.infile == None:
+        load_data_user_input()
+    else:
+        load_data_from_csv(args.infile)
 
 ############################## MAIN ##############################
 
@@ -2346,110 +2749,111 @@ else:
 # if the source packet is not found in one of the datasets (dropped packet or something), we need to try the next packet in the source dataset
 # to keep data aligned across all sets, we simply remove that packet from all data sources that have it
 
-if len(all_data) == 0:
-    print("\nNo datasets loaded, exiting")
-    sys.exit()
+if not args.plot_only:
+    if len(all_data) == 0:
+        print("\nNo datasets loaded, exiting")
+        sys.exit()
 
-source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
-source_data_obj = all_data[source_data_obj_index]
-source_data_list_original = source_data_obj["original_data_list"]
-source_data_list_filtered = source_data_obj["filtered_data_list"]
+    source_data_obj_index = get_obj_by_key_value(all_data,"data_order",1)
+    source_data_obj = all_data[source_data_obj_index]
+    source_data_list_original = source_data_obj["original_data_list"]
+    source_data_list_filtered = source_data_obj["filtered_data_list"]
 
-source_packet_params = source_data_obj["dataset_params"]
+    source_packet_params = source_data_obj["dataset_params"]
 
-all_datasets_have_offset = False
+    all_datasets_have_offset = False
 
-packets_to_skip = 0
-max_packets_to_skip = 30
+    packets_to_skip = 0
+    max_packets_to_skip = 30
 
-source_reqid_list = []
-
-
-for dataset_to_filter in all_data:
-    filter_dataset(dataset_to_filter)
-
-all_filtered_datasets_contain_data = True
-
-print("\nFiltered Packet Totals:")
-for dataset in all_data:
-    
-    dataset_len = len(dataset["filtered_data_list"])
-    print("\t" + dataset["dataset_name"] + ": " + str(dataset_len))
-
-    if dataset_len == 0: 
-        all_filtered_datasets_contain_data = False
-
-if all_filtered_datasets_contain_data == False:
-    print("\nERROR: One or more filtered datasets does not contain any data")
-    sys.exit()
+    source_reqid_list = []
 
 
-# print("\nFilter to first unique Totals:")
-# for dataset_to_find_unique in all_data:
-#     find_first_unique_packet(dataset_to_find_unique)
+    for dataset_to_filter in all_data:
+        filter_dataset(dataset_to_filter)
 
+    all_filtered_datasets_contain_data = True
 
-# loop through the first 30 packets of the source 
-# while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_skip:
-logging.info("---------- FINDING FIRST PACKET FOR ALL DATASETS ----------")
-# logging.info("  --> Skipping first " + str(packets_to_skip) + " source packets")
-
-# iterate through all datasets and filter the dataset starting at the matched packet
-for source_dataset in all_data:
-
-    all_datasets_have_offset = True
-    
-    for dataset_to_search in all_data:
+    print("\nFiltered Packet Totals:")
+    for dataset in all_data:
         
-        # dont align a dataset with itself
-        if source_dataset["dataset_name"] == dataset_to_search["dataset_name"]:
-            source_dataset ["starting_dataset_index"] = 0
-            continue
+        dataset_len = len(dataset["filtered_data_list"])
+        print("\t" + dataset["dataset_name"] + ": " + str(dataset_len))
 
-        align_dataset(source_dataset,dataset_to_search)
+        if dataset_len == 0: 
+            all_filtered_datasets_contain_data = False
+
+    if all_filtered_datasets_contain_data == False:
+        print("\nERROR: One or more filtered datasets does not contain any data")
+        sys.exit()
+
+
+    # print("\nFilter to first unique Totals:")
+    # for dataset_to_find_unique in all_data:
+    #     find_first_unique_packet(dataset_to_find_unique)
+
+
+    # loop through the first 30 packets of the source 
+    # while all_datasets_have_offset == False and packets_to_skip <= max_packets_to_skip:
+    logging.info("---------- FINDING FIRST PACKET FOR ALL DATASETS ----------")
+    # logging.info("  --> Skipping first " + str(packets_to_skip) + " source packets")
+
+    # iterate through all datasets and filter the dataset starting at the matched packet
+    for source_dataset in all_data:
+
+        all_datasets_have_offset = True
         
-        # if we go through the whole source_dataset and we haven't found the matching packet,
-        # break to continue to the next source packet
-        if not dataset_to_search["found_packet_matching_search"]:
-            logging.debug("Could not find offset in: " + dataset_to_search["dataset_name"] )
-            all_datasets_have_offset = False
+        for dataset_to_search in all_data:
+            
+            # dont align a dataset with itself
+            if source_dataset["dataset_name"] == dataset_to_search["dataset_name"]:
+                source_dataset ["starting_dataset_index"] = 0
+                continue
+
+            align_dataset(source_dataset,dataset_to_search)
+            
+            # if we go through the whole source_dataset and we haven't found the matching packet,
+            # break to continue to the next source packet
+            if not dataset_to_search["found_packet_matching_search"]:
+                logging.debug("Could not find offset in: " + dataset_to_search["dataset_name"] )
+                all_datasets_have_offset = False
+                break
+
+        
+
+        # if all datasets found a packet matching the source packet, break to stop looking
+        if all_datasets_have_offset == True:
+            logging.info("All datasets found source offset:")
+
+            for dataset in all_data:
+                logging.info("  " + dataset["dataset_name"] + ": " + str(dataset["starting_dataset_index"]))
+
             break
+        else:
+            # if one of the datasets did not find the matching source packet:
+            # clear filtered data, reset found_packet_matching_search, and increase the packets to skip
+            logging.debug("Some datasets could not find source offset, moving to next source dataset")
+            for dataset in all_data:
+                dataset["found_packet_matching_search"] = False
+                dataset["starting_dataset_index"] = None
 
-    
+            # packets_to_skip += 1
+            
+            # if packets_to_skip == max_packets_to_skip:
+            #     logging.debug("None of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
+            #     print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
+            #     sys.exit()
+            
+    if all_datasets_have_offset == False:
+        print("\nUnable to find the first packet of any of the datasets in all other datasets, unable to align data")
+        logging.error("Unable to find the first packet of any of the datasets in all other datasets, unable to align data")
+        sys.exit()
 
-    # if all datasets found a packet matching the source packet, break to stop looking
-    if all_datasets_have_offset == True:
-        logging.info("All datasets found source offset:")
-
-        for dataset in all_data:
-            logging.info("  " + dataset["dataset_name"] + ": " + str(dataset["starting_dataset_index"]))
-
-        break
-    else:
-        # if one of the datasets did not find the matching source packet:
-        # clear filtered data, reset found_packet_matching_search, and increase the packets to skip
-        logging.debug("Some datasets could not find source offset, moving to next source dataset")
-        for dataset in all_data:
-            dataset["found_packet_matching_search"] = False
-            dataset["starting_dataset_index"] = None
-
-        # packets_to_skip += 1
-        
-        # if packets_to_skip == max_packets_to_skip:
-        #     logging.debug("None of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
-        #     print("\nNone of the first 30 packets in the source data could be found in all subsiquent datasets, exiting")
-        #     sys.exit()
-        
-if all_datasets_have_offset == False:
-    print("\nUnable to find the first packet of any of the datasets in all other datasets, unable to align data")
-    logging.error("Unable to find the first packet of any of the datasets in all other datasets, unable to align data")
-    sys.exit()
-
-for dataset in all_data:
-    dataset["filtered_data_list"] = dataset["filtered_data_list"][dataset["starting_dataset_index"]:]
+    for dataset in all_data:
+        dataset["filtered_data_list"] = dataset["filtered_data_list"][dataset["starting_dataset_index"]:]
 
 
-check_for_dropped_packets()
+    check_for_dropped_packets()
 
 ############################## INITIALIZE CSV WRITER ##############################
 
@@ -2458,20 +2862,27 @@ if args.outfile == None:
 else:
     outfile = str(clean_name(args.outfile))
 
-try:
-    os.mkdir("results")
-except:
-    pass
+results_base_dir = "results/" + args.results_summary_prefix + "_results" 
 
-results_outfile_obj = open("results/" + outfile + ".csv",'w',newline='')
-results_outfile_writer = csv.writer(results_outfile_obj)
+results_filename = results_base_dir + "/" + outfile + ".csv"
 
-calculate_performance_metrics()
+if not args.plot_only:
+    try:
+        os.makedirs(results_base_dir)
+    except:
+        pass
 
-results_outfile_obj.close()
+    results_outfile_obj = open(results_filename,'w',newline='')
+    results_outfile_writer = csv.writer(results_outfile_obj)
 
-performance_post_processing("results/" + outfile + ".csv")
+    calculate_performance_metrics()
 
+    results_outfile_obj.close()
+
+    performance_post_processing(results_base_dir + "/" + outfile + ".csv")
+
+
+plot_latency(results_filename,results_base_dir)
 
 
 

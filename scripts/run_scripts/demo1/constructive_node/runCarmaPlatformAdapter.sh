@@ -27,19 +27,19 @@ if [[ $? -ne 0 ]] ; then
     exit 1
 fi
 
-localCarlaAdapterPath=$localInstallPath/$carmaPlatformAdapterVersion
+localCarlaAdapterPath=$VUG_LOCAL_INSTALL_PATH/$VUG_CARMA_PLATFORM_ADAPTER_VERSION
 
 adapterVerbosity='4'
 
-carmaAddress=$localAddress
+carmaAddress=$VUG_LOCAL_ADDRESS
 carmaPort='5398'
 
-carmaAdapterAddress=$localAddress
+carmaAdapterAddress=$VUG_LOCAL_ADDRESS
 carmaAdapterPort='56700'
 
-mkdir -p $localAdapterLogPath
+mkdir -p $VUG_ADAPTER_LOG_PATH
 
-adapterLogFile=$localAdapterLogPath/carma_platform_adapter_terminal_out.log
+adapterLogFile=$VUG_ADAPTER_LOG_PATH/carma_platform_adapter_terminal_out.log
 
 echo "<< ***** Adapter Started **** >>" > $adapterLogFile
 date >> $adapterLogFile
@@ -52,5 +52,5 @@ BASH_XTRACEFD=4
 
 set -x
 
-$localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $carmaID -verbosity $adapterVerbosity | tee -a $adapterLogFile
+$localCarlaAdapterPath/bin/carma-platform-tena-adapter -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -carmaEndpoint $carmaAddress:$carmaPort -adapterEndpoint $carmaAdapterAddress:$carmaAdapterPort -carmaID $VUG_CARMA_VEHICLE_ID -verbosity $adapterVerbosity | tee -a $adapterLogFile
 

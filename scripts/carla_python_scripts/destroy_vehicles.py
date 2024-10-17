@@ -42,55 +42,15 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-n', '--number-of-vehicles',
-        metavar='N',
-        default=10,
-        type=int,
-        help='number of vehicles (default: 10)')
+        '-e', '--exclude',
+        metavar='VEHICLE_NAME',
+        type=str,
+        help='Exclude these vehicles when deleting (comma separated, Ex: VW-MAN-1,ECON-MAN-1)')
     argparser.add_argument(
-        '-w', '--number-of-walkers',
-        metavar='W',
-        default=50,
-        type=int,
-        help='number of walkers (default: 50)')
-    argparser.add_argument(
-        '--safe',
-        action='store_true',
-        help='avoid spawning vehicles prone to accidents')
-    argparser.add_argument(
-        '--filterv',
-        metavar='PATTERN',
-        default='vehicle.*',
-        help='vehicles filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '--filterw',
-        metavar='PATTERN',
-        default='walker.pedestrian.*',
-        help='pedestrians filter (default: "walker.pedestrian.*")')
-    argparser.add_argument(
-        '--tm-port',
-        metavar='P',
-        default=8000,
-        type=int,
-        help='port to communicate with TM (default: 8000)')
-    argparser.add_argument(
-        '--sync',
-        action='store_true',
-        help='Synchronous mode execution')
-    argparser.add_argument(
-        '--hybrid',
-        action='store_true',
-        help='Enanble')
-    argparser.add_argument(
-        '-s', '--seed',
-        metavar='S',
-        type=int,
-        help='Random device seed')
-    argparser.add_argument(
-        '--car-lights-on',
-        action='store_true',
-        default=False,
-        help='Enanble car lights')
+        '-i', '--include',
+        metavar='VEHICLE_NAME',
+        type=str,
+        help='Only delete these vehicles (comma separated, Ex: VW-MAN-1,ECON-MAN-1)')
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -100,8 +60,6 @@ def main():
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = False
-    random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
@@ -114,10 +72,34 @@ def main():
         #client.set_timeout(10.0)
         
         vehicles = world.get_actors().filter('vehicle.*')
+        print(str(vehicles))
+
+        if args.include:
+            vehicles_to_include = (args.include).replace(" ","").split(",")
+            included_vehicles = []
+
+            for vehicle in vehicles:
+                print(vehicle.attributes["role_name"])
+                if vehicle.attributes["role_name"] in vehicles_to_include:
+                    included_vehicles.append(vehicle)
+            
+            vehicles = included_vehicles
+
+            print(f'INCLUDED: {vehicles}')
+
+
+        if args.exclude:
+            vehicles_to_exclude = (args.exclude).replace(" ","").split(",")
+        else:
+            vehicles_to_exclude = []
         for vehicle in vehicles:
             print(vehicle)
             print("attributes: " + str(vehicle.attributes))
             print("location: " + str(vehicle.get_location()))
+            
+            if vehicle.attributes["role_name"] in vehicles_to_exclude:
+                print("Skipping: " + str(vehicle.attributes["role_name"]))
+                continue
             # vehicle.attributes["color"] = "255,255,255"
             vehicle.destroy()
 
@@ -138,15 +120,6 @@ def main():
 
     finally:
 
-        if args.sync and synchronous_master:
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
-
-        print('\nENDING')
-
-
         time.sleep(0.5)
 
 if __name__ == '__main__':
@@ -156,4 +129,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        print('\ndone.')
+        print('\nDONE DESTROYING VEHICLES')

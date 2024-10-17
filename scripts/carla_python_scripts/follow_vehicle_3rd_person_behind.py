@@ -794,7 +794,7 @@ class CameraManager(object):
         self._camera_transforms = [
             #(carla.Transform(carla.Location(x=5, y=-0.20, z=1.2)), Attachment.Rigid)
             #(carla.Transform(carla.Location(x=0.15, y=-0.30, z=1.25)), Attachment.Rigid)
-            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm)
+            (carla.Transform(carla.Location(x=-15, z=10), carla.Rotation(pitch=5.0)), Attachment.SpringArm)
             #(carla.Transform(carla.Location(x=5.5, y=1.5, z=3)), Attachment.SpringArm),
             #(carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm)
             #(carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)

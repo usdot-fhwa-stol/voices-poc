@@ -1,95 +1,114 @@
 #!/bin/bash
 
-voices_config=~/.voices_config
+voices_site_config=$HOME/.voices_site_config
+voices_scenario_config=$HOME/.voices_scenario_config
 
-if [ -L ${voices_config} ] ; then
-   if [ -e ${voices_config} ] ; then
-      config_link_dest=$(readlink -f $voices_config)
-      link_base_name=$(basename ${config_link_dest})
+voices_site_config_docker=$HOME/.voices_site_config_docker
+voices_scenario_config_docker=$HOME/.voices_scenario_config_docker
 
-      . $voices_config
+if [ -L ${voices_site_config} ] && [ -L ${voices_scenario_config} ]; then
+    if [ -e ${voices_site_config} ] && [ -e ${voices_scenario_config} ]; then
+        site_config_link_dest=$(readlink -f $voices_site_config)
+        site_link_base_name=$(basename ${site_config_link_dest})
 
+        scenario_config_link_dest=$(readlink -f $voices_scenario_config)
+        scenario_link_base_name=$(basename ${scenario_config_link_dest})
 
-      echo "Site Config: "$link_base_name
-      echo "Scenario Config: "$scenario_config_file
-   else
-      echo "[!!!] .voices_config link is broken"
-      exit 1
+        source $HOME/.voices_site_config
+
+		# if voices config docker exists, then source it to overwrite docker specific vars
+		if [ -e ${voices_site_config_docker} ]; then
+			source $HOME/.voices_site_config_docker
+		fi
+
+		source $HOME/.voices_scenario_config
+
+		if [ -e ${voices_scenario_config_docker} ]; then
+			source $HOME/.voices_scenario_config_docker
+		fi
+
+        echo "Site Config: "$site_link_base_name
+        echo "Scenario Config: "$scenario_link_base_name
+    else
+        echo "[!!!] .voices_site_config or .voices_scenario_config link is broken"
+        echo "Site Config: "$(readlink -f $site_link_base_name)
+        echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
+        exit 1
    fi
-elif [ -e ${voices_config} ] ; then
-   echo "[!!!] .voices_config file is not a symbolic link"
-   exit 1
+elif [ -e ${voices_site_config} ] || [ -e ${voices_site_config} ]; then
+    echo "[!!!] .voices_site_config or .voices_scenario_config file is not a symbolic link"
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
+    exit 1
 else
-   echo "[!!!] .voices_config link is is missing"
-   exit 1
+    echo "[!!!] .voices_site_config or .voices_scenario_config symbolic link does not exist"
+    echo "Site Config: "$(readlink -f $site_link_base_name)
+    echo "Scenario Config: "$(readlink -f $scenario_link_base_name)
+    exit 1
 fi
+
 
 echo
-echo "What vehicle position are you? [#]" 
-echo 
-echo "    [1]  	UCLA Vehicle"
-echo "    [2]  	Nissan Vehicle"
-echo "    [3]  	Econolite Traffic Light"
-echo "    [4]  	MCity Observer"
-echo "    [5]  	TFHRC Manual Vehicle"
-echo "    [6]  	TFHRC Local CARMA Platform Vehicle"
+read -p "Are you hosting a CARMA Platform Vehicle? [y/n] " isCarmaVehicle
 
-echo
-read -p "--> " positionIndex
-
-vehicle_type='virtual_vehicle'
-vehicle_name=$carmaID
-if [[ $positionIndex == 6 ]]; then
-    vehicle_type='local_carma_platform_vehicle'
-elif [[ $positionIndex -gt 6 ]]; then
-    echo "Invalid selection, try again..."
-    exit
-fi
-
-if [[ $vehicle_type == 'live_vehicle' ]]; then
-
-    # Live vehicle
-    obu_interface_name=$(ifconfig | grep -B1 "192.168.88.100" | head -n 1 | sed 's/:.*//')
-    tcpdump_out="sudo tcpdump -i $obu_interface_name dst 192.168.88.40 and port 1516 -w carma_platform_out.pcap"
-    tcpdump_in="sudo tcpdump -i $obu_interface_name src 192.168.88.40 and port 5398 -w carma_platform_in.pcap"
-
-else
-
-    tcpdump_out="sudo tcpdump -i lo port $j2735AdapterReceivePort -w ip_packet_out.pcap"
-    tcpdump_in="sudo tcpdump -i lo port $j2735AdapterSendPort -w ip_packet_in.pcap"
-
-fi
+username=$(whoami)
 
 timestamp=$(date -d "today" +"%Y%m%d%H%M%S")
 
-logs_folder_name=$simId'_'$timestamp
+logs_folder_name=$VUG_SIM_ID'_'$timestamp
+
+if [[ $VUG_DOCKER_START_TJ2735_ADAPTER == true ]]; then
+
+    j2735_tcpdump_out="tcpdump -i lo port $VUG_J2735_ADAPTER_RECEIVE_PORT -w J2735_packet_in.pcap"
+    j2735_tcpdump_in="tcpdump -i lo port $VUG_J2735_ADAPTER_SEND_PORT -w J2735_packet_out.pcap"
+
+    if [[ $username != "root" ]]; then
+        j2735_tcpdump_out="sudo "+$j2735_tcpdump_out
+        j2735_tcpdump_in="sudo "+$j2735_tcpdump_in
+    fi
+
+fi
+
+if [[ $VUG_DOCKER_START_TJ3224_ADAPTER == true ]]; then
+
+    j3224_tcpdump_out="tcpdump -i lo port $VUG_J3224_ADAPTER_RECEIVE_PORT -w J3224_packet_in.pcap"
+    j3224_tcpdump_in="tcpdump -i lo port $VUG_J3224_ADAPTER_SEND_PORT -w J3224_packet_out.pcap"
+
+    if [[ $username != "root" ]]; then
+        j3224_tcpdump_out="sudo "+$j3224_tcpdump_out
+        j3224_tcpdump_in="sudo "+$j3224_tcpdump_in
+    fi
+
+fi
 
 echo
 echo "Folder Name: "$logs_folder_name
 
-mkdir -p $logFilesRoot/$logs_folder_name
-cd $logFilesRoot/$logs_folder_name
+mkdir -p $VUG_LOG_FILES_ROOT/$logs_folder_name
+cd $VUG_LOG_FILES_ROOT/$logs_folder_name
+
+echo
+read -p "Would you like to collect the TENA SDO data? [y/n] " save_tdcs_data
+
+if [[ $save_tdcs_data =~ ^[yY]$ ]]; then
+    echo
+    echo "Starting TDCS" 
+    tdcs_command="$VUG_TDCS_PATH/start.sh -emEndpoints $VUG_EM_ADDRESS:$VUG_EM_PORT -listenEndpoints $VUG_LOCAL_ADDRESS -databaseName $logs_folder_name.sqlite -dbFolder ."
+    echo $tdcs_command
+    $tdcs_command &
+fi
+
+echo
+read -p "Would you like to collect eco data [y/n] " collect_eco
+
+if [[ $collect_eco =~ ^[yY]$ ]]; then
+    echo collecting
+    collect_eco_cmd="python3 $HOME/voices-poc/scripts/carla_python_scripts/collect_pilot2_vehicle_eco_data.py --vehicle_rolenames $VUG_COLLECT_ECO_DATA_ROLENAMES --host $VUG_CARLA_ADDRESS --output_dir $VUG_LOG_FILES_ROOT/$logs_folder_name"
+fi
 
 #if we are not a live vehicle then prompt to collect logs 
 #(live vehicle is not connected to VOICES network)
 
-if [[ ! $vehicle_type == 'live_vehicle' ]]; then
-
-    echo
-    read -p "Would you like to collect the TENA SDO data? [y/n] " save_tdcs_data
-
-    if [[ $save_tdcs_data =~ ^[yY]$ ]]; then
-        echo
-        echo "Starting TDCS" 
-        tdcs_command="$tdcsPath/start.sh -emEndpoints $emAddress:$emPort -listenEndpoints $localAddress -databaseName $logs_folder_name.sqlite -dbFolder ."
-        echo $tdcs_command
-        $tdcs_command &
-    fi
-fi
-
-if [[ $vehicle_type == 'local_carma_platform_vehicle' ]]; then
-    trap copyCarmaLogs SIGINT
-fi
 
 copyCarmaLogs()
 {
@@ -109,10 +128,10 @@ copyCarmaLogs()
     if [[ ! $vehicle_type == 'live_vehicle' ]]; then
 
         echo "Copying adapter logs"
-        mv $localAdapterLogPath/*.log .
+        mv $VUG_ADAPTER_LOG_PATH/*.log .
 
         echo "Copying carma simulation logs"    
-        mv $localCarmaSimLogPath/*.log .
+        mv $VUG_CARMA_SIM_LOG_PATH/*.log .
     
     fi
 
@@ -128,10 +147,22 @@ copyCarmaLogs()
     exit
 }
 
+if [[ $isCarmaVehicle =~ ^[yY]$ ]]; then
+    trap copyCarmaLogs SIGINT
+fi
+
+
+echo
+echo $j2735_tcpdump_out
+echo $j2735_tcpdump_in
+echo $j3224_tcpdump_out
+echo $j3224_tcpdump_in
+echo $collect_eco_cmd
+
+echo
+read -p "Data collection ready, press [ENTER] to begin..." dummyvar
+
 echo
 echo "Starting tcpdumps - when finished press [CTRL + C]"
-echo
-echo $tcpdump_out
-echo $tcpdump_in
 echo 
-$tcpdump_out & $tcpdump_in && fg
+$collect_eco_cmd & $j2735_tcpdump_out & $j2735_tcpdump_in & $j3224_tcpdump_out & $j3224_tcpdump_in & wait

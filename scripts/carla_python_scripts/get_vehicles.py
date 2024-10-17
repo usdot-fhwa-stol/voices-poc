@@ -105,6 +105,7 @@ def main():
 
     try:
         world = client.get_world()
+        world_map = world.get_map()
         print("Available Maps: " + ', '.join(client.get_available_maps()))
         
         #world = client.load_world('/Game/Carla/Maps/Carla_v14_10_1_2021')
@@ -119,6 +120,8 @@ def main():
             print(vehicle)
             print("attributes: " + str(vehicle.attributes))
             print("vehicle transform: " + str(vehicle.get_transform()))
+            print("Lat/Long: " + str(world_map.transform_to_geolocation(vehicle.get_transform().location)))
+            print("")
 
 
         
@@ -127,24 +130,15 @@ def main():
         #print(dir(trafficlights[0]))
         #for light in trafficlights:
             #print(light.get_group_traffic_lights())
-        print("")
-        print("All Vehicle Blueprints:")
-        blueprints = [bp for bp in world.get_blueprint_library().filter('vehicle.*')]
-        for blueprint in blueprints:
-            print(blueprint.id)
-            for attr in blueprint:
-                print('  - {}'.format(attr))
+        # print("")
+        # print("All Vehicle Blueprints:")
+        # blueprints = [bp for bp in world.get_blueprint_library().filter('vehicle.*')]
+        # for blueprint in blueprints:
+        #     print(blueprint.id)
+        #     for attr in blueprint:
+        #         print('  - {}'.format(attr))
 
     finally:
-
-        if args.sync and synchronous_master:
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.apply_settings(settings)
-
-        print('\nENDING')
-
 
         time.sleep(0.5)
 
@@ -155,4 +149,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        print('\ndone.')
+        print('\nDONE GETTING VEHICLES')
