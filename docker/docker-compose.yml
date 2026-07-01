@@ -22,8 +22,9 @@ services:
   
   dt-carla:
     container_name: dt-carla
-    image: harbor.distributedtesting.org/distributed-testing/dt-carla:latest
+    image: harbor.distributedtesting.org/distributed-testing/dt-carla:0.10.0
     profiles: ["carla"]
+    privileged: true
     network_mode: "host"
     environment:
       - DISPLAY=$DISPLAY
