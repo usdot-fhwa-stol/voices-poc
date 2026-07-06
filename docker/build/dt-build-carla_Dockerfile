@@ -1,12 +1,12 @@
+#
+# BUILD COMMAND: VERSION=0.0.2 && sudo DOCKER_BUILDKIT=1 docker build --build-arg version=$VERSION -t harbor.distributedtesting.org/distributed-testing/dt-build-carla:$VERSION . --progress=plain -f dt-build-carla_Dockerfile
+# VERSION=0.0.2 && docker tag harbor.distributedtesting.org/distributed-testing/dt-build-carla:$VERSION harbor.distributedtesting.org/distributed-testing/dt-build-carla:latest
+#
+
 FROM harbor.distributedtesting.org/distributed-testing/dt-build-general:latest
 
-SHELL ["/bin/bash", "-ec"]
-
-ARG VERSION
-ARG DEBIAN_FRONTEND="noninteractive"
-
-LABEL version=${VERSION} \
-      description="CARLA 0.10.0 C++ adapter build environment"
+ARG DEBIAN_FRONTEND="noninteractive" 
+ARG TZ="America/New_York"
 
 USER root
 
@@ -27,27 +27,29 @@ RUN apt-get clean && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 180 && \
     python3 -m pip install --upgrade pip
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        gcc-11 g++-11 \
-        cmake \
-        ninja-build \
-        python3-dev python3-pip \
-        libvulkan1 \
-        libpng-dev libtiff5-dev libjpeg-dev \
-        libxml2-dev \
-        git git-lfs \
-        rsync \
-        unzip \
-        curl && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 110 && \
-    rm -rf /var/lib/apt/lists/*
+# Install Python packages as dt_user
+USER dt_user
+RUN python3 -m pip install --no-cache-dir --user setuptools==47.3.1 distro wheel auditwheel
+USER root
+RUN rm -rf /home/dt_user/.cache
 
+# install gcc-7 (required for patchelf build, not sure how to re-specify it)
+RUN echo "deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal main universe" | tee /etc/apt/sources.list.d/focal.list && \
+    apt-get update && \
+    apt-get install -y gcc-7 g++-7 && \
+    rm /etc/apt/sources.list.d/focal.list
+    
+WORKDIR /home/dt_user
+RUN git clone https://github.com/carla-simulator/carla.git
+WORKDIR /home/dt_user/carla/Examples/CppClient
+RUN git checkout tags/0.9.15.2 -b voices
 
 # # Added to resolve xerces 3.2.3 no longer being available online
 RUN find /home/dt_user/carla -type f -exec sed -i 's/XERCESC_VERSION=3.2.3/XERCESC_VERSION=3.3.0/g' {} \;
 
+# Point CARLA/Boost to clang-14 instead of clang-10
+RUN echo "using clang : 22.0 : /usr/bin/clang++ ;" > /home/dt_user/user-config.jam
+ENV BOOST_BUILD_USER_CONFIG=/home/dt_user/user-config.jam
 
 # replaced jfrog repo with official boost archives
 RUN find /home/dt_user/carla -type f -exec sed -i 's|boostorg\.jfrog\.io/artifactory/main|archives.boost.io|g' {} \;
