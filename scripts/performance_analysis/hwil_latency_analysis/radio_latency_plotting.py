@@ -12,6 +12,7 @@ from collections import defaultdict, deque
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -307,113 +308,36 @@ def plot_latency_timeseries(
     )
     plt.close(fig)
 
+def calculate_jitter(df: pd.DataFrame) -> float:
+    if len(df) < 2:
+        return float("nan")
 
-def main() -> None:
-    """Run overall latency analysis."""
-    parser = argparse.ArgumentParser(
-        description="Calculate overall latency from V2X transmit and receive logs."
-    )
-    parser.add_argument(
-        "--transmit-log",
-        type=Path,
-        required=True,
-        help="Path to the transmit log.",
-    )
-    parser.add_argument(
-        "--receive-log",
-        type=Path,
-        required=True,
-        help="Path to the receive log.",
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=Path("."),
-        help="Output directory for CSV data and plots.",
-    )
-    parser.add_argument(
-        "--max-latency-ms",
-        type=int,
-        default=200,
-        help="Maximum displayed x-axis value for histogram and CDF plots.",
-    )
-    parser.add_argument(
-        "--rolling-window",
-        type=int,
-        default=20,
-        help="Number of samples used for the rolling latency mean.",
-    )
-    parser.add_argument("--debug", action="store_true")
+    ordered = df.sort_values("Tx Timestamp (ms)")
+    latency = ordered["Latency (ms)"].astype(float)
+    return float(latency.diff().abs().dropna().mean())
+    
+def calculate_statistics(
+    df: pd.DataFrame,
+    *,
+    message_type: str,
+    run_name: str,
+) -> dict[str, Any]:
+    latency = pd.to_numeric(df["Latency (ms)"], errors="coerce")
+    latency = latency[np.isfinite(latency)]
 
-    args = parser.parse_args()
+    jitter = calculate_jitter(df)
+    standard_deviation = float(latency.std()) if len(latency) > 1 else 0.0
 
-    logging.basicConfig(
-        level=logging.DEBUG if args.debug else logging.INFO,
-        format="%(levelname)s: %(message)s",
-    )
-
-    if not args.transmit_log.is_file():
-        parser.error(f"Transmit log does not exist: {args.transmit_log}")
-
-    if not args.receive_log.is_file():
-        parser.error(f"Receive log does not exist: {args.receive_log}")
-
-    if args.max_latency_ms <= 0:
-        parser.error("--max-latency-ms must be greater than zero.")
-
-    if args.rolling_window <= 0:
-        parser.error("--rolling-window must be greater than zero.")
-
-    data_dir = args.output_dir / "data"
-    plots_dir = args.output_dir / "plots"
-    data_dir.mkdir(parents=True, exist_ok=True)
-    plots_dir.mkdir(parents=True, exist_ok=True)
-
-    tx_entries = read_log_entries(args.transmit_log)
-    rx_entries = read_log_entries(args.receive_log)
-
-    logging.info(
-        "Loaded %d TX messages and %d RX messages.",
-        len(tx_entries),
-        len(rx_entries),
-    )
-
-    latency_results = calculate_latency(tx_entries, rx_entries)
-    latency_df = results_to_dataframe(latency_results)
-
-    if latency_df.empty:
-        logging.warning("No matching TX/RX messages found.")
-        return
-
-    latency_df.to_csv(data_dir / "latency_results.csv", index=False)
-
-    latency_series = latency_df["Latency (ms)"]
-    mean_latency = float(latency_series.mean())
-    median_latency = float(latency_series.median())
-    p95_latency = float(latency_series.quantile(0.95))
-    p99_latency = float(latency_series.quantile(0.99))
-
-    logging.info("Matched messages: %d", len(latency_df))
-    logging.info(
-        "Mean: %.2f ms | Median: %.2f ms | P95: %.2f ms | P99: %.2f ms",
-        mean_latency,
-        median_latency,
-        p95_latency,
-        p99_latency,
-    )
-
-    plot_latency_histogram(latency_df, plots_dir, args.max_latency_ms)
-    plot_latency_cdf(latency_df, plots_dir, args.max_latency_ms)
-    plot_latency_timeseries(latency_df, plots_dir, args.rolling_window)
-
-    print(
-        "RESULT_SUMMARY: "
-        f"mean={mean_latency:.2f} ms, "
-        f"median={median_latency:.2f} ms, "
-        f"p95={p95_latency:.2f} ms, "
-        f"p99={p99_latency:.2f} ms"
-    )
-
-
-if __name__ == "__main__":
-    main()
+    return {
+        "message_type": message_type,
+        "run_name": run_name,
+        "samples": len(latency),
+        "min_ms": round(float(latency.min()), 2),
+        "max_ms": round(float(latency.max()), 2),
+        "mean_ms": round(float(latency.mean()), 2),
+        "median_ms": round(float(latency.median()), 2),
+        "p95_ms": round(float(latency.quantile(0.95)), 2),
+        "p99_ms": round(float(latency.quantile(0.99)), 2),
+        "jitter_ms": round(jitter, 2) if np.isfinite(jitter) else "NA",
+        "std_dev": round(standard_deviation, 2),
+    }
