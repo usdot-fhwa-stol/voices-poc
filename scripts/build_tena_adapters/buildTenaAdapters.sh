@@ -170,7 +170,7 @@ fi
 carlaTenaAdapterGitUrl="git@github.com:usdot-fhwa-stol/vug-carla-adapter.git"
 
 buildGeneralImage="harbor.distributedtesting.org/distributed-testing/dt-build-general:latest"
-buildCarlaImage="harbor.distributedtesting.org/distributed-testing/dt-build-carla:0.10.0-0.0.1"
+buildCarlaImage="harbor.distributedtesting.org/distributed-testing/dt-build-carla:latest"
 buildV2xImage="usdotfhwaops/v2xhubamd:dt-P-1.1.0"
 
 if [[ $tenaAppIndex == 1 ]]; then
@@ -248,7 +248,7 @@ elif [[ $tenaAppIndex == 7 ]]; then
 	requiresProtocolio=false
 	defaultBranch='develop'
 	noBuildVersion=false
-	applicationFolderName=TenaV2XPlugin # Need to find actual name
+	applicationFolderName=TenaV2XPlugin
 
 elif [[ $tenaAppIndex == 8 ]]; then
 	tenaApp=DT4ITS-RadioHWIL
@@ -400,34 +400,6 @@ fi
 echo
 echo "The looking for packages to be installed:"
 
-
-## TODO: replace these check with a docker exec command into build container
-
-# look for middleware
-# if [ -d $localTenaDir/$tenaVersion ]; then
-# 	echo "TENA Middleware $tenaVersion found..."
-# else
-# 	echo
-# 	echo "The proper TENA Middleware version was not found. Please install version $tenaVersion"
-# 	exit
-# fi
-
-# #look for boost
-# if [ -d $localTenaDir/$boostVersion* ]; then
-# 	echo "$boostVersion found..."
-# else
-# 	echo "The proper Boost version was not found. Please install version $boostVersion"
-# 	exit
-# fi
-
-#look for VUG Combined
-# if [ -d $localTenaDir/$tenaVersion/src/$vugCombinedVersion* ]; then
-# 	echo "$vugCombinedVersion found..."
-# else
-# 	echo "The proper VUG-Combined was not found. Please install version $vugCombinedVersion"
-# 	exit
-# fi
-
 #look for VUG Threads
 # set -x
 if [ $tenaApp == "vug-threads-library" ] || [ -d $localInstallDir/$vugThreadsVersion ]; then
@@ -493,18 +465,6 @@ chmod a+rw $localAppDir/build
 
 echo
 echo "#### Running CMAKE ####"
-
-#check for mw library
-#ls $localTenaDir/lib/cmake
-# if [[ ! -d $localTenaDir/lib/cmake/mw ]]; then
-# 	echo
-# 	echo mw library not installed in local TENA install $localTenaDir/lib/cmake/mw
-# 	echo Pulling mw library
-# 	git clone git@github.com:usdot-fhwa-stol/vug-cmake-package.git cmake_temp || exit
-# 	mv cmake_temp/cmake/ $localTenaDir/lib/ || exit
-# 	rm -rf cmake_temp || exit
-# fi
-
 echo
 
 additionalBuildEnv=""

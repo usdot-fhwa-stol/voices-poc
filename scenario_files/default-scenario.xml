@@ -13,8 +13,8 @@
 
    <vehicle name="DEFAULT-M-1" bsmid="f03ad610" type="vehicle.lincoln.mkz" simulationIdentifier="CARLA-DEFAULT-1" material="Aluminum" lvcIndicator="Constructive" generate_bsms="true" organization="DEFAULT">
         <initialTSPI>
-            <GeodeticPosition latitudeInDegrees="0.000036" longitudeInDegrees="0.000926" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
-            <Heading>90.219055</Heading>
+            <GeodeticPosition latitudeInDegrees="0.001800" longitudeInDegrees="0.001122" heightAboveEllipsoidInMeters="1"> </GeodeticPosition>
+            <Heading>21.85235</Heading>
         </initialTSPI>
     </vehicle>
   </vehicles>

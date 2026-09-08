@@ -121,7 +121,7 @@ def setup_logging(level=logging.INFO):
         raise ValueError("LOG PATH not valid")
     log_folder = os.path.join(dt_path, "logs/json_script_logs/")
     os.makedirs(log_folder, exist_ok=True)
-    #os.chmod(log_folder, 0o777) # Modifies permission on the LOG_PATH/logs/json_script_logs folder to rwxrwxrwx
+    os.chmod(log_folder, 0o777) # Modifies permission on the LOG_PATH/logs/json_script_logs folder to rwxrwxrwx
 
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     logging.basicConfig(
