@@ -2344,7 +2344,7 @@ data_params = {
                 },
             ]
         },
-        "SecureV2XMsg": {
+        "SecureV2XMessage": {
             "skip_if_neqs": [
                 {
                     "key": "Metadata,Endpoint",

@@ -99,7 +99,7 @@ data_types = {
     },
     "SecureV2XMessage": {
         "pcap_file_pattern": "SecureV2XMessage-THIS-DOES-NOT-EXIST",
-        "sdo_file_pattern": ["TV2XMsg-SecureV2XMsg"],
+        "sdo_file_pattern": ["TV2XMsg-SecureV2X"],
     },
 }
 
