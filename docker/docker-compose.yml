@@ -20,7 +20,7 @@ services:
       - ${VUG_LOCAL_DT_PATH}:/home/dt_user/distributed-testing
       #- ~/distributed-testing/docker/build/lib/COPY/start_scripts:/home/dt_user/start_scripts
       #- ~/tenadev/INSTALL/CARLAtenaAdapter-2.3.3:/home/dt_user/VUG_Adapters/CARLAtenaAdapter-2.3.2
-      #- ~/tenadev/INSTALL/tena-entity-generator-2.3.3:/home/dt_user/VUG_Adapters/tena-entity-generator-2.3.3
+      - ~/tenadev/INSTALL/tena-entity-generator-2.3.3:/home/dt_user/VUG_Adapters/tena-entity-generator-2.3.3
     stop_grace_period: 30s
 
   dt-carla:
