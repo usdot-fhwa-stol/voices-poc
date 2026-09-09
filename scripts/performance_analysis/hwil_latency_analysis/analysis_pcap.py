@@ -1,7 +1,5 @@
 """Decode PCAPs and run V2X messaging-performance analysis."""
 
-from __future__ import annotations
-
 import argparse
 import logging
 import os
@@ -33,12 +31,17 @@ ENDPOINTS = (
 
 CAPTURE_DIRECTIONS = ("tx", "rx")
 
+# Make a name for every endpoint + direction combo, like "dut_1_tx",
+# "dut_1_rx", "proxy_1_tx", and so on. We use these names as CLI flags
+# and as keys to remember which file belongs to which endpoint/direction.
 PCAP_ROLES = tuple(
     f"{endpoint}_{direction}"
     for endpoint in ENDPOINTS
     for direction in CAPTURE_DIRECTIONS
 )
 
+# The pairs of endpoints we want to check(we look at both directions
+# for each pair).
 SUPPORTED_LINKS = (
     ("dut_1", "proxy_1"),
     ("dut_2", "proxy_2"),
@@ -47,6 +50,8 @@ SUPPORTED_LINKS = (
     ("dut_1", "dut_2"),
 )
 
+# Words to look for in a filename or folder name to guess which endpoint
+# it belongs to (handles spellings like "dut1", "dut_1", "dut-1").
 ENDPOINT_PATTERNS = {
     "dut_1": r"dut[_-]?1",
     "proxy_1": r"proxy[_-]?1",
@@ -55,6 +60,7 @@ ENDPOINT_PATTERNS = {
     "v2xhub": r"v2xhub[_-]|v2xhub",
 }
 
+# Words to look for to guess if a file is sending or receiving.
 DIRECTION_PATTERNS = {
     "tx": r"tx|transmit",
     "rx": r"rx|receive",
@@ -62,6 +68,7 @@ DIRECTION_PATTERNS = {
 
 
 def validate_pcap(role: str, path: Path) -> None:
+    """Check that the file we picked for this role really exists and is a .pcap file."""
     if not path.is_file():
         raise FileNotFoundError(f"PCAP assigned to {role} does not exist: {path}")
 
@@ -73,19 +80,27 @@ def validate_pcap(role: str, path: Path) -> None:
 
 
 def role_parts(role: str) -> tuple[str, str]:
+    """Split a name like 'dut_1_tx' into two pieces: 'dut_1' and 'tx'."""
     endpoint, direction = role.rsplit("_", maxsplit=1)
     return endpoint, direction
 
 
 def cli_option_name(role: str) -> str:
+    """Turn a role name into a command-line flag, like 'dut_1_tx' -> '--dut-1-tx'."""
     return f"--{role.replace('_', '-')}"
 
 
 def decoded_log_name(pcap_path: Path) -> str:
+    """Make the name we expect the decoded text file to have."""
     return f"decoded_{pcap_path.stem}.log"
 
 
 def find_pcap_candidates(input_dir: Path, role: str) -> list[Path]:
+    """
+    Look through every file inside input_dir and find .pcap files that
+    seem to match this role, by checking the folder names and file name
+    for info about which endpoint and direction they belong to.
+    """
     endpoint, direction = role_parts(role)
     endpoint_re = re.compile(
         rf"(?:^|[^a-z0-9]){ENDPOINT_PATTERNS[endpoint]}(?:[^a-z0-9]|$)",
@@ -99,11 +114,12 @@ def find_pcap_candidates(input_dir: Path, role: str) -> list[Path]:
     candidates: list[Path] = []
 
     for path in input_dir.rglob("*"):
+        # Skip anything that isn't a .pcap file.
         if not path.is_file() or path.suffix.lower() not in PCAP_SUFFIXES:
             continue
 
         rel_path = path.relative_to(input_dir)
-        folder_parts = rel_path.parts[:-1]
+        folder_parts = rel_path.parts[:-1]  # just the folder names, not the filename
 
         endpoint_in_folder = any(endpoint_re.search(part) for part in folder_parts)
         direction_in_folder = any(direction_re.search(part) for part in folder_parts)
@@ -117,6 +133,9 @@ def find_pcap_candidates(input_dir: Path, role: str) -> list[Path]:
 
 
 def discover_role_pcap(input_dir: Path, role: str) -> Path | None:
+    """
+    Try to find exactly one PCAP file for this role automatically.
+    """
     candidates = find_pcap_candidates(input_dir, role)
 
     if not candidates:
@@ -136,6 +155,10 @@ def discover_role_pcap(input_dir: Path, role: str) -> Path | None:
 
 
 def resolve_explicit_path(value: Path, input_dir: Path) -> Path:
+    """
+    Figure out the real, full path for a file the user typed in.
+    Works whether they gave a full path or just a filename inside input_dir.
+    """
     value = value.expanduser()
     if value.is_absolute():
         return value.resolve()
@@ -148,6 +171,10 @@ def resolve_explicit_path(value: Path, input_dir: Path) -> Path:
 
 
 def collect_pcap_inputs(args: argparse.Namespace, input_dir: Path) -> dict[str, Path]:
+    """
+    Figure out which PCAP file goes with which role. Use
+    a file with a CLI flag or detect based off name.
+    """
     inputs: dict[str, Path] = {}
     assigned_paths: dict[Path, str] = {}
 
@@ -165,6 +192,7 @@ def collect_pcap_inputs(args: argparse.Namespace, input_dir: Path) -> dict[str, 
 
         validate_pcap(role, path)
 
+        # Stop the same file from being used for two roles by mistake.
         if path in assigned_paths:
             other_role = assigned_paths[path]
             raise ValueError(
@@ -178,6 +206,10 @@ def collect_pcap_inputs(args: argparse.Namespace, input_dir: Path) -> dict[str, 
 
 
 def locate_decoder_output(decoded_dir: Path, pcap_path: Path, expected_output: Path) -> Path:
+    """
+    After decoding, find the log file that was created. First check the
+    expected name, then other potential names. 
+    """
     if expected_output.is_file() and expected_output.stat().st_size > 0:
         return expected_output.resolve()
 
@@ -201,6 +233,9 @@ def locate_decoder_output(decoded_dir: Path, pcap_path: Path, expected_output: P
 
 
 def decode_pcap(role: str, pcap_path: Path, decoded_dir: Path, force_decode: bool) -> Path:
+    """
+    Turn one PCAP file into a readable text log.
+    """
     decoded_dir.mkdir(parents=True, exist_ok=True)
     expected_output = decoded_dir / decoded_log_name(pcap_path)
 
@@ -225,6 +260,10 @@ def decode_pcap(role: str, pcap_path: Path, decoded_dir: Path, force_decode: boo
 
 
 def supported_direction_names() -> set[str]:
+    """
+    Make the full list of valid "X_to_Y" direction names, using both ways
+    (forward and backward) for every pair in SUPPORTED_LINKS.
+    """
     directions: set[str] = set()
     for endpoint_a, endpoint_b in SUPPORTED_LINKS:
         directions.add(f"{endpoint_a}_to_{endpoint_b}")
@@ -233,6 +272,10 @@ def supported_direction_names() -> set[str]:
 
 
 def parse_custom_result_names(values: list[str]) -> dict[str, str]:
+    """
+    Read --name DIRECTION=FOLDER_NAME options from the command line, so
+    the user can pick a custom folder name for a direction's results.
+    """
     valid_directions = supported_direction_names()
     custom_names: dict[str, str] = {}
 
@@ -253,6 +296,7 @@ def parse_custom_result_names(values: list[str]) -> dict[str, str]:
         if not folder_name:
             raise ValueError(f"Result folder name cannot be empty for {direction!r}.")
 
+        
         if Path(folder_name).name != folder_name:
             raise ValueError(f"Result folder name must not contain path separators: {folder_name!r}")
 
@@ -273,9 +317,16 @@ def evaluate_direction(
     max_latency_ms: int,
     rolling_window: int,
 ) -> Path | None:
+    """
+    Check how long messages take to go from tx_endpoint to rx_endpoint:
+    load their logs, work out the delay for each message, and save the
+    numbers and charts. Returns the folder where results were saved, or
+    None if we couldn't do the check.
+    """
     tx_role = f"{tx_endpoint}_tx"
     rx_role = f"{rx_endpoint}_rx"
 
+    # We need both the sending log and the receiving log, so skip if either is missing.
     if tx_role not in decoded_logs or rx_role not in decoded_logs:
         logging.info(
             "Skipping %s -> %s because %s or %s is missing",
@@ -283,6 +334,7 @@ def evaluate_direction(
         )
         return None
 
+    # Pick the folder name to save results in.
     direction_name = f"{tx_endpoint}_to_{rx_endpoint}"
     folder_name = custom_result_names.get(direction_name, direction_name)
     output_dir = results_dir / folder_name
@@ -290,11 +342,13 @@ def evaluate_direction(
 
     logging.info("Analyzing and plotting %s -> %s", tx_endpoint, rx_endpoint)
 
+    # Read the sending and receiving logs into lists of messages.
     tx_entries = read_log_entries(decoded_logs[tx_role])
     rx_entries = read_log_entries(decoded_logs[rx_role])
 
     logging.info("Loaded %d TX messages and %d RX messages.", len(tx_entries), len(rx_entries))
 
+    # Match up sent messages with received messages and measure the delay.
     latency_results = calculate_latency(tx_entries, rx_entries)
     df = results_to_dataframe(latency_results)
 
@@ -328,6 +382,10 @@ def evaluate_bidirectional(
     max_latency_ms: int,
     rolling_window: int,
 ) -> list[Path]:
+    """
+    For one pair of endpoints, run the delay check in whichever direction(s)
+    we have enough data for: A-to-B, B-to-A, or both.
+    """
     has_forward = f"{endpoint_a}_tx" in decoded_logs and f"{endpoint_b}_rx" in decoded_logs
     has_reverse = f"{endpoint_b}_tx" in decoded_logs and f"{endpoint_a}_rx" in decoded_logs
 
@@ -354,8 +412,12 @@ def evaluate_bidirectional(
 
 
 def run_pcap_analysis(args: argparse.Namespace) -> int:
-    """Core execution function called directly or via the runner."""
+    """
+    Find the folders, find the PCAP files, decode them, then check the
+    directory for every supported pair of endpoints.
+    """
     try:
+        # Find the main run folder, and the folder to search for PCAPs in.
         run_dir = args.run_dir.expanduser().resolve()
         input_dir = run_dir if args.input_dir is None else args.input_dir.expanduser().resolve()
 
@@ -364,18 +426,23 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
         if not input_dir.is_dir():
             raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
 
+        # Read any custom result folder names the user gave with --name.
         custom_result_names = parse_custom_result_names(getattr(args, "name", []))
+
+        # Work out which PCAP file goes with which role.
         pcap_inputs = collect_pcap_inputs(args, input_dir)
 
         if not pcap_inputs:
             logging.warning("No PCAPs discovered in %s for PCAP analysis.", input_dir)
             return 0
 
+        # Set up folders for the decoded logs and the final results.
         decoded_dir = run_dir / "decoded"
         results_dir = run_dir / "results"
         decoded_dir.mkdir(parents=True, exist_ok=True)
         results_dir.mkdir(parents=True, exist_ok=True)
 
+        # Decode every PCAP file we found into a text log.
         decoded_logs: dict[str, Path] = {}
         for role, pcap_path in sorted(pcap_inputs.items()):
             decoded_logs[role] = decode_pcap(
@@ -385,6 +452,7 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
                 force_decode=getattr(args, "force_decode", False),
             )
 
+        # Check the directory for every pair of endpoints we support (both ways).
         result_dirs: list[Path] = []
         for endpoint_a, endpoint_b in SUPPORTED_LINKS:
             result_dirs.extend(
@@ -416,6 +484,8 @@ if __name__ == "__main__":
     parser.add_argument("--name", action="append", default=[])
     parser.add_argument("--debug", action="store_true")
 
+    # Add one command-line flag for every possible endpoint + direction,
+    # like --dut-1-tx, --proxy-1-rx
     for role in PCAP_ROLES:
         parser.add_argument(cli_option_name(role), dest=role, type=Path, default=None)
 

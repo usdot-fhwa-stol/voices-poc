@@ -20,6 +20,10 @@ from radio_latency_plotting import (
     plot_latency_timeseries,
 )
 
+
+# "patterns" = what the filename looks like.
+# "id_cols" = columns that help us match up rows.
+# "skip_events" = rows we want to throw away and not use.
 DATA_TYPES: dict[str, dict[str, Any]] = {
     "Radio": {
         "patterns": ["*Entities-Radio*.csv", "*Radio*.csv"],
@@ -53,17 +57,16 @@ class LogRecord:
 
 
 def clean_value(value: Any) -> str:
+    """Turn an empty/missing value into "", and everything else into plain text."""
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
 
-def safe_filename(value: str) -> str:
-    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value.strip())
-    return cleaned.strip("._") or "analysis"
-
-
 def normalize_timestamp_ms(value: Any) -> float:
+    """
+    Makes sure timestamp values are in milliseconds.
+    """
     numeric = float(value)
     if not np.isfinite(numeric):
         raise ValueError("Timestamp is not finite")
@@ -80,16 +83,21 @@ def normalize_timestamp_ms(value: Any) -> float:
 
 
 def extract_host(value: Any) -> str:
+    """Pull just the address part out of something like 'http://1.2.3.4:8080' -> '1.2.3.4'."""
     endpoint = clean_value(value)
     if not endpoint:
         return ""
 
+    # Remove any "http://" or similar bit at the front.
     endpoint = re.sub(r"^[A-Za-z][A-Za-z0-9+.-]*://", "", endpoint)
+
+    # Remove brackets
     if endpoint.startswith("["):
         closing_bracket = endpoint.find("]")
         if closing_bracket != -1:
             return endpoint[1:closing_bracket]
 
+    # Remove port
     if endpoint.count(":") == 1:
         return endpoint.rsplit(":", maxsplit=1)[0]
 
@@ -97,6 +105,7 @@ def extract_host(value: Any) -> str:
 
 
 def find_csv_file(directory: Path, patterns: Iterable[str]) -> Path | None:
+    """Look inside a folder (and its subfolders) for a file matching one of the given name patterns."""
     if not directory.is_dir():
         return None
 
@@ -109,47 +118,57 @@ def find_csv_file(directory: Path, patterns: Iterable[str]) -> Path | None:
 
 
 def read_records(csv_file: Path, msg_type: str) -> list[LogRecord]:
+    """Open a CSV file and turn each usable row into a LogRecord."""
     cfg = DATA_TYPES[msg_type]
 
+    # Try to open the file. If it's broken or unreadable, give up and return nothing.
     try:
         df = pd.read_csv(csv_file, dtype=str, low_memory=False)
     except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
         logging.error("Failed to read %s: %s", csv_file, error)
         return []
 
+    # Figure out which column tells us "when it was sent".
     tx_col = next(
         (c for c in ("Metadata,TimeOfTransmission", "Metadata,TimeOfCommit", "const^Metadata,TimeOfCreation") if c in df.columns),
         None,
     )
+    # Figure out which column tells us "when it arrived".
     rx_col = next(
         (c for c in ("Metadata,TimeOfReceipt", "packetTimestamp") if c in df.columns),
         None,
     )
 
+    # If we can't find both times, skip this file.
     if tx_col is None or rx_col is None:
         logging.warning("Missing timing columns in %s", csv_file)
         return []
 
+    # Throw away rows that are the "skip" kind of event (like Discovery/Destruction), if any.
     event_col = "Metadata,Enum,Middleware::EventType"
     skip_events = cfg["skip_events"]
     if event_col in df.columns and skip_events:
         df = df.loc[~df[event_col].isin(skip_events)]
 
+    # Figure out which column (if any) holds the sender's IP address.
     ip_col = next(
         (c for c in ("const^Metadata,SDOid.hostIPaddress", "Metadata,Endpoint", "const^Metadata,Endpoint") if c in df.columns),
         None,
     )
 
+    # Only keep the ID columns that actually exist in this file.
     available_id_cols = [c for c in cfg["id_cols"] if c in df.columns]
 
     records: list[LogRecord] = []
     for row_index, row in df.iterrows():
+        # Try to read and fix up the two timestamps for this row.
         try:
             tx_ms = normalize_timestamp_ms(row[tx_col])
             rx_ms = normalize_timestamp_ms(row[rx_col])
         except (TypeError, ValueError, OverflowError):
             continue
 
+        # Build a "key" out of the ID columns so we can match rows to each other later.
         key_parts = [clean_value(row.get(c)) for c in available_id_cols if clean_value(row.get(c))]
         row_id = clean_value(row.get("rowID")) or str(row_index)
 
@@ -167,10 +186,14 @@ def read_records(csv_file: Path, msg_type: str) -> list[LogRecord]:
             )
         )
 
+    # Put the records in time order, earliest first.
     return sorted(records, key=lambda r: (r.tx_time_ms, r.rx_time_ms))
 
 
 def process_csv(records: list[LogRecord]) -> pd.DataFrame:
+    """
+    Turn our list of LogRecords into a dataframe.
+    """
     rows = [
         {
             "Tx Timestamp (ms)": record.tx_time_ms,
@@ -196,7 +219,8 @@ def save_analysis(
     max_latency_ms: float,
     rolling_window: int,
 ) -> tuple[dict[str, Any], Path]:
-    output_dir = results_dir / safe_filename(message_type)
+    """Save the table to a CSV file, create plots and data summary."""
+    output_dir = results_dir / message_type
     os.makedirs(output_dir, exist_ok=True)
 
     df.to_csv(output_dir / "latency_results.csv", index=False)
@@ -212,11 +236,16 @@ def save_analysis(
 
 
 def run_csv_analysis(args: argparse.Namespace) -> int:
-    """Core execution function called directly or via the runner."""
+    """
+    For each type of data we know about
+    (Radio, SecureV2XMessage), find its CSV file, read, clean,
+    and save the results and plots.
+    """
     run_dir = args.run_dir.expanduser().resolve()
     input_dir = run_dir if args.input_dir is None else args.input_dir.expanduser().resolve()
     results_dir = run_dir / "results"
 
+    # Stop early if the folders we need don't actually exist.
     if not run_dir.is_dir() or not input_dir.is_dir():
         logging.error("Directory not found. Run: %s, Input: %s", run_dir, input_dir)
         return 1
@@ -224,6 +253,7 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
     results_dir.mkdir(parents=True, exist_ok=True)
     summary_records: list[dict[str, Any]] = []
 
+    # Go through each data type one at a time (Radio, then SecureV2XMessage).
     for msg_type, cfg in DATA_TYPES.items():
         csv_file = find_csv_file(input_dir, cfg["patterns"])
 
@@ -243,6 +273,7 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
             logging.warning("  [-] No valid non-negative latency calculated.")
             continue
 
+        # Save the results, charts, and summary for this data type.
         summary, out_path = save_analysis(
             df,
             message_type=msg_type,
