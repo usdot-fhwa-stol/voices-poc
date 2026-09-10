@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 """
-Unified V2X Analysis Runner.
-Executes PCAP decoding/analysis and CSV analysis using shared arguments.
+Runs PCAP decoding/analysis and CSV analysis, can do batches of test runs.
 """
 
 from __future__ import annotations
@@ -10,9 +8,16 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import Any
+
+import pandas as pd
 
 import analysis_csv
 import analysis_pcap
+
+
+TOTAL_SUMMARY_FILENAME = "total_data_summary.csv"
+FAILURE_RESULTS = {"FAIL", "ERROR"}
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -21,18 +26,28 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     # --- Shared Arguments ---
-    parser.add_argument(
+    run_selection = parser.add_mutually_exclusive_group(required=True)
+    run_selection.add_argument(
         "-r",
         "--run-dir",
         type=Path,
-        required=True,
-        help="Directory for analysis output results.",
+        help="Directory for one analysis run.",
+    )
+    run_selection.add_argument(
+        "-b",
+        "--batch-dir",
+        type=Path,
+        help="Directory containing multiple run directories.",
     )
     parser.add_argument(
         "--input-dir",
         type=Path,
         default=None,
-        help="Directory containing input files (defaults to --run-dir).",
+        help=(
+            "Directory containing input files. For a single run, it defaults "
+            "to --run-dir. For a batch, each run uses the same-named "
+            "subdirectory inside --input-dir."
+        ),
     )
     parser.add_argument(
         "--max-latency-ms",
@@ -77,9 +92,11 @@ def parse_arguments() -> argparse.Namespace:
         action="append",
         default=[],
         metavar="DIRECTION=FOLDER_NAME",
-        help="Customize result directory names (e.g., --name dut_1_to_proxy_1=side_1).",
+        help=(
+            "Customize result directory names "
+            "(e.g., --name dut_1_to_proxy_1=side_1)."
+        ),
     )
-
 
     for role in analysis_pcap.PCAP_ROLES:
         pcap_group.add_argument(
@@ -91,6 +108,351 @@ def parse_arguments() -> argparse.Namespace:
         )
 
     return parser.parse_args()
+
+
+def discover_batch_runs(batch_dir: Path) -> list[Path]:
+    """Find the immediate child directories that represent individual runs."""
+    if not batch_dir.is_dir():
+        raise FileNotFoundError(
+            f"Batch directory does not exist: {batch_dir}"
+        )
+
+    ignored_names = {
+        "decoded",
+        "results",
+        "__pycache__",
+    }
+    run_dirs = sorted(
+        (
+            path.resolve()
+            for path in batch_dir.iterdir()
+            if path.is_dir()
+            and path.name not in ignored_names
+            and not path.name.startswith(".")
+        ),
+        key=lambda path: path.name.lower(),
+    )
+
+    if not run_dirs:
+        raise FileNotFoundError(
+            f"No run directories found inside batch directory: {batch_dir}"
+        )
+
+    return run_dirs
+
+
+def get_run_directories(args: argparse.Namespace) -> list[Path]:
+    """Return either the selected run or all runs found in a batch."""
+    if args.run_dir is not None:
+        run_dir = args.run_dir.expanduser().resolve()
+        if not run_dir.is_dir():
+            raise FileNotFoundError(
+                f"Run directory does not exist: {run_dir}"
+            )
+        return [run_dir]
+
+    batch_dir = args.batch_dir.expanduser().resolve()
+    return discover_batch_runs(batch_dir)
+
+
+def get_run_input_dir(
+    args: argparse.Namespace,
+    run_dir: Path,
+) -> Path:
+    """Select the input directory for one run."""
+    if args.input_dir is None:
+        return run_dir
+
+    input_root = args.input_dir.expanduser().resolve()
+
+    if args.batch_dir is None:
+        return input_root
+
+    run_input_dir = input_root / run_dir.name
+    if not run_input_dir.is_dir():
+        raise FileNotFoundError(
+            f"Input directory for run {run_dir.name!r} does not exist: "
+            f"{run_input_dir}"
+        )
+
+    return run_input_dir.resolve()
+
+
+def make_run_arguments(
+    args: argparse.Namespace,
+    run_dir: Path,
+) -> argparse.Namespace:
+    """Make an argument namespace for one analysis run."""
+    run_values = vars(args).copy()
+    run_values["run_dir"] = run_dir
+    run_values["input_dir"] = get_run_input_dir(args, run_dir)
+    run_values["batch_dir"] = None
+    return argparse.Namespace(**run_values)
+
+
+def normalize_threshold_result(value: Any) -> str:
+    """Normalize a threshold result read from a generated summary CSV."""
+    if value is None or pd.isna(value):
+        return "NOT_CONFIGURED"
+
+    result = str(value).strip().upper()
+    return result or "NOT_CONFIGURED"
+
+
+def read_run_summary_files(run_dir: Path) -> pd.DataFrame:
+    """Read all generated test summary CSV files for one run."""
+    results_dir = run_dir / "results"
+    if not results_dir.is_dir():
+        logging.warning(
+            "No results directory found for run %s",
+            run_dir.name,
+        )
+        return pd.DataFrame()
+
+    summary_files = sorted(
+        (
+            path
+            for path in results_dir.rglob("results_summary.csv")
+            if path.is_file()
+        ),
+        key=lambda path: str(path).lower(),
+    )
+
+    if not summary_files:
+        logging.warning(
+            "No results_summary.csv files found for run %s",
+            run_dir.name,
+        )
+        return pd.DataFrame()
+
+    summary_frames: list[pd.DataFrame] = []
+
+    for summary_file in summary_files:
+        try:
+            summary_df = pd.read_csv(summary_file)
+        except (
+            OSError,
+            pd.errors.EmptyDataError,
+            pd.errors.ParserError,
+            UnicodeDecodeError,
+        ) as error:
+            logging.error(
+                "Failed to read summary file %s: %s",
+                summary_file,
+                error,
+            )
+            continue
+
+        if summary_df.empty:
+            logging.warning(
+                "Summary file is empty: %s",
+                summary_file,
+            )
+            continue
+
+        relative_file = summary_file.relative_to(run_dir)
+        test_name = summary_file.parent.name
+
+        summary_df.insert(0, "run_name", run_dir.name)
+        summary_df.insert(1, "test_name", test_name)
+        summary_df.insert(2, "summary_file", str(relative_file))
+        summary_frames.append(summary_df)
+
+    if not summary_frames:
+        return pd.DataFrame()
+
+    return pd.concat(
+        summary_frames,
+        ignore_index=True,
+        sort=False,
+    )
+
+
+def add_run_result(
+    summary_df: pd.DataFrame,
+    analysis_status: int,
+) -> pd.DataFrame:
+    """
+    Add a run result that fails when an analysis errored or any individual
+    threshold test failed.
+    """
+    result_df = summary_df.copy()
+
+    if "threshold_result" in result_df.columns:
+        threshold_results = result_df["threshold_result"].map(
+            normalize_threshold_result
+        )
+        result_df["threshold_result"] = threshold_results
+        threshold_failed = threshold_results.isin(
+            FAILURE_RESULTS
+        ).any()
+    else:
+        threshold_failed = False
+
+    if analysis_status != 0:
+        run_result = "FAIL"
+        failure_reason = "ANALYSIS_ERROR"
+    elif threshold_failed:
+        run_result = "FAIL"
+        failure_reason = "THRESHOLD_FAILURE"
+    elif result_df.empty:
+        run_result = "NO_RESULTS"
+        failure_reason = "NO_RESULTS"
+    else:
+        run_result = "PASS"
+        failure_reason = ""
+
+    result_df["run_result"] = run_result
+    result_df["run_failed"] = run_result == "FAIL"
+    result_df["failure_reason"] = failure_reason
+    result_df["analysis_status"] = analysis_status
+
+    return result_df
+
+
+def write_run_total_summary(
+    run_dir: Path,
+    analysis_status: int,
+) -> pd.DataFrame:
+    """Create the total data summary CSV for one run."""
+    summary_df = read_run_summary_files(run_dir)
+    summary_df = add_run_result(
+        summary_df,
+        analysis_status,
+    )
+
+    results_dir = run_dir / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    output_file = results_dir / TOTAL_SUMMARY_FILENAME
+
+    if summary_df.empty:
+        run_result = (
+            "FAIL"
+            if analysis_status != 0
+            else "NO_RESULTS"
+        )
+        failure_reason = (
+            "ANALYSIS_ERROR"
+            if analysis_status != 0
+            else "NO_RESULTS"
+        )
+        summary_df = pd.DataFrame(
+            [
+                {
+                    "run_name": run_dir.name,
+                    "test_name": "",
+                    "summary_file": "",
+                    "threshold_result": "",
+                    "run_result": run_result,
+                    "run_failed": run_result == "FAIL",
+                    "failure_reason": failure_reason,
+                    "analysis_status": analysis_status,
+                }
+            ]
+        )
+
+    summary_df.to_csv(output_file, index=False)
+    logging.info(
+        "Run total summary written to: %s",
+        output_file,
+    )
+
+    return summary_df
+
+
+def write_batch_total_summary(
+    batch_dir: Path,
+    run_summaries: list[pd.DataFrame],
+) -> Path:
+    """Combine all run summaries into one batch-level summary CSV."""
+    output_file = batch_dir / TOTAL_SUMMARY_FILENAME
+
+    if run_summaries:
+        batch_summary = pd.concat(
+            run_summaries,
+            ignore_index=True,
+            sort=False,
+        )
+    else:
+        batch_summary = pd.DataFrame(
+            columns=[
+                "run_name",
+                "test_name",
+                "summary_file",
+                "threshold_result",
+                "run_result",
+                "run_failed",
+                "failure_reason",
+                "analysis_status",
+            ]
+        )
+
+    batch_summary.to_csv(output_file, index=False)
+    logging.info(
+        "Batch total summary written to: %s",
+        output_file,
+    )
+
+    return output_file.resolve()
+
+
+def run_analyses_for_run(
+    args: argparse.Namespace,
+    run_dir: Path,
+) -> int:
+    """Run the enabled analyses for one run directory."""
+    try:
+        run_args = make_run_arguments(args, run_dir)
+    except Exception as error:
+        logging.error(
+            "Unable to prepare run %s: %s",
+            run_dir.name,
+            error,
+        )
+        return 1
+
+    logging.info(
+        "================ Processing Run: %s ================",
+        run_dir.name,
+    )
+    logging.info("Run directory: %s", run_dir)
+    logging.info("Input directory: %s", run_args.input_dir)
+
+    results: list[int] = []
+
+    if not args.no_pcap:
+        logging.info(
+            "================ Running PCAP Analysis ================"
+        )
+        try:
+            pcap_status = analysis_pcap.run_pcap_analysis(
+                run_args
+            )
+        except Exception:
+            logging.exception(
+                "Unhandled PCAP analysis error for run %s",
+                run_dir.name,
+            )
+            pcap_status = 1
+
+        results.append(pcap_status)
+
+    if not args.no_csv:
+        logging.info(
+            "================ Running CSV Analysis ================"
+        )
+        try:
+            csv_status = analysis_csv.run_csv_analysis(run_args)
+        except Exception:
+            logging.exception(
+                "Unhandled CSV analysis error for run %s",
+                run_dir.name,
+            )
+            csv_status = 1
+
+        results.append(csv_status)
+
+    return max(results) if results else 0
 
 
 def main() -> int:
@@ -105,22 +467,83 @@ def main() -> int:
     run_csv = not args.no_csv
 
     if not run_pcap and not run_csv:
-        logging.warning("Both PCAP and CSV analysis were disabled. Exiting.")
+        logging.warning(
+            "Both PCAP and CSV analysis were disabled. Exiting."
+        )
         return 0
 
-    results: list[int] = []
+    try:
+        run_dirs = get_run_directories(args)
+    except Exception as error:
+        logging.error("Unable to select analysis runs: %s", error)
+        return 1
 
-    if run_pcap:
-        logging.info("================ Running PCAP Analysis ================")
-        pcap_status = analysis_pcap.run_pcap_analysis(args)
-        results.append(pcap_status)
+    statuses: list[int] = []
+    run_summaries: list[pd.DataFrame] = []
 
-    if run_csv:
-        logging.info("================ Running CSV Analysis ================")
-        csv_status = analysis_csv.run_csv_analysis(args)
-        results.append(csv_status)
+    for run_dir in run_dirs:
+        run_status = run_analyses_for_run(
+            args,
+            run_dir,
+        )
+        statuses.append(run_status)
 
-    return max(results) if results else 0
+        try:
+            run_summary = write_run_total_summary(
+                run_dir,
+                run_status,
+            )
+            run_summaries.append(run_summary)
+        except Exception:
+            logging.exception(
+                "Failed to create total summary for run %s",
+                run_dir.name,
+            )
+            statuses.append(1)
+
+    if args.batch_dir is not None:
+        batch_dir = args.batch_dir.expanduser().resolve()
+        try:
+            batch_summary_file = write_batch_total_summary(
+                batch_dir,
+                run_summaries,
+            )
+            print(
+                "[✓] Batch analysis complete. "
+                f"Total summary saved to: {batch_summary_file}"
+            )
+        except Exception:
+            logging.exception(
+                "Failed to create the batch total summary"
+            )
+            statuses.append(1)
+    elif run_dirs:
+        summary_file = (
+            run_dirs[0]
+            / "results"
+            / TOTAL_SUMMARY_FILENAME
+        )
+        print(
+            "[✓] Analysis complete. "
+            f"Total summary saved to: {summary_file}"
+        )
+
+    failed_runs = 0
+    for run_summary in run_summaries:
+        if (
+            "run_failed" in run_summary.columns
+            and run_summary["run_failed"].fillna(False).any()
+        ):
+            failed_runs += 1
+
+    if failed_runs:
+        logging.warning(
+            "%d of %d run(s) failed at least one threshold.",
+            failed_runs,
+            len(run_dirs),
+        )
+
+    return max(statuses) if statuses else 0
 
 
 if __name__ == "__main__":
