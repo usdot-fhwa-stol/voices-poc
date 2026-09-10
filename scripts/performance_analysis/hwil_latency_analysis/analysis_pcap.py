@@ -2,10 +2,10 @@
 
 import argparse
 import logging
-import os
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pcapDecode
@@ -48,6 +48,19 @@ SUPPORTED_LINKS = (
     ("proxy_1", "v2xhub"),
     ("proxy_2", "v2xhub"),
     ("dut_1", "dut_2"),
+)
+
+LATENCY_THRESHOLDS_MS = {
+    ("dut", "dut"): 120.0,
+    ("dut", "proxy"): 39.77,
+    ("proxy", "v2xhub"): 10.0,
+    ("proxy", "dut"): 32.0,
+}
+
+LATENCY_COLUMN_CANDIDATES = (
+    "latency_ms",
+    "latency (ms)",
+    "latency",
 )
 
 # Words to look for in a filename or folder name to guess which endpoint
@@ -103,11 +116,13 @@ def find_pcap_candidates(input_dir: Path, role: str) -> list[Path]:
     """
     endpoint, direction = role_parts(role)
     endpoint_re = re.compile(
-        rf"(?:^|[^a-z0-9]){ENDPOINT_PATTERNS[endpoint]}(?:[^a-z0-9]|$)",
+        rf"(?:^|[^a-z0-9]){ENDPOINT_PATTERNS[endpoint]}"
+        rf"(?:[^a-z0-9]|$)",
         re.IGNORECASE,
     )
     direction_re = re.compile(
-        rf"(?:^|[^a-z0-9]){DIRECTION_PATTERNS[direction]}(?:[^a-z0-9]|$)",
+        rf"(?:^|[^a-z0-9]){DIRECTION_PATTERNS[direction]}"
+        rf"(?:[^a-z0-9]|$)",
         re.IGNORECASE,
     )
 
@@ -126,7 +141,9 @@ def find_pcap_candidates(input_dir: Path, role: str) -> list[Path]:
         endpoint_in_file = endpoint_re.search(path.stem) is not None
         direction_in_file = direction_re.search(path.stem) is not None
 
-        if (endpoint_in_folder or endpoint_in_file) and (direction_in_folder or direction_in_file):
+        if (endpoint_in_folder or endpoint_in_file) and (
+            direction_in_folder or direction_in_file
+        ):
             candidates.append(path.resolve())
 
     return sorted(candidates, key=lambda path: path.name.lower())
@@ -150,7 +167,11 @@ def discover_role_pcap(input_dir: Path, role: str) -> Path | None:
             f"Choose one explicitly with {cli_option_name(role)}."
         )
 
-    logging.info("Automatically discovered %s: %s", role, candidates[0].name)
+    logging.info(
+        "Automatically discovered %s: %s",
+        role,
+        candidates[0].name,
+    )
     return candidates[0]
 
 
@@ -170,7 +191,10 @@ def resolve_explicit_path(value: Path, input_dir: Path) -> Path:
     return value.resolve()
 
 
-def collect_pcap_inputs(args: argparse.Namespace, input_dir: Path) -> dict[str, Path]:
+def collect_pcap_inputs(
+    args: argparse.Namespace,
+    input_dir: Path,
+) -> dict[str, Path]:
     """
     Figure out which PCAP file goes with which role. Use
     a file with a CLI flag or detect based off name.
@@ -205,10 +229,14 @@ def collect_pcap_inputs(args: argparse.Namespace, input_dir: Path) -> dict[str, 
     return inputs
 
 
-def locate_decoder_output(decoded_dir: Path, pcap_path: Path, expected_output: Path) -> Path:
+def locate_decoder_output(
+    decoded_dir: Path,
+    pcap_path: Path,
+    expected_output: Path,
+) -> Path:
     """
     After decoding, find the log file that was created. First check the
-    expected name, then other potential names. 
+    expected name, then other potential names.
     """
     if expected_output.is_file() and expected_output.stat().st_size > 0:
         return expected_output.resolve()
@@ -222,25 +250,40 @@ def locate_decoder_output(decoded_dir: Path, pcap_path: Path, expected_output: P
         candidate = decoded_dir / filename
         if candidate.is_file() and candidate.stat().st_size > 0:
             logging.warning(
-                "Decoder output filename differed from expectation; using %s", candidate
+                "Decoder output filename differed from expectation; using %s",
+                candidate,
             )
             return candidate.resolve()
 
     raise RuntimeError(
-        "The decoder completed without creating an identifiable nonempty log for "
+        "The decoder completed without creating an identifiable "
+        "nonempty log for "
         f"{pcap_path}. Expected: {expected_output}"
     )
 
 
-def decode_pcap(role: str, pcap_path: Path, decoded_dir: Path, force_decode: bool) -> Path:
+def decode_pcap(
+    role: str,
+    pcap_path: Path,
+    decoded_dir: Path,
+    force_decode: bool,
+) -> Path:
     """
     Turn one PCAP file into a readable text log.
     """
     decoded_dir.mkdir(parents=True, exist_ok=True)
     expected_output = decoded_dir / decoded_log_name(pcap_path)
 
-    if not force_decode and expected_output.is_file() and expected_output.stat().st_size > 0:
-        logging.info("Reusing decoded %s log: %s", role, expected_output)
+    if (
+        not force_decode
+        and expected_output.is_file()
+        and expected_output.stat().st_size > 0
+    ):
+        logging.info(
+            "Reusing decoded %s log: %s",
+            role,
+            expected_output,
+        )
         return expected_output.resolve()
 
     if expected_output.is_file():
@@ -281,7 +324,9 @@ def parse_custom_result_names(values: list[str]) -> dict[str, str]:
 
     for value in values:
         if "=" not in value:
-            raise ValueError(f"Invalid --name value {value!r}. Expected DIRECTION=FOLDER_NAME.")
+            raise ValueError(
+                f"Invalid --name value {value!r}. Expected DIRECTION=FOLDER_NAME."
+            )
 
         direction, folder_name = value.split("=", maxsplit=1)
         direction = direction.strip()
@@ -290,22 +335,114 @@ def parse_custom_result_names(values: list[str]) -> dict[str, str]:
         if direction not in valid_directions:
             valid_direction_text = ", ".join(sorted(valid_directions))
             raise ValueError(
-                f"Unknown direction {direction!r} in --name. Valid directions: {valid_direction_text}"
+                f"Unknown direction {direction!r} in --name. "
+                f"Valid directions: {valid_direction_text}"
             )
 
         if not folder_name:
             raise ValueError(f"Result folder name cannot be empty for {direction!r}.")
 
-        
         if Path(folder_name).name != folder_name:
-            raise ValueError(f"Result folder name must not contain path separators: {folder_name!r}")
+            raise ValueError(
+                f"Result folder name must not contain path separators: {folder_name!r}"
+            )
 
         if folder_name in custom_names.values():
-            raise ValueError(f"Custom result folder name is duplicated: {folder_name!r}")
+            raise ValueError(
+                f"Custom result folder name is duplicated: {folder_name!r}"
+            )
 
         custom_names[direction] = folder_name
 
     return custom_names
+
+
+def endpoint_type(endpoint: str) -> str:
+    """Return the generic endpoint type used by threshold presets."""
+    if endpoint.startswith("dut_"):
+        return "dut"
+
+    if endpoint.startswith("proxy_"):
+        return "proxy"
+
+    return endpoint
+
+
+def get_latency_threshold(
+    tx_endpoint: str,
+    rx_endpoint: str,
+) -> float | None:
+    """Return the configured latency threshold for one direction."""
+    threshold_key = (
+        endpoint_type(tx_endpoint),
+        endpoint_type(rx_endpoint),
+    )
+    return LATENCY_THRESHOLDS_MS.get(threshold_key)
+
+
+def find_latency_column(df: pd.DataFrame) -> str:
+    """Find the DataFrame column containing latency in milliseconds."""
+    normalized_columns = {
+        str(column).strip().lower(): str(column) for column in df.columns
+    }
+
+    for candidate in LATENCY_COLUMN_CANDIDATES:
+        if candidate in normalized_columns:
+            return normalized_columns[candidate]
+
+    available_columns = ", ".join(str(column) for column in df.columns)
+    raise ValueError(
+        f"Could not identify the latency column. Available columns: {available_columns}"
+    )
+
+
+def add_threshold_summary(
+    summary: dict[str, Any],
+    df: pd.DataFrame,
+    tx_endpoint: str,
+    rx_endpoint: str,
+) -> dict[str, Any]:
+    """Add threshold counts, percentage, and result to a summary."""
+    threshold = get_latency_threshold(tx_endpoint, rx_endpoint)
+
+    if threshold is None:
+        summary.update(
+            {
+                "latency_threshold_ms": None,
+                "threshold_total_samples": None,
+                "threshold_passed_samples": None,
+                "threshold_failed_samples": None,
+                "threshold_pass_percent": None,
+                "threshold_result": "NOT_CONFIGURED",
+            }
+        )
+        return summary
+
+    latency_column = find_latency_column(df)
+    latencies = pd.to_numeric(
+        df[latency_column],
+        errors="coerce",
+    ).dropna()
+
+    total_samples = len(latencies)
+    passed_samples = int((latencies < threshold).sum())
+    failed_samples = total_samples - passed_samples
+    pass_percent = passed_samples / total_samples * 100.0 if total_samples else 0.0
+
+    summary.update(
+        {
+            "latency_threshold_ms": threshold,
+            "threshold_total_samples": total_samples,
+            "threshold_passed_samples": passed_samples,
+            "threshold_failed_samples": failed_samples,
+            "threshold_pass_percent": round(pass_percent, 2),
+            "threshold_result": (
+                "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
+            ),
+        }
+    )
+
+    return summary
 
 
 def evaluate_direction(
@@ -314,7 +451,7 @@ def evaluate_direction(
     decoded_logs: dict[str, Path],
     results_dir: Path,
     custom_result_names: dict[str, str],
-    max_latency_ms: int,
+    max_latency_ms: float,
     rolling_window: int,
 ) -> Path | None:
     """
@@ -330,30 +467,48 @@ def evaluate_direction(
     if tx_role not in decoded_logs or rx_role not in decoded_logs:
         logging.info(
             "Skipping %s -> %s because %s or %s is missing",
-            tx_endpoint, rx_endpoint, tx_role, rx_role,
+            tx_endpoint,
+            rx_endpoint,
+            tx_role,
+            rx_role,
         )
         return None
 
     # Pick the folder name to save results in.
     direction_name = f"{tx_endpoint}_to_{rx_endpoint}"
-    folder_name = custom_result_names.get(direction_name, direction_name)
+    folder_name = custom_result_names.get(
+        direction_name,
+        direction_name,
+    )
     output_dir = results_dir / folder_name
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    logging.info("Analyzing and plotting %s -> %s", tx_endpoint, rx_endpoint)
+    logging.info(
+        "Analyzing and plotting %s -> %s",
+        tx_endpoint,
+        rx_endpoint,
+    )
 
     # Read the sending and receiving logs into lists of messages.
     tx_entries = read_log_entries(decoded_logs[tx_role])
     rx_entries = read_log_entries(decoded_logs[rx_role])
 
-    logging.info("Loaded %d TX messages and %d RX messages.", len(tx_entries), len(rx_entries))
+    logging.info(
+        "Loaded %d TX messages and %d RX messages.",
+        len(tx_entries),
+        len(rx_entries),
+    )
 
     # Match up sent messages with received messages and measure the delay.
     latency_results = calculate_latency(tx_entries, rx_entries)
     df = results_to_dataframe(latency_results)
 
     if df.empty:
-        logging.warning("No matching TX/RX messages found for %s -> %s.", tx_endpoint, rx_endpoint)
+        logging.warning(
+            "No matching TX/RX messages found for %s -> %s.",
+            tx_endpoint,
+            rx_endpoint,
+        )
         return None
 
     df.to_csv(output_dir / "latency_results.csv", index=False)
@@ -367,7 +522,35 @@ def evaluate_direction(
         message_type=f"{tx_endpoint}->{rx_endpoint}",
         run_name=results_dir.parent.name,
     )
-    pd.DataFrame([summary]).to_csv(output_dir / "results_summary.csv", index=False)
+    summary = add_threshold_summary(
+        summary=summary,
+        df=df,
+        tx_endpoint=tx_endpoint,
+        rx_endpoint=rx_endpoint,
+    )
+    pd.DataFrame([summary]).to_csv(
+        output_dir / "results_summary.csv",
+        index=False,
+    )
+
+    threshold = get_latency_threshold(tx_endpoint, rx_endpoint)
+    if threshold is None:
+        logging.info(
+            "No latency threshold configured for %s -> %s",
+            tx_endpoint,
+            rx_endpoint,
+        )
+    else:
+        logging.info(
+            "Threshold result for %s -> %s: %s (%d/%d samples below %.2f ms, %.2f%%)",
+            tx_endpoint,
+            rx_endpoint,
+            summary["threshold_result"],
+            summary["threshold_passed_samples"],
+            summary["threshold_total_samples"],
+            threshold,
+            summary["threshold_pass_percent"],
+        )
 
     logging.info("Results and plots written to: %s", output_dir)
     return output_dir.resolve()
@@ -379,31 +562,55 @@ def evaluate_bidirectional(
     decoded_logs: dict[str, Path],
     results_dir: Path,
     custom_result_names: dict[str, str],
-    max_latency_ms: int,
+    max_latency_ms: float,
     rolling_window: int,
 ) -> list[Path]:
     """
     For one pair of endpoints, run the delay check in whichever direction(s)
     we have enough data for: A-to-B, B-to-A, or both.
     """
-    has_forward = f"{endpoint_a}_tx" in decoded_logs and f"{endpoint_b}_rx" in decoded_logs
-    has_reverse = f"{endpoint_b}_tx" in decoded_logs and f"{endpoint_a}_rx" in decoded_logs
+    has_forward = (
+        f"{endpoint_a}_tx" in decoded_logs and f"{endpoint_b}_rx" in decoded_logs
+    )
+    has_reverse = (
+        f"{endpoint_b}_tx" in decoded_logs and f"{endpoint_a}_rx" in decoded_logs
+    )
 
     if not has_forward and not has_reverse:
-        logging.info("Skipping %s <-> %s because no complete direction is available", endpoint_a, endpoint_b)
+        logging.info(
+            "Skipping %s <-> %s because no complete direction is available",
+            endpoint_a,
+            endpoint_b,
+        )
         return []
 
-    logging.info("=== Evaluating %s <-> %s ===", endpoint_a, endpoint_b)
+    logging.info(
+        "=== Evaluating %s <-> %s ===",
+        endpoint_a,
+        endpoint_b,
+    )
     result_dirs: list[Path] = []
 
     forward_output = evaluate_direction(
-        endpoint_a, endpoint_b, decoded_logs, results_dir, custom_result_names, max_latency_ms, rolling_window
+        endpoint_a,
+        endpoint_b,
+        decoded_logs,
+        results_dir,
+        custom_result_names,
+        max_latency_ms,
+        rolling_window,
     )
     if forward_output:
         result_dirs.append(forward_output)
 
     reverse_output = evaluate_direction(
-        endpoint_b, endpoint_a, decoded_logs, results_dir, custom_result_names, max_latency_ms, rolling_window
+        endpoint_b,
+        endpoint_a,
+        decoded_logs,
+        results_dir,
+        custom_result_names,
+        max_latency_ms,
+        rolling_window,
     )
     if reverse_output:
         result_dirs.append(reverse_output)
@@ -419,7 +626,9 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
     try:
         # Find the main run folder, and the folder to search for PCAPs in.
         run_dir = args.run_dir.expanduser().resolve()
-        input_dir = run_dir if args.input_dir is None else args.input_dir.expanduser().resolve()
+        input_dir = (
+            run_dir if args.input_dir is None else args.input_dir.expanduser().resolve()
+        )
 
         if not run_dir.is_dir():
             raise FileNotFoundError(f"Run directory does not exist: {run_dir}")
@@ -433,7 +642,10 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
         pcap_inputs = collect_pcap_inputs(args, input_dir)
 
         if not pcap_inputs:
-            logging.warning("No PCAPs discovered in %s for PCAP analysis.", input_dir)
+            logging.warning(
+                "No PCAPs discovered in %s for PCAP analysis.",
+                input_dir,
+            )
             return 0
 
         # Set up folders for the decoded logs and the final results.
@@ -449,7 +661,11 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
                 role=role,
                 pcap_path=pcap_path,
                 decoded_dir=decoded_dir,
-                force_decode=getattr(args, "force_decode", False),
+                force_decode=getattr(
+                    args,
+                    "force_decode",
+                    False,
+                ),
             )
 
         # Check the directory for every pair of endpoints we support (both ways).
@@ -457,13 +673,18 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
         for endpoint_a, endpoint_b in SUPPORTED_LINKS:
             result_dirs.extend(
                 evaluate_bidirectional(
-                    endpoint_a, endpoint_b, decoded_logs, results_dir,
-                    custom_result_names, int(args.max_latency_ms), args.rolling_window
+                    endpoint_a,
+                    endpoint_b,
+                    decoded_logs,
+                    results_dir,
+                    custom_result_names,
+                    args.max_latency_ms,
+                    args.rolling_window,
                 )
             )
 
         if not result_dirs:
-            logging.warning("No valid bidirectional PCAP directions evaluated.")
+            logging.warning("No valid PCAP directions were evaluated.")
             return 0
 
         print(f"[✓] PCAP Analysis complete. Results saved to: {results_dir}")
@@ -476,18 +697,50 @@ def run_pcap_analysis(args: argparse.Namespace) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Decode PCAPs and run V2X analysis.")
-    parser.add_argument("-r", "--run-dir", type=Path, required=True)
-    parser.add_argument("--input-dir", type=Path, default=None)
-    parser.add_argument("--max-latency-ms", type=float, default=200.0)
-    parser.add_argument("--rolling-window", type=int, default=20)
-    parser.add_argument("--force-decode", action="store_true")
-    parser.add_argument("--name", action="append", default=[])
-    parser.add_argument("--debug", action="store_true")
+    parser.add_argument(
+        "-r",
+        "--run-dir",
+        type=Path,
+        required=True,
+    )
+    parser.add_argument(
+        "--input-dir",
+        type=Path,
+        default=None,
+    )
+    parser.add_argument(
+        "--max-latency-ms",
+        type=float,
+        default=200.0,
+    )
+    parser.add_argument(
+        "--rolling-window",
+        type=int,
+        default=20,
+    )
+    parser.add_argument(
+        "--force-decode",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--name",
+        action="append",
+        default=[],
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+    )
 
     # Add one command-line flag for every possible endpoint + direction,
     # like --dut-1-tx, --proxy-1-rx
     for role in PCAP_ROLES:
-        parser.add_argument(cli_option_name(role), dest=role, type=Path, default=None)
+        parser.add_argument(
+            cli_option_name(role),
+            dest=role,
+            type=Path,
+            default=None,
+        )
 
     cli_args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if cli_args.debug else logging.INFO)
