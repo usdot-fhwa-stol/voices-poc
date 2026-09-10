@@ -18,6 +18,8 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${VUG_LOCAL_DT_PATH}:/home/dt_user/distributed-testing
+      - /home/dt-5/Downloads:/home/dt_user/Downloads
+      - /home/dt-5/tenadev/INSTALL/tena-entity-generator-2.3.3:/home/dt_user/VUG_Adapters/tena-entity-generator-2.3.3
     stop_grace_period: 30s
   
   dt-carla:
