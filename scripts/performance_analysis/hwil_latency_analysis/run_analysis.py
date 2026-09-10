@@ -106,7 +106,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def discover_batch_runs(batch_dir: Path) -> list[Path]:
-    """Find the immediate child directories that represent individual runs."""
+    """Find sub-directories for individual runs."""
     if not batch_dir.is_dir():
         raise FileNotFoundError(f"Batch directory does not exist: {batch_dir}")
 
@@ -172,7 +172,7 @@ def make_run_arguments(
     args: argparse.Namespace,
     run_dir: Path,
 ) -> argparse.Namespace:
-    """Make an argument namespace for one analysis run."""
+    """Make arguments for one analysis run."""
     run_values = vars(args).copy()
     run_values["run_dir"] = run_dir
     run_values["input_dir"] = get_run_input_dir(args, run_dir)
@@ -385,11 +385,11 @@ def write_batch_total_summary(
     return output_file.resolve()
 
 
-def run_analyses_for_run(
+def analyze_single_run(
     args: argparse.Namespace,
     run_dir: Path,
 ) -> int:
-    """Run the enabled analyses for one run directory."""
+    """Run the analysis for one run directory."""
     try:
         run_args = make_run_arguments(args, run_dir)
     except Exception as error:
@@ -463,7 +463,7 @@ def main() -> int:
     run_summaries: list[pd.DataFrame] = []
 
     for run_dir in run_dirs:
-        run_status = run_analyses_for_run(
+        run_status = analyze_single_run(
             args,
             run_dir,
         )
