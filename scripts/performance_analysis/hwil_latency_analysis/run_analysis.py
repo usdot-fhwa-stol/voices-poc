@@ -333,9 +333,7 @@ def write_run_total_summary(
                     "summary_file": "",
                     "threshold_result": "",
                     "run_result": run_result,
-                    "run_failed": run_result == "FAIL",
                     "failure_reason": failure_reason,
-                    "analysis_status": analysis_status,
                 }
             ]
         )

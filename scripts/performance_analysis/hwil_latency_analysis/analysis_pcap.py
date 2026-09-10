@@ -9,14 +9,11 @@ from typing import Any
 
 import pandas as pd
 import pcapDecode
-from radio_latency_plotting import (
+from plots_and_summaries import (
     calculate_latency,
-    calculate_statistics,
-    plot_latency_cdf,
-    plot_latency_histogram,
-    plot_latency_timeseries,
     read_log_entries,
     results_to_dataframe,
+    save_latency_report,
 )
 
 PCAP_SUFFIXES = {".pcap"}
@@ -397,53 +394,6 @@ def find_latency_column(df: pd.DataFrame) -> str:
     )
 
 
-def add_threshold_summary(
-    summary: dict[str, Any],
-    df: pd.DataFrame,
-    tx_endpoint: str,
-    rx_endpoint: str,
-) -> dict[str, Any]:
-    """Add threshold counts, percentage, and result to a summary."""
-    threshold = get_latency_threshold(tx_endpoint, rx_endpoint)
-
-    if threshold is None:
-        summary.update(
-            {
-                "latency_threshold_ms": None,
-                "passed_samples": None,
-                "failed_samples": None,
-                "pass_percent": None,
-                "threshold_result": "NOT_CONFIGURED",
-            }
-        )
-        return summary
-
-    latency_column = find_latency_column(df)
-    latencies = pd.to_numeric(
-        df[latency_column],
-        errors="coerce",
-    ).dropna()
-
-    total_samples = len(latencies)
-    passed_samples = int((latencies < threshold).sum())
-    failed_samples = total_samples - passed_samples
-    pass_percent = passed_samples / total_samples * 100.0 if total_samples else 0.0
-
-    summary.update(
-        {
-            "latency_threshold_ms": threshold,
-            "passed_samples": passed_samples,
-            "failed_samples": failed_samples,
-            "pass_percent": round(pass_percent, 2),
-            "threshold_result": (
-                "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
-            ),
-        }
-    )
-
-    return summary
-
-
 def evaluate_direction(
     tx_endpoint: str,
     rx_endpoint: str,
@@ -510,29 +460,20 @@ def evaluate_direction(
         )
         return None
 
-    df.to_csv(output_dir / "latency_results.csv", index=False)
+    threshold = get_latency_threshold(tx_endpoint, rx_endpoint)
+    latency_column = find_latency_column(df)
 
-    plot_latency_histogram(df, output_dir, max_latency_ms)
-    plot_latency_cdf(df, output_dir, max_latency_ms)
-    plot_latency_timeseries(df, output_dir, rolling_window)
-
-    summary = calculate_statistics(
+    summary = save_latency_report(
         df,
+        output_dir,
         message_type=f"{tx_endpoint}->{rx_endpoint}",
         run_name=results_dir.parent.name,
-    )
-    summary = add_threshold_summary(
-        summary=summary,
-        df=df,
-        tx_endpoint=tx_endpoint,
-        rx_endpoint=rx_endpoint,
-    )
-    pd.DataFrame([summary]).to_csv(
-        output_dir / "results_summary.csv",
-        index=False,
+        max_latency_ms=max_latency_ms,
+        rolling_window=rolling_window,
+        threshold=threshold,
+        latency_column=latency_column,
     )
 
-    threshold = get_latency_threshold(tx_endpoint, rx_endpoint)
     if threshold is None:
         logging.info(
             "No latency threshold configured for %s -> %s",
@@ -546,6 +487,7 @@ def evaluate_direction(
             rx_endpoint,
             summary["threshold_result"],
             summary["passed_samples"],
+            len(df),
             threshold,
             summary["pass_percent"],
         )

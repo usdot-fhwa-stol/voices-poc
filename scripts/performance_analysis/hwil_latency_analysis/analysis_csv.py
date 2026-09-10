@@ -10,12 +10,7 @@ from typing import Any, Iterable
 
 import numpy as np
 import pandas as pd
-from radio_latency_plotting import (
-    calculate_statistics,
-    plot_latency_cdf,
-    plot_latency_histogram,
-    plot_latency_timeseries,
-)
+from plots_and_summaries import save_latency_report
 
 LATENCY_THRESHOLD_MS = 10.0
 
@@ -130,7 +125,6 @@ def read_records(
     """Open a CSV file and turn each usable row into a LogRecord."""
     cfg = DATA_TYPES[msg_type]
 
-    # Try to open the file. If it's broken or unreadable, give up and return nothing.
     try:
         df = pd.read_csv(csv_file, dtype=str, low_memory=False)
     except (
@@ -197,7 +191,7 @@ def read_records(
 
     records: list[LogRecord] = []
     for row_index, row in df.iterrows():
-        # Try to read and fix up the two timestamps for this row.
+        
         try:
             tx_ms = normalize_timestamp_ms(row[tx_col])
             rx_ms = normalize_timestamp_ms(row[rx_col])
@@ -266,36 +260,6 @@ def process_csv(records: list[LogRecord]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def add_threshold_summary(
-    summary: dict[str, Any],
-    df: pd.DataFrame,
-) -> dict[str, Any]:
-    """Add latency threshold counts, percentage, and result to a summary."""
-    latencies = pd.to_numeric(
-        df["Latency (ms)"],
-        errors="coerce",
-    ).dropna()
-
-    total_samples = len(latencies)
-    passed_samples = int((latencies < LATENCY_THRESHOLD_MS).sum())
-    failed_samples = total_samples - passed_samples
-    pass_percent = passed_samples / total_samples * 100.0 if total_samples else 0.0
-
-    summary.update(
-        {
-            "latency_threshold_ms": LATENCY_THRESHOLD_MS,
-            "passed_samples": passed_samples,
-            "failed_samples": failed_samples,
-            "pass_percent": round(pass_percent, 2),
-            "threshold_result": (
-                "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
-            ),
-        }
-    )
-
-    return summary
-
-
 def save_analysis(
     df: pd.DataFrame,
     *,
@@ -307,39 +271,15 @@ def save_analysis(
 ) -> tuple[dict[str, Any], Path]:
     """Save the table to a CSV file, create plots and data summary."""
     output_dir = results_dir / message_type
-    output_dir.mkdir(parents=True, exist_ok=True)
 
-    df.to_csv(
-        output_dir / "latency_results.csv",
-        index=False,
-    )
-
-    plot_latency_histogram(
+    summary = save_latency_report(
         df,
         output_dir,
-        max_latency_ms,
-    )
-    plot_latency_cdf(
-        df,
-        output_dir,
-        max_latency_ms,
-    )
-    plot_latency_timeseries(
-        df,
-        output_dir,
-        rolling_window,
-    )
-
-    summary = calculate_statistics(
-        df,
         message_type=message_type,
         run_name=run_name,
-    )
-    summary = add_threshold_summary(summary, df)
-
-    pd.DataFrame([summary]).to_csv(
-        output_dir / "results_summary.csv",
-        index=False,
+        max_latency_ms=max_latency_ms,
+        rolling_window=rolling_window,
+        threshold=LATENCY_THRESHOLD_MS,
     )
 
     logging.info(
@@ -347,6 +287,7 @@ def save_analysis(
         message_type,
         summary["threshold_result"],
         summary["passed_samples"],
+        len(df),
         LATENCY_THRESHOLD_MS,
         summary["pass_percent"],
     )
@@ -427,7 +368,7 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
             f"Mean: {summary['mean_ms']:.2f} ms | "
             f"P95: {summary['p95_ms']:.2f} ms | "
             f"Threshold: {summary['threshold_result']} "
-            f"({summary['threshold_pass_percent']:.2f}% below "
+            f"({summary['pass_percent']:.2f}% below "
             f"{LATENCY_THRESHOLD_MS:g} ms)"
         )
 

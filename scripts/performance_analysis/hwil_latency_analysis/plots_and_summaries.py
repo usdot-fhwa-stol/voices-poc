@@ -308,6 +308,102 @@ def plot_latency_timeseries(
     )
     plt.close(fig)
 
+def add_threshold_summary(
+    summary: dict[str, Any],
+    df: pd.DataFrame,
+    *,
+    threshold: float | None,
+    latency_column: str = "Latency (ms)",
+) -> dict[str, Any]:
+    """Add latency threshold counts, percentage, and result to a summary.
+
+    If ``threshold`` is None, the summary is marked as "NOT_CONFIGURED"
+    rather than PASS/FAIL.
+    """
+    if threshold is None:
+        summary.update(
+            {
+                "latency_threshold_ms": None,
+                "passed_samples": None,
+                "failed_samples": None,
+                "pass_percent": None,
+                "threshold_result": "NOT_CONFIGURED",
+            }
+        )
+        return summary
+
+    latencies = pd.to_numeric(
+        df[latency_column],
+        errors="coerce",
+    ).dropna()
+
+    total_samples = len(latencies)
+    passed_samples = int((latencies < threshold).sum())
+    failed_samples = total_samples - passed_samples
+    pass_percent = passed_samples / total_samples * 100.0 if total_samples else 0.0
+
+    summary.update(
+        {
+            "latency_threshold_ms": threshold,
+            "passed_samples": passed_samples,
+            "failed_samples": failed_samples,
+            "pass_percent": round(pass_percent, 2),
+            "threshold_result": (
+                "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
+            ),
+        }
+    )
+
+    return summary
+
+
+def save_latency_report(
+    df: pd.DataFrame,
+    output_dir: Path,
+    *,
+    message_type: str,
+    run_name: str,
+    max_latency_ms: float,
+    rolling_window: int,
+    threshold: float | None,
+    latency_column: str = "Latency (ms)",
+) -> dict[str, Any]:
+    """
+    Persist a latency DataFrame as the standard report: the raw results CSV,
+    the histogram/CDF/timeseries plots, and a results_summary.csv (with
+    threshold pass/fail info). Returns the summary dict.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    df.to_csv(
+        output_dir / "latency_results.csv",
+        index=False,
+    )
+
+    plot_latency_histogram(df, output_dir, max_latency_ms)
+    plot_latency_cdf(df, output_dir, max_latency_ms)
+    plot_latency_timeseries(df, output_dir, rolling_window)
+
+    summary = calculate_statistics(
+        df,
+        message_type=message_type,
+        run_name=run_name,
+    )
+    summary = add_threshold_summary(
+        summary,
+        df,
+        threshold=threshold,
+        latency_column=latency_column,
+    )
+
+    pd.DataFrame([summary]).to_csv(
+        output_dir / "results_summary.csv",
+        index=False,
+    )
+
+    return summary
+
+
 def calculate_jitter(df: pd.DataFrame) -> float:
     if len(df) < 2:
         return float("nan")
