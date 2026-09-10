@@ -284,10 +284,9 @@ def add_threshold_summary(
     summary.update(
         {
             "latency_threshold_ms": LATENCY_THRESHOLD_MS,
-            "threshold_total_samples": total_samples,
-            "threshold_passed_samples": passed_samples,
-            "threshold_failed_samples": failed_samples,
-            "threshold_pass_percent": round(pass_percent, 2),
+            "passed_samples": passed_samples,
+            "failed_samples": failed_samples,
+            "pass_percent": round(pass_percent, 2),
             "threshold_result": (
                 "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
             ),
@@ -347,10 +346,9 @@ def save_analysis(
         "Threshold result for %s: %s (%d/%d samples below %.2f ms, %.2f%%)",
         message_type,
         summary["threshold_result"],
-        summary["threshold_passed_samples"],
-        summary["threshold_total_samples"],
+        summary["passed_samples"],
         LATENCY_THRESHOLD_MS,
-        summary["threshold_pass_percent"],
+        summary["pass_percent"],
     )
 
     return summary, output_dir.resolve()

@@ -2,19 +2,15 @@
 Runs PCAP decoding/analysis and CSV analysis, can do batches of test runs.
 """
 
-from __future__ import annotations
-
 import argparse
 import logging
 import sys
 from pathlib import Path
 from typing import Any
 
-import pandas as pd
-
 import analysis_csv
 import analysis_pcap
-
+import pandas as pd
 
 TOTAL_SUMMARY_FILENAME = "total_data_summary.csv"
 FAILURE_RESULTS = {"FAIL", "ERROR"}
@@ -93,8 +89,7 @@ def parse_arguments() -> argparse.Namespace:
         default=[],
         metavar="DIRECTION=FOLDER_NAME",
         help=(
-            "Customize result directory names "
-            "(e.g., --name dut_1_to_proxy_1=side_1)."
+            "Customize result directory names (e.g., --name dut_1_to_proxy_1=side_1)."
         ),
     )
 
@@ -113,9 +108,7 @@ def parse_arguments() -> argparse.Namespace:
 def discover_batch_runs(batch_dir: Path) -> list[Path]:
     """Find the immediate child directories that represent individual runs."""
     if not batch_dir.is_dir():
-        raise FileNotFoundError(
-            f"Batch directory does not exist: {batch_dir}"
-        )
+        raise FileNotFoundError(f"Batch directory does not exist: {batch_dir}")
 
     ignored_names = {
         "decoded",
@@ -146,9 +139,7 @@ def get_run_directories(args: argparse.Namespace) -> list[Path]:
     if args.run_dir is not None:
         run_dir = args.run_dir.expanduser().resolve()
         if not run_dir.is_dir():
-            raise FileNotFoundError(
-                f"Run directory does not exist: {run_dir}"
-            )
+            raise FileNotFoundError(f"Run directory does not exist: {run_dir}")
         return [run_dir]
 
     batch_dir = args.batch_dir.expanduser().resolve()
@@ -171,8 +162,7 @@ def get_run_input_dir(
     run_input_dir = input_root / run_dir.name
     if not run_input_dir.is_dir():
         raise FileNotFoundError(
-            f"Input directory for run {run_dir.name!r} does not exist: "
-            f"{run_input_dir}"
+            f"Input directory for run {run_dir.name!r} does not exist: {run_input_dir}"
         )
 
     return run_input_dir.resolve()
@@ -210,11 +200,7 @@ def read_run_summary_files(run_dir: Path) -> pd.DataFrame:
         return pd.DataFrame()
 
     summary_files = sorted(
-        (
-            path
-            for path in results_dir.rglob("results_summary.csv")
-            if path.is_file()
-        ),
+        (path for path in results_dir.rglob("results_summary.csv") if path.is_file()),
         key=lambda path: str(path).lower(),
     )
 
@@ -253,9 +239,22 @@ def read_run_summary_files(run_dir: Path) -> pd.DataFrame:
         relative_file = summary_file.relative_to(run_dir)
         test_name = summary_file.parent.name
 
-        summary_df.insert(0, "run_name", run_dir.name)
-        summary_df.insert(1, "test_name", test_name)
-        summary_df.insert(2, "summary_file", str(relative_file))
+        # Assign instead of inserting because these columns may already exist.
+        summary_df["run_name"] = run_dir.name
+        summary_df["test_name"] = test_name
+        summary_df["summary_file"] = str(relative_file)
+
+        # Move the metadata columns to the beginning of the DataFrame.
+        metadata_columns = [
+            "run_name",
+            "test_name",
+            "summary_file",
+        ]
+        remaining_columns = [
+            column for column in summary_df.columns if column not in metadata_columns
+        ]
+        summary_df = summary_df[metadata_columns + remaining_columns]
+
         summary_frames.append(summary_df)
 
     if not summary_frames:
@@ -283,9 +282,7 @@ def add_run_result(
             normalize_threshold_result
         )
         result_df["threshold_result"] = threshold_results
-        threshold_failed = threshold_results.isin(
-            FAILURE_RESULTS
-        ).any()
+        threshold_failed = threshold_results.isin(FAILURE_RESULTS).any()
     else:
         threshold_failed = False
 
@@ -326,16 +323,8 @@ def write_run_total_summary(
     output_file = results_dir / TOTAL_SUMMARY_FILENAME
 
     if summary_df.empty:
-        run_result = (
-            "FAIL"
-            if analysis_status != 0
-            else "NO_RESULTS"
-        )
-        failure_reason = (
-            "ANALYSIS_ERROR"
-            if analysis_status != 0
-            else "NO_RESULTS"
-        )
+        run_result = "FAIL" if analysis_status != 0 else "NO_RESULTS"
+        failure_reason = "ANALYSIS_ERROR" if analysis_status != 0 else "NO_RESULTS"
         summary_df = pd.DataFrame(
             [
                 {
@@ -421,13 +410,9 @@ def run_analyses_for_run(
     results: list[int] = []
 
     if not args.no_pcap:
-        logging.info(
-            "================ Running PCAP Analysis ================"
-        )
+        logging.info("================ Running PCAP Analysis ================")
         try:
-            pcap_status = analysis_pcap.run_pcap_analysis(
-                run_args
-            )
+            pcap_status = analysis_pcap.run_pcap_analysis(run_args)
         except Exception:
             logging.exception(
                 "Unhandled PCAP analysis error for run %s",
@@ -438,9 +423,7 @@ def run_analyses_for_run(
         results.append(pcap_status)
 
     if not args.no_csv:
-        logging.info(
-            "================ Running CSV Analysis ================"
-        )
+        logging.info("================ Running CSV Analysis ================")
         try:
             csv_status = analysis_csv.run_csv_analysis(run_args)
         except Exception:
@@ -467,9 +450,7 @@ def main() -> int:
     run_csv = not args.no_csv
 
     if not run_pcap and not run_csv:
-        logging.warning(
-            "Both PCAP and CSV analysis were disabled. Exiting."
-        )
+        logging.warning("Both PCAP and CSV analysis were disabled. Exiting.")
         return 0
 
     try:
@@ -513,20 +494,11 @@ def main() -> int:
                 f"Total summary saved to: {batch_summary_file}"
             )
         except Exception:
-            logging.exception(
-                "Failed to create the batch total summary"
-            )
+            logging.exception("Failed to create the batch total summary")
             statuses.append(1)
     elif run_dirs:
-        summary_file = (
-            run_dirs[0]
-            / "results"
-            / TOTAL_SUMMARY_FILENAME
-        )
-        print(
-            "[✓] Analysis complete. "
-            f"Total summary saved to: {summary_file}"
-        )
+        summary_file = run_dirs[0] / "results" / TOTAL_SUMMARY_FILENAME
+        print(f"[✓] Analysis complete. Total summary saved to: {summary_file}")
 
     failed_runs = 0
     for run_summary in run_summaries:

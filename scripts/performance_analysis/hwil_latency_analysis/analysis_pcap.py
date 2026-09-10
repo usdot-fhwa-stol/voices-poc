@@ -53,8 +53,9 @@ SUPPORTED_LINKS = (
 LATENCY_THRESHOLDS_MS = {
     ("dut", "dut"): 120.0,
     ("dut", "proxy"): 39.77,
-    ("proxy", "v2xhub"): 10.0,
     ("proxy", "dut"): 32.0,
+    ("proxy", "v2xhub"): 10.0,
+    ("v2xhub", "proxy"): 10.0,
 }
 
 LATENCY_COLUMN_CANDIDATES = (
@@ -409,10 +410,9 @@ def add_threshold_summary(
         summary.update(
             {
                 "latency_threshold_ms": None,
-                "threshold_total_samples": None,
-                "threshold_passed_samples": None,
-                "threshold_failed_samples": None,
-                "threshold_pass_percent": None,
+                "passed_samples": None,
+                "failed_samples": None,
+                "pass_percent": None,
                 "threshold_result": "NOT_CONFIGURED",
             }
         )
@@ -432,10 +432,9 @@ def add_threshold_summary(
     summary.update(
         {
             "latency_threshold_ms": threshold,
-            "threshold_total_samples": total_samples,
-            "threshold_passed_samples": passed_samples,
-            "threshold_failed_samples": failed_samples,
-            "threshold_pass_percent": round(pass_percent, 2),
+            "passed_samples": passed_samples,
+            "failed_samples": failed_samples,
+            "pass_percent": round(pass_percent, 2),
             "threshold_result": (
                 "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
             ),
@@ -546,10 +545,9 @@ def evaluate_direction(
             tx_endpoint,
             rx_endpoint,
             summary["threshold_result"],
-            summary["threshold_passed_samples"],
-            summary["threshold_total_samples"],
+            summary["passed_samples"],
             threshold,
-            summary["threshold_pass_percent"],
+            summary["pass_percent"],
         )
 
     logging.info("Results and plots written to: %s", output_dir)
