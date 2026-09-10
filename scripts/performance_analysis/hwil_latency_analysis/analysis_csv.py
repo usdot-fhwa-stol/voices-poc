@@ -1,10 +1,7 @@
 """Run-level Latency Analysis for Radio & SecureV2XMessage CSVs."""
 
-from __future__ import annotations
-
 import argparse
 import logging
-import os
 import re
 import sys
 from dataclasses import dataclass
@@ -19,6 +16,8 @@ from radio_latency_plotting import (
     plot_latency_histogram,
     plot_latency_timeseries,
 )
+
+LATENCY_THRESHOLD_MS = 10.0
 
 
 # "patterns" = what the filename looks like.
@@ -89,7 +88,11 @@ def extract_host(value: Any) -> str:
         return ""
 
     # Remove any "http://" or similar bit at the front.
-    endpoint = re.sub(r"^[A-Za-z][A-Za-z0-9+.-]*://", "", endpoint)
+    endpoint = re.sub(
+        r"^[A-Za-z][A-Za-z0-9+.-]*://",
+        "",
+        endpoint,
+    )
 
     # Remove brackets
     if endpoint.startswith("["):
@@ -104,7 +107,10 @@ def extract_host(value: Any) -> str:
     return endpoint
 
 
-def find_csv_file(directory: Path, patterns: Iterable[str]) -> Path | None:
+def find_csv_file(
+    directory: Path,
+    patterns: Iterable[str],
+) -> Path | None:
     """Look inside a folder (and its subfolders) for a file matching one of the given name patterns."""
     if not directory.is_dir():
         return None
@@ -117,25 +123,47 @@ def find_csv_file(directory: Path, patterns: Iterable[str]) -> Path | None:
     return None
 
 
-def read_records(csv_file: Path, msg_type: str) -> list[LogRecord]:
+def read_records(
+    csv_file: Path,
+    msg_type: str,
+) -> list[LogRecord]:
     """Open a CSV file and turn each usable row into a LogRecord."""
     cfg = DATA_TYPES[msg_type]
 
     # Try to open the file. If it's broken or unreadable, give up and return nothing.
     try:
         df = pd.read_csv(csv_file, dtype=str, low_memory=False)
-    except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
+    except (
+        OSError,
+        pd.errors.ParserError,
+        UnicodeDecodeError,
+    ) as error:
         logging.error("Failed to read %s: %s", csv_file, error)
         return []
 
     # Figure out which column tells us "when it was sent".
     tx_col = next(
-        (c for c in ("Metadata,TimeOfTransmission", "Metadata,TimeOfCommit", "const^Metadata,TimeOfCreation") if c in df.columns),
+        (
+            column
+            for column in (
+                "Metadata,TimeOfTransmission",
+                "Metadata,TimeOfCommit",
+                "const^Metadata,TimeOfCreation",
+            )
+            if column in df.columns
+        ),
         None,
     )
     # Figure out which column tells us "when it arrived".
     rx_col = next(
-        (c for c in ("Metadata,TimeOfReceipt", "packetTimestamp") if c in df.columns),
+        (
+            column
+            for column in (
+                "Metadata,TimeOfReceipt",
+                "packetTimestamp",
+            )
+            if column in df.columns
+        ),
         None,
     )
 
@@ -152,12 +180,20 @@ def read_records(csv_file: Path, msg_type: str) -> list[LogRecord]:
 
     # Figure out which column (if any) holds the sender's IP address.
     ip_col = next(
-        (c for c in ("const^Metadata,SDOid.hostIPaddress", "Metadata,Endpoint", "const^Metadata,Endpoint") if c in df.columns),
+        (
+            column
+            for column in (
+                "const^Metadata,SDOid.hostIPaddress",
+                "Metadata,Endpoint",
+                "const^Metadata,Endpoint",
+            )
+            if column in df.columns
+        ),
         None,
     )
 
     # Only keep the ID columns that actually exist in this file.
-    available_id_cols = [c for c in cfg["id_cols"] if c in df.columns]
+    available_id_cols = [column for column in cfg["id_cols"] if column in df.columns]
 
     records: list[LogRecord] = []
     for row_index, row in df.iterrows():
@@ -169,10 +205,19 @@ def read_records(csv_file: Path, msg_type: str) -> list[LogRecord]:
             continue
 
         # Build a "key" out of the ID columns so we can match rows to each other later.
-        key_parts = [clean_value(row.get(c)) for c in available_id_cols if clean_value(row.get(c))]
+        key_parts = []
+        for column in available_id_cols:
+            value = clean_value(row.get(column))
+            if value:
+                key_parts.append(value)
+
         row_id = clean_value(row.get("rowID")) or str(row_index)
 
-        match_key = f"{msg_type}::{'::'.join(key_parts)}" if key_parts else f"{msg_type}::row::{row_id}"
+        match_key = (
+            f"{msg_type}::{'::'.join(key_parts)}"
+            if key_parts
+            else f"{msg_type}::row::{row_id}"
+        )
         ip_address = extract_host(row.get(ip_col)) if ip_col else ""
 
         records.append(
@@ -187,7 +232,13 @@ def read_records(csv_file: Path, msg_type: str) -> list[LogRecord]:
         )
 
     # Put the records in time order, earliest first.
-    return sorted(records, key=lambda r: (r.tx_time_ms, r.rx_time_ms))
+    return sorted(
+        records,
+        key=lambda record: (
+            record.tx_time_ms,
+            record.rx_time_ms,
+        ),
+    )
 
 
 def process_csv(records: list[LogRecord]) -> pd.DataFrame:
@@ -202,12 +253,48 @@ def process_csv(records: list[LogRecord]) -> pd.DataFrame:
             "Match Key": record.match_key,
             "Row ID": record.row_id,
             "IP Address": record.ip_address,
-            "Datetime": pd.to_datetime(record.tx_time_ms, unit="ms", utc=True, errors="coerce"),
+            "Datetime": pd.to_datetime(
+                record.tx_time_ms,
+                unit="ms",
+                utc=True,
+                errors="coerce",
+            ),
         }
         for record in records
-        if np.isfinite(record.latency_ms) and record.latency_ms >= 0
+        if (np.isfinite(record.latency_ms) and record.latency_ms >= 0)
     ]
     return pd.DataFrame(rows)
+
+
+def add_threshold_summary(
+    summary: dict[str, Any],
+    df: pd.DataFrame,
+) -> dict[str, Any]:
+    """Add latency threshold counts, percentage, and result to a summary."""
+    latencies = pd.to_numeric(
+        df["Latency (ms)"],
+        errors="coerce",
+    ).dropna()
+
+    total_samples = len(latencies)
+    passed_samples = int((latencies < LATENCY_THRESHOLD_MS).sum())
+    failed_samples = total_samples - passed_samples
+    pass_percent = passed_samples / total_samples * 100.0 if total_samples else 0.0
+
+    summary.update(
+        {
+            "latency_threshold_ms": LATENCY_THRESHOLD_MS,
+            "threshold_total_samples": total_samples,
+            "threshold_passed_samples": passed_samples,
+            "threshold_failed_samples": failed_samples,
+            "threshold_pass_percent": round(pass_percent, 2),
+            "threshold_result": (
+                "PASS" if total_samples > 0 and failed_samples == 0 else "FAIL"
+            ),
+        }
+    )
+
+    return summary
 
 
 def save_analysis(
@@ -221,16 +308,50 @@ def save_analysis(
 ) -> tuple[dict[str, Any], Path]:
     """Save the table to a CSV file, create plots and data summary."""
     output_dir = results_dir / message_type
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    df.to_csv(output_dir / "latency_results.csv", index=False)
+    df.to_csv(
+        output_dir / "latency_results.csv",
+        index=False,
+    )
 
-    plot_latency_histogram(df, output_dir, int(max_latency_ms))
-    plot_latency_cdf(df, output_dir, int(max_latency_ms))
-    plot_latency_timeseries(df, output_dir, rolling_window)
+    plot_latency_histogram(
+        df,
+        output_dir,
+        max_latency_ms,
+    )
+    plot_latency_cdf(
+        df,
+        output_dir,
+        max_latency_ms,
+    )
+    plot_latency_timeseries(
+        df,
+        output_dir,
+        rolling_window,
+    )
 
-    summary = calculate_statistics(df, message_type=message_type, run_name=run_name)
-    pd.DataFrame([summary]).to_csv(output_dir / "results_summary.csv", index=False)
+    summary = calculate_statistics(
+        df,
+        message_type=message_type,
+        run_name=run_name,
+    )
+    summary = add_threshold_summary(summary, df)
+
+    pd.DataFrame([summary]).to_csv(
+        output_dir / "results_summary.csv",
+        index=False,
+    )
+
+    logging.info(
+        "Threshold result for %s: %s (%d/%d samples below %.2f ms, %.2f%%)",
+        message_type,
+        summary["threshold_result"],
+        summary["threshold_passed_samples"],
+        summary["threshold_total_samples"],
+        LATENCY_THRESHOLD_MS,
+        summary["threshold_pass_percent"],
+    )
 
     return summary, output_dir.resolve()
 
@@ -242,12 +363,18 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
     and save the results and plots.
     """
     run_dir = args.run_dir.expanduser().resolve()
-    input_dir = run_dir if args.input_dir is None else args.input_dir.expanduser().resolve()
+    input_dir = (
+        run_dir if args.input_dir is None else args.input_dir.expanduser().resolve()
+    )
     results_dir = run_dir / "results"
 
     # Stop early if the folders we need don't actually exist.
     if not run_dir.is_dir() or not input_dir.is_dir():
-        logging.error("Directory not found. Run: %s, Input: %s", run_dir, input_dir)
+        logging.error(
+            "Directory not found. Run: %s, Input: %s",
+            run_dir,
+            input_dir,
+        )
         return 1
 
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -255,17 +382,31 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
 
     # Go through each data type one at a time (Radio, then SecureV2XMessage).
     for msg_type, cfg in DATA_TYPES.items():
-        csv_file = find_csv_file(input_dir, cfg["patterns"])
+        csv_file = find_csv_file(
+            input_dir,
+            cfg["patterns"],
+        )
 
         if not csv_file:
-            logging.info("[-] No CSV file found for %s in %s", msg_type, input_dir)
+            logging.info(
+                "[-] No CSV file found for %s in %s",
+                msg_type,
+                input_dir,
+            )
             continue
 
-        logging.info("[+] Processing %s: %s", msg_type, csv_file.name)
+        logging.info(
+            "[+] Processing %s: %s",
+            msg_type,
+            csv_file.name,
+        )
         records = read_records(csv_file, msg_type)
 
         if not records:
-            logging.warning("  [-] No valid records in %s", csv_file.name)
+            logging.warning(
+                "  [-] No valid records in %s",
+                csv_file.name,
+            )
             continue
 
         df = process_csv(records)
@@ -285,7 +426,11 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
         summary_records.append(summary)
         print(
             f"  [✓] Processed {len(df):,} records | "
-            f"Mean: {summary['mean_ms']:.2f} ms | P95: {summary['p95_ms']:.2f} ms"
+            f"Mean: {summary['mean_ms']:.2f} ms | "
+            f"P95: {summary['p95_ms']:.2f} ms | "
+            f"Threshold: {summary['threshold_result']} "
+            f"({summary['threshold_pass_percent']:.2f}% below "
+            f"{LATENCY_THRESHOLD_MS:g} ms)"
         )
 
     if not summary_records:
@@ -297,11 +442,31 @@ def run_csv_analysis(args: argparse.Namespace) -> int:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run-level Latency Analysis for CSVs.")
-    parser.add_argument("-r", "--run-dir", type=Path, required=True)
-    parser.add_argument("--input-dir", type=Path, default=None)
-    parser.add_argument("--max-latency-ms", type=float, default=200.0)
-    parser.add_argument("--rolling-window", type=int, default=20)
-    parser.add_argument("--debug", action="store_true")
+    parser.add_argument(
+        "-r",
+        "--run-dir",
+        type=Path,
+        required=True,
+    )
+    parser.add_argument(
+        "--input-dir",
+        type=Path,
+        default=None,
+    )
+    parser.add_argument(
+        "--max-latency-ms",
+        type=float,
+        default=200.0,
+    )
+    parser.add_argument(
+        "--rolling-window",
+        type=int,
+        default=20,
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+    )
 
     cli_args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG if cli_args.debug else logging.INFO)
