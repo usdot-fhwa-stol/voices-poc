@@ -12,7 +12,7 @@ import analysis_csv
 import analysis_pcap
 import pandas as pd
 
-TOTAL_SUMMARY_FILENAME = "total_data_summary.csv"
+
 FAILURE_RESULTS = {"FAIL", "ERROR"}
 
 
@@ -220,7 +220,7 @@ def write_run_summary(
         )
 
     results_dir.mkdir(parents=True, exist_ok=True)
-    output_file = results_dir / TOTAL_SUMMARY_FILENAME
+    output_file = results_dir / (run_dir.name + "_summary.csv")
     summary.to_csv(output_file, index=False)
 
     logging.info("Run summary written to %s", output_file)
@@ -253,7 +253,7 @@ def write_total_summary(
         )
 
     results_root.mkdir(parents=True, exist_ok=True)
-    output_file = results_root / TOTAL_SUMMARY_FILENAME
+    output_file = results_root / "total_data_summary.csv"
     total_summary.to_csv(output_file, index=False)
 
     logging.info("Total summary written to %s", output_file)
