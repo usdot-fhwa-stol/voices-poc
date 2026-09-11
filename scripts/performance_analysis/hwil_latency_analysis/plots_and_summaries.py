@@ -5,8 +5,6 @@ by reading log files, calculating message latency,
 and generating plots for visualization.
 """
 
-import argparse
-import logging
 import re
 from collections import defaultdict, deque
 from collections.abc import Sequence
